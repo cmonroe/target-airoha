@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -1222,7 +1222,7 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1223,7 +1223,7 @@ static int airoha_qdma_init_hfwd_queues(
  	dma_addr_t dma_addr;
  	const char *name;
  	int size, index;
@@ -9,7 +9,7 @@
  
  	size = HW_DSCP_NUM * sizeof(struct airoha_qdma_fwd_desc);
  	if (!dmam_alloc_coherent(eth->dev, size, &dma_addr, GFP_KERNEL))
-@@ -1236,7 +1236,7 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1237,7 +1237,7 @@ static int airoha_qdma_init_hfwd_queues(
  
  	index = of_property_match_string(eth->dev->of_node,
  					 "memory-region-names", name);
@@ -18,7 +18,7 @@
  		struct reserved_mem *rmem;
  		struct device_node *np;
  
-@@ -1263,13 +1263,11 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1264,13 +1264,11 @@ static int airoha_qdma_init_hfwd_queues(
  	airoha_qdma_rmw(qdma, REG_FWD_DSCP_LOW_THR, FWD_DSCP_LOW_THR_MASK,
  			FIELD_PREP(FWD_DSCP_LOW_THR_MASK, 128));
  

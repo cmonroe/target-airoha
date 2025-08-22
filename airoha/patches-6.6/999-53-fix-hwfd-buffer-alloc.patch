@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -80,28 +80,6 @@ static void airoha_qdma_irq_disable(stru
+@@ -78,28 +78,6 @@ static void airoha_qdma_irq_disable(stru
  	airoha_qdma_set_irqmask(irq_bank, index, mask, 0);
  }
  
@@ -29,7 +29,7 @@
  static bool airhoa_is_phy_external(struct airoha_gdm_port *port)
  {
  	return port->id != 1;
-@@ -1247,9 +1225,7 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1248,9 +1226,7 @@ static int airoha_qdma_init_hfwd_queues(
  	u32 status, val;
  
  	size = HW_DSCP_NUM * sizeof(struct airoha_qdma_fwd_desc);
@@ -40,7 +40,7 @@
  		return -ENOMEM;
  
  	airoha_qdma_wr(qdma, REG_FWD_DSCP_BASE, dma_addr);
-@@ -1271,16 +1247,11 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1272,16 +1248,11 @@ static int airoha_qdma_init_hfwd_queues(
  
  		rmem = of_reserved_mem_lookup(np);
  		of_node_put(np);
@@ -74,7 +74,7 @@
  };
  
  struct airoha_gdm_port {
-@@ -647,6 +641,28 @@ struct airoha_foe_entry *airoha_ppe_foe_
+@@ -648,6 +642,28 @@ struct airoha_foe_entry *airoha_ppe_foe_
  void airoha_ppe_foe_entry_get_stats(struct airoha_ppe *ppe, u32 hash,
  				    struct airoha_foe_stats64 *stats);
  

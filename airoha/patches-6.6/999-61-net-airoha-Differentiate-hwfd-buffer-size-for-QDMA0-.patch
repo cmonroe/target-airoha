@@ -18,7 +18,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -1220,20 +1220,24 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1221,20 +1221,24 @@ static int airoha_qdma_init_hfwd_queues(
  	int size, index, num_desc = HW_DSCP_NUM;
  	struct airoha_eth *eth = qdma->eth;
  	int id = qdma - &eth->qdma[0];
@@ -44,7 +44,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
  		np = of_parse_phandle(eth->dev->of_node, "memory-region",
  				      index);
  		if (!np)
-@@ -1245,9 +1249,9 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1246,9 +1250,9 @@ static int airoha_qdma_init_hfwd_queues(
  		/* Compute the number of hw descriptors according to the
  		 * reserved memory size and the payload buffer size
  		 */
@@ -56,7 +56,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
  		if (!dmam_alloc_coherent(eth->dev, size, &dma_addr,
  					 GFP_KERNEL))
  			return -ENOMEM;
-@@ -1260,12 +1264,12 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1261,12 +1265,12 @@ static int airoha_qdma_init_hfwd_queues(
  		return -ENOMEM;
  
  	airoha_qdma_wr(qdma, REG_FWD_DSCP_BASE, dma_addr);

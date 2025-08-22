@@ -15,7 +15,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -727,7 +727,7 @@ static int airoha_qdma_rx_process(struct
+@@ -728,7 +728,7 @@ static int airoha_qdma_rx_process(struct
  
  		reason = FIELD_GET(AIROHA_RXD4_PPE_CPU_REASON, msg1);
  		if (reason == PPE_CPU_REASON_HIT_UNBIND_RATE_REACHED)
@@ -44,7 +44,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
  	u32 hash;
  
  	enum airoha_flow_entry_type type;
-@@ -559,7 +563,8 @@ u32 airoha_rmw(void __iomem *base, u32 o
+@@ -560,7 +564,8 @@ u32 airoha_rmw(void __iomem *base, u32 o
  bool airoha_is_valid_gdm_port(struct airoha_eth *eth,
  			      struct airoha_gdm_port *port);
  

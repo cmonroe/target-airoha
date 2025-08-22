@@ -259,7 +259,7 @@
  #endif /* AIROHA_OFFLOAD_H */
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -2791,10 +2791,11 @@ static int airoha_tc_matchall_act_valida
+@@ -2783,10 +2783,11 @@ static int airoha_tc_matchall_act_valida
  	return 0;
  }
  
@@ -272,7 +272,7 @@
  	u32 rate = 0, bucket_size = 0;
  
  	switch (f->command) {
-@@ -2829,17 +2830,18 @@ static int airoha_dev_tc_matchall(struct
+@@ -2821,17 +2822,18 @@ static int airoha_dev_tc_matchall(struct
  static int airoha_dev_setup_tc_block_cb(enum tc_setup_type type,
  					void *type_data, void *cb_priv)
  {
@@ -294,7 +294,7 @@
  	default:
  		return -EOPNOTSUPP;
  	}
-@@ -2863,7 +2865,7 @@ static int airoha_dev_setup_tc_block(str
+@@ -2855,7 +2857,7 @@ static int airoha_dev_setup_tc_block(str
  			flow_block_cb_incref(block_cb);
  			return 0;
  		}

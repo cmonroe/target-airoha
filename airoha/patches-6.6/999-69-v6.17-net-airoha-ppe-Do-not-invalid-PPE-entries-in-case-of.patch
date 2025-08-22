@@ -26,11 +26,9 @@ Signed-off-by: Paolo Abeni <pabeni@redhat.com>
  drivers/net/ethernet/airoha/airoha_ppe.c | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/ethernet/airoha/airoha_ppe.c b/drivers/net/ethernet/airoha/airoha_ppe.c
-index 47411d2cbd28..88694b08afa1 100644
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -736,10 +736,8 @@ static void airoha_ppe_foe_insert_entry(struct airoha_ppe *ppe,
+@@ -794,10 +794,8 @@ static void airoha_ppe_foe_insert_entry(
  			continue;
  		}
  
@@ -40,8 +38,5 @@ index 47411d2cbd28..88694b08afa1 100644
  			continue;
 -		}
  
- 		airoha_ppe_foe_commit_entry(ppe, &e->data, hash);
+ 		airoha_ppe_foe_commit_entry(ppe, &e->data, hash, rx_wlan);
  		commit_done = true;
--- 
-2.50.0
-

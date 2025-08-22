@@ -41,7 +41,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
  	struct rhash_head node;
  	unsigned long cookie;
  };
-@@ -485,6 +496,8 @@ struct airoha_ppe {
+@@ -484,6 +495,8 @@ struct airoha_ppe {
  	void *foe;
  	dma_addr_t foe_dma;
  

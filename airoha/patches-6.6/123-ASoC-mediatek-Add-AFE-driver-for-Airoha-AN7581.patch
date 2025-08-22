@@ -20,8 +20,6 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
  create mode 100644 sound/soc/mediatek/an7581/an7581-afe-pcm.c
  create mode 100644 sound/soc/mediatek/an7581/an7581-reg.h
 
-diff --git a/sound/soc/mediatek/Kconfig b/sound/soc/mediatek/Kconfig
-index 90e367586493..30d48bcb6501 100644
 --- a/sound/soc/mediatek/Kconfig
 +++ b/sound/soc/mediatek/Kconfig
 @@ -3,6 +3,16 @@ config SND_SOC_MEDIATEK
@@ -41,18 +39,13 @@ index 90e367586493..30d48bcb6501 100644
  config SND_SOC_MT2701
  	tristate "ASoC support for Mediatek MT2701 chip"
  	depends on ARCH_MEDIATEK
-diff --git a/sound/soc/mediatek/Makefile b/sound/soc/mediatek/Makefile
-index 4b55434f2168..fa3dee7c1d58 100644
 --- a/sound/soc/mediatek/Makefile
 +++ b/sound/soc/mediatek/Makefile
-@@ -10,3 +10,4 @@ obj-$(CONFIG_SND_SOC_MT8188) += mt8188/
+@@ -9,3 +9,4 @@ obj-$(CONFIG_SND_SOC_MT8186) += mt8186/
  obj-$(CONFIG_SND_SOC_MT8188) += mt8188/
  obj-$(CONFIG_SND_SOC_MT8192) += mt8192/
  obj-$(CONFIG_SND_SOC_MT8195) += mt8195/
 +obj-$(CONFIG_SND_SOC_AN7581) += an7581/
-diff --git a/sound/soc/mediatek/an7581/Makefile b/sound/soc/mediatek/an7581/Makefile
-new file mode 100644
-index 000000000000..bf475e14096a
 --- /dev/null
 +++ b/sound/soc/mediatek/an7581/Makefile
 @@ -0,0 +1,7 @@
@@ -63,9 +56,6 @@ index 000000000000..bf475e14096a
 +	an7581-afe-pcm.o
 +
 +obj-$(CONFIG_SND_SOC_AN7581) += snd-soc-an7581-afe.o
-diff --git a/sound/soc/mediatek/an7581/an7581-afe-common.h b/sound/soc/mediatek/an7581/an7581-afe-common.h
-new file mode 100644
-index 000000000000..d2528735b75f
 --- /dev/null
 +++ b/sound/soc/mediatek/an7581/an7581-afe-common.h
 @@ -0,0 +1,35 @@
@@ -104,9 +94,6 @@ index 000000000000..d2528735b75f
 +				       unsigned int rate);
 +
 +#endif
-diff --git a/sound/soc/mediatek/an7581/an7581-afe-pcm.c b/sound/soc/mediatek/an7581/an7581-afe-pcm.c
-new file mode 100644
-index 000000000000..e1da26feca51
 --- /dev/null
 +++ b/sound/soc/mediatek/an7581/an7581-afe-pcm.c
 @@ -0,0 +1,455 @@
@@ -565,9 +552,6 @@ index 000000000000..e1da26feca51
 +
 +MODULE_DESCRIPTION("Airoha SoC AFE platform driver for ALSA AN7581");
 +MODULE_LICENSE("GPL");
-diff --git a/sound/soc/mediatek/an7581/an7581-reg.h b/sound/soc/mediatek/an7581/an7581-reg.h
-new file mode 100644
-index 000000000000..2b14a66afa68
 --- /dev/null
 +++ b/sound/soc/mediatek/an7581/an7581-reg.h
 @@ -0,0 +1,29 @@
@@ -600,6 +584,3 @@ index 000000000000..2b14a66afa68
 +#define AFE_MAX_REGISTER		AFE_IRQ1_CON0
 +
 +#endif
--- 
-2.50.0
-

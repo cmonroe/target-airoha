@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -17,6 +17,7 @@
+@@ -15,6 +15,7 @@
  #include <net/netdev_rx_queue.h>
  #include <net/page_pool/helpers.h>
  #include <net/pkt_cls.h>
@@ -8,7 +8,7 @@
  #include <uapi/linux/ppp_defs.h>
  
  #include "airoha_regs.h"
-@@ -481,6 +482,40 @@ static void airoha_fe_crsn_qsel_init(str
+@@ -479,6 +480,40 @@ static void airoha_fe_crsn_qsel_init(str
  				 CDM_CRSN_QSEL_Q1));
  }
  
@@ -49,7 +49,7 @@
  static int airoha_fe_init(struct airoha_eth *eth)
  {
  	airoha_fe_maccr_init(eth);
-@@ -667,9 +702,87 @@ static int airoha_qdma_get_gdm_port(stru
+@@ -668,9 +703,87 @@ static int airoha_qdma_get_gdm_port(stru
  	return port >= ARRAY_SIZE(eth->ports) ? -EINVAL : port;
  }
  
@@ -137,7 +137,7 @@
  	struct airoha_qdma *qdma = q->qdma;
  	struct airoha_eth *eth = qdma->eth;
  	int qid = q - &qdma->q_rx[0];
-@@ -679,7 +792,6 @@ static int airoha_qdma_rx_process(struct
+@@ -680,7 +793,6 @@ static int airoha_qdma_rx_process(struct
  		struct airoha_queue_entry *e = &q->entry[q->tail];
  		struct airoha_qdma_desc *desc = &q->desc[q->tail];
  		u32 hash, reason, msg1 = le32_to_cpu(desc->msg1);
@@ -145,7 +145,7 @@
  		struct page *page = virt_to_head_page(e->buf);
  		u32 desc_ctrl = le32_to_cpu(desc->ctrl);
  		struct airoha_gdm_port *port;
-@@ -688,22 +800,16 @@ static int airoha_qdma_rx_process(struct
+@@ -689,22 +801,16 @@ static int airoha_qdma_rx_process(struct
  		if (!(desc_ctrl & QDMA_DESC_DONE_MASK))
  			break;
  
@@ -171,7 +171,7 @@
  			goto free_frag;
  
  		p = airoha_qdma_get_gdm_port(eth, desc);
-@@ -719,9 +825,14 @@ static int airoha_qdma_rx_process(struct
+@@ -720,9 +826,14 @@ static int airoha_qdma_rx_process(struct
  			__skb_put(q->skb, len);
  			skb_mark_for_recycle(q->skb);
  			q->skb->dev = port->dev;
@@ -187,7 +187,7 @@
  		} else { /* scattered frame */
  			struct skb_shared_info *shinfo = skb_shinfo(q->skb);
  			int nr_frags = shinfo->nr_frags;
-@@ -767,10 +878,11 @@ static int airoha_qdma_rx_process(struct
+@@ -768,10 +879,11 @@ static int airoha_qdma_rx_process(struct
  		q->skb = NULL;
  		continue;
  free_frag:
@@ -200,7 +200,7 @@
  		}
  	}
  	airoha_qdma_fill_rx_queue(q);
-@@ -807,15 +919,17 @@ static int airoha_qdma_rx_napi_poll(stru
+@@ -808,15 +920,17 @@ static int airoha_qdma_rx_napi_poll(stru
  }
  
  static int airoha_qdma_init_rx_queue(struct airoha_queue *q,
@@ -222,7 +222,7 @@
  		.nid = NUMA_NO_NODE,
  		.dev = qdma->eth->dev,
  		.napi = &q->napi,
-@@ -824,7 +938,7 @@ static int airoha_qdma_init_rx_queue(str
+@@ -825,7 +939,7 @@ static int airoha_qdma_init_rx_queue(str
  	int qid = q - &qdma->q_rx[0], thr;
  	dma_addr_t dma_addr;
  
@@ -231,7 +231,7 @@
  	q->ndesc = ndesc;
  	q->qdma = qdma;
  
-@@ -886,15 +1000,18 @@ static int airoha_qdma_init_rx(struct ai
+@@ -887,15 +1001,18 @@ static int airoha_qdma_init_rx(struct ai
  	int i;
  
  	for (i = 0; i < ARRAY_SIZE(qdma->q_rx); i++) {
@@ -253,7 +253,7 @@
  		if (err)
  			return err;
  	}
-@@ -1973,6 +2090,47 @@ static u32 airoha_get_dsa_tag(struct sk_
+@@ -1965,6 +2082,47 @@ static u32 airoha_get_dsa_tag(struct sk_
  #endif
  }
  
@@ -301,7 +301,7 @@
  static netdev_tx_t airoha_dev_xmit(struct sk_buff *skb,
  				   struct net_device *dev)
  {
-@@ -2878,6 +3036,7 @@ static const struct net_device_ops airoh
+@@ -2870,6 +3028,7 @@ static const struct net_device_ops airoh
  	.ndo_stop		= airoha_dev_stop,
  	.ndo_change_mtu		= airoha_dev_change_mtu,
  	.ndo_select_queue	= airoha_dev_select_queue,
@@ -309,7 +309,7 @@
  	.ndo_start_xmit		= airoha_dev_xmit,
  	.ndo_get_stats64        = airoha_dev_get_stats64,
  	.ndo_set_mac_address	= airoha_dev_set_macaddr,
-@@ -3152,6 +3311,31 @@ static int airoha_xmit_rings_show(struct
+@@ -3058,6 +3217,31 @@ static int airoha_xmit_rings_show(struct
  }
  DEFINE_SHOW_ATTRIBUTE(airoha_xmit_rings);
  
@@ -341,7 +341,7 @@
  static int airoha_tx_meter_show(struct seq_file *s, void *data)
  {
  	struct airoha_gdm_port *port = s->private;
-@@ -3234,6 +3418,8 @@ static int airoha_register_port_debugfs(
+@@ -3140,6 +3324,8 @@ static int airoha_register_port_debugfs(
  			    &airoha_tx_meter_fops);
  	debugfs_create_file("xmit-rings", 0400, root, port,
  			    &airoha_xmit_rings_fops);
@@ -350,7 +350,7 @@
  
  	return 0;
  }
-@@ -3290,12 +3476,9 @@ static int airoha_alloc_gdm_port(struct
+@@ -3196,12 +3382,9 @@ static int airoha_alloc_gdm_port(struct
  	dev->ethtool_ops = &airoha_ethtool_ops;
  	dev->max_mtu = AIROHA_MAX_MTU;
  	dev->watchdog_timeo = 5 * HZ;

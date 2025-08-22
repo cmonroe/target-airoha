@@ -10,7 +10,7 @@
  #include <linux/tcp.h>
  #include <linux/pcs/pcs-airoha.h>
  #include <linux/u64_stats_sync.h>
-@@ -20,6 +22,9 @@
+@@ -18,6 +20,9 @@
  #include "airoha_regs.h"
  #include "airoha_eth.h"
  
@@ -20,7 +20,7 @@
  u32 airoha_rr(void __iomem *base, u32 offset)
  {
  	return readl(base + offset);
-@@ -754,7 +759,8 @@ static int airoha_qdma_rx_process(struct
+@@ -755,7 +760,8 @@ static int airoha_qdma_rx_process(struct
  
  		reason = FIELD_GET(AIROHA_RXD4_PPE_CPU_REASON, msg1);
  		if (reason == PPE_CPU_REASON_HIT_UNBIND_RATE_REACHED)
@@ -30,7 +30,7 @@
  
  		done++;
  		napi_gro_receive(&q->napi, q->skb);
-@@ -1117,9 +1123,11 @@ static void airoha_qdma_cleanup_tx_queue
+@@ -1118,9 +1124,11 @@ static void airoha_qdma_cleanup_tx_queue
  static int airoha_qdma_init_hfwd_queues(struct airoha_qdma *qdma)
  {
  	struct airoha_eth *eth = qdma->eth;
@@ -44,7 +44,7 @@
  
  	size = HW_DSCP_NUM * sizeof(struct airoha_qdma_fwd_desc);
  	qdma->hfwd.desc = dmam_alloc_coherent(eth->dev, size, &dma_addr,
-@@ -1129,12 +1137,36 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1130,12 +1138,36 @@ static int airoha_qdma_init_hfwd_queues(
  
  	airoha_qdma_wr(qdma, REG_FWD_DSCP_BASE, dma_addr);
  
@@ -85,7 +85,7 @@
  	airoha_qdma_wr(qdma, REG_FWD_BUF_BASE, dma_addr);
  
  	airoha_qdma_rmw(qdma, REG_HW_FWD_DSCP_CFG,
-@@ -1142,11 +1174,14 @@ static int airoha_qdma_init_hfwd_queues(
+@@ -1143,11 +1175,14 @@ static int airoha_qdma_init_hfwd_queues(
  			FIELD_PREP(HW_FWD_DSCP_PAYLOAD_SIZE_MASK, 0));
  	airoha_qdma_rmw(qdma, REG_FWD_DSCP_LOW_THR, FWD_DSCP_LOW_THR_MASK,
  			FIELD_PREP(FWD_DSCP_LOW_THR_MASK, 128));
@@ -103,7 +103,7 @@
  
  	return read_poll_timeout(airoha_qdma_rr, status,
  				 !(status & LMGR_INIT_START), USEC_PER_MSEC,
-@@ -2627,11 +2662,10 @@ static int airoha_tc_matchall_act_valida
+@@ -2619,11 +2654,10 @@ static int airoha_tc_matchall_act_valida
  	return 0;
  }
  
@@ -116,7 +116,7 @@
  	u32 rate = 0, bucket_size = 0;
  
  	switch (f->command) {
-@@ -2666,16 +2700,17 @@ static int airoha_dev_tc_matchall(struct
+@@ -2658,16 +2692,17 @@ static int airoha_dev_tc_matchall(struct
  static int airoha_dev_setup_tc_block_cb(enum tc_setup_type type,
  					void *type_data, void *cb_priv)
  {
@@ -138,7 +138,7 @@
  	default:
  		return -EOPNOTSUPP;
  	}
-@@ -2699,7 +2734,7 @@ static int airoha_dev_setup_tc_block(str
+@@ -2691,7 +2726,7 @@ static int airoha_dev_setup_tc_block(str
  			flow_block_cb_incref(block_cb);
  			return 0;
  		}
@@ -147,7 +147,7 @@
  		if (IS_ERR(block_cb))
  			return PTR_ERR(block_cb);
  
-@@ -3416,6 +3451,8 @@ static int airoha_probe(struct platform_
+@@ -3312,6 +3347,8 @@ static int airoha_probe(struct platform_
  	if (err)
  		goto error_napi_stop;
  
@@ -202,7 +202,7 @@
  /* RX queue to IRQ mapping: BIT(q) in IRQ(n) */
  #define RX_IRQ0_BANK_PIN_MASK			0x839f
  #define RX_IRQ1_BANK_PIN_MASK			0x7fe00000
-@@ -546,6 +554,7 @@ struct airoha_gdm_port {
+@@ -545,6 +553,7 @@ struct airoha_gdm_port {
  #define AIROHA_RXD4_FOE_ENTRY		GENMASK(15, 0)
  
  struct airoha_ppe {
@@ -210,7 +210,7 @@
  	struct airoha_eth *eth;
  
  	void *foe;
-@@ -617,9 +626,9 @@ u32 airoha_rmw(void __iomem *base, u32 o
+@@ -618,9 +627,9 @@ u32 airoha_rmw(void __iomem *base, u32 o
  bool airoha_is_valid_gdm_port(struct airoha_eth *eth,
  			      struct airoha_gdm_port *port);
  

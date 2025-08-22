@@ -12,7 +12,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -560,6 +560,27 @@ static int airoha_fe_init(struct airoha_
+@@ -558,6 +558,27 @@ static int airoha_fe_init(struct airoha_
  	/* disable IFC by default */
  	airoha_fe_clear(eth, REG_FE_CSR_IFC_CFG, FE_IFC_EN_MASK);
  
@@ -40,7 +40,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
  	/* enable 1:N vlan action, init vlan table */
  	airoha_fe_set(eth, REG_MC_VLAN_EN, MC_VLAN_EN_MASK);
  
-@@ -1703,7 +1724,6 @@ static void airhoha_set_gdm2_loopback(st
+@@ -1695,7 +1716,6 @@ static void airhoha_set_gdm2_loopback(st
  
  	if (port->id == 3) {
  		/* FIXME: handle XSI_PCE1_PORT */

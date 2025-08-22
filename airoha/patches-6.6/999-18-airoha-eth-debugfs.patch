@@ -1,7 +1,7 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -2432,6 +2432,129 @@ static void airoha_metadata_dst_free(str
- 	}
+@@ -2587,6 +2587,129 @@ static int airoha_setup_phylink(struct n
+ 	return 0;
  }
  
 +static int airoha_xmit_rings_show(struct seq_file *s, void *data)
@@ -130,9 +130,9 @@
  static int airoha_alloc_gdm_port(struct airoha_eth *eth,
  				 struct device_node *np, int index)
  {
-@@ -2509,6 +2632,10 @@ static int airoha_alloc_gdm_port(struct
- 	if (err)
- 		return err;
+@@ -2670,6 +2793,10 @@ static int airoha_alloc_gdm_port(struct
+ 			return err;
+ 	}
  
 +	err = airoha_register_port_debugfs(port);
 +	if (err)
@@ -141,7 +141,7 @@
  	return register_netdev(dev);
  }
  
-@@ -2568,6 +2695,7 @@ static int airoha_probe(struct platform_
+@@ -2729,6 +2856,7 @@ static int airoha_probe(struct platform_
  	strscpy(eth->napi_dev->name, "qdma_eth", sizeof(eth->napi_dev->name));
  	platform_set_drvdata(pdev, eth);
  
@@ -149,7 +149,7 @@
  	err = airoha_hw_init(pdev, eth);
  	if (err)
  		goto error_hw_cleanup;
-@@ -2596,6 +2724,7 @@ error_napi_stop:
+@@ -2757,6 +2885,7 @@ error_napi_stop:
  	for (i = 0; i < ARRAY_SIZE(eth->qdma); i++)
  		airoha_qdma_stop_napi(&eth->qdma[i]);
  error_hw_cleanup:
@@ -157,7 +157,7 @@
  	for (i = 0; i < ARRAY_SIZE(eth->qdma); i++)
  		airoha_hw_cleanup(&eth->qdma[i]);
  
-@@ -2636,6 +2765,7 @@ static void airoha_remove(struct platfor
+@@ -2805,6 +2934,7 @@ static void airoha_remove(struct platfor
  	free_netdev(eth->napi_dev);
  
  	airoha_ppe_deinit(eth);
@@ -167,7 +167,7 @@
  
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -149,6 +149,7 @@ enum trtcm_param {
+@@ -148,6 +148,7 @@ enum trtcm_param {
  #define MAX_TOKEN_SIZE_OFFSET			17
  #define TRTCM_TOKEN_RATE_MASK			GENMASK(23, 6)
  #define TRTCM_TOKEN_RATE_FRACTION_MASK		GENMASK(5, 0)
@@ -175,7 +175,7 @@
  
  struct airoha_queue_entry {
  	union {
-@@ -503,6 +504,8 @@ struct airoha_eth {
+@@ -506,6 +507,8 @@ struct airoha_eth {
  
  	struct airoha_qdma qdma[AIROHA_MAX_NUM_QDMA];
  	struct airoha_gdm_port *ports[AIROHA_MAX_NUM_GDM_PORTS];
@@ -183,10 +183,10 @@
 +	struct dentry *debugfs_dir;
  };
  
- u32 airoha_rr(void __iomem *base, u32 offset);
+ struct airoha_eth_match_data {
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -913,5 +913,4 @@ void airoha_ppe_deinit(struct airoha_eth
+@@ -919,5 +919,4 @@ void airoha_ppe_deinit(struct airoha_eth
  	rcu_read_unlock();
  
  	rhashtable_destroy(&eth->flow_table);

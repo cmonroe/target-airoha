@@ -87,7 +87,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
  	enum airoha_flow_entry_type type;
  
  	struct rhash_head node;
-@@ -510,6 +538,9 @@ struct airoha_ppe {
+@@ -509,6 +537,9 @@ struct airoha_ppe {
  	struct hlist_head *foe_flow;
  	u16 foe_check_time[PPE_NUM_ENTRIES];
  
@@ -97,7 +97,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
  	struct dentry *debugfs_dir;
  };
  
-@@ -576,6 +607,8 @@ void airoha_ppe_deinit(struct airoha_eth
+@@ -577,6 +608,8 @@ void airoha_ppe_deinit(struct airoha_eth
  void airoha_ppe_init_upd_mem(struct airoha_gdm_port *port);
  struct airoha_foe_entry *airoha_ppe_foe_get_entry(struct airoha_ppe *ppe,
  						  u32 hash);

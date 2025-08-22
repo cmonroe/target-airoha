@@ -13,19 +13,17 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
  drivers/net/ethernet/airoha/airoha_regs.h |  12 ++
  3 files changed, 149 insertions(+)
 
-diff --git a/drivers/net/ethernet/airoha/airoha_eth.c b/drivers/net/ethernet/airoha/airoha_eth.c
-index faca939053e3..ede4f552896f 100644
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -4,6 +4,7 @@
-  * Author: Lorenzo Bianconi <lorenzo@kernel.org>
-  */
+@@ -7,6 +7,7 @@
+ #include <linux/of_net.h>
+ #include <linux/platform_device.h>
  #include <linux/tcp.h>
 +#include <linux/pcs/pcs-airoha.h>
  #include <linux/u64_stats_sync.h>
  #include <net/dst_metadata.h>
  #include <net/page_pool/helpers.h>
-@@ -72,6 +73,11 @@ static bool airhoa_is_lan_gdm_port(struct airoha_gdm_port *port)
+@@ -76,6 +77,11 @@ static bool airhoa_is_lan_gdm_port(struc
  	return port->id == 1;
  }
  
@@ -37,7 +35,7 @@ index faca939053e3..ede4f552896f 100644
  static void airoha_set_macaddr(struct airoha_gdm_port *port, const u8 *addr)
  {
  	struct airoha_eth *eth = port->qdma->eth;
-@@ -1529,6 +1535,17 @@ static int airoha_dev_open(struct net_device *dev)
+@@ -1534,6 +1540,17 @@ static int airoha_dev_open(struct net_de
  	struct airoha_qdma *qdma = port->qdma;
  	int err;
  
@@ -55,7 +53,7 @@ index faca939053e3..ede4f552896f 100644
  	netif_tx_start_all_queues(dev);
  	err = airoha_set_vip_for_gdm_port(port, true);
  	if (err)
-@@ -1577,6 +1594,11 @@ static int airoha_dev_stop(struct net_device *dev)
+@@ -1582,6 +1599,11 @@ static int airoha_dev_stop(struct net_de
  		}
  	}
  
@@ -67,7 +65,7 @@ index faca939053e3..ede4f552896f 100644
  	return 0;
  }
  
-@@ -2386,6 +2406,20 @@ static const struct ethtool_ops airoha_ethtool_ops = {
+@@ -2408,6 +2430,20 @@ static const struct ethtool_ops airoha_e
  	.get_rmon_stats		= airoha_ethtool_get_rmon_stats,
  };
  
@@ -88,7 +86,7 @@ index faca939053e3..ede4f552896f 100644
  static int airoha_metadata_dst_alloc(struct airoha_gdm_port *port)
  {
  	int i;
-@@ -2417,6 +2451,99 @@ static void airoha_metadata_dst_free(struct airoha_gdm_port *port)
+@@ -2439,6 +2475,99 @@ static void airoha_metadata_dst_free(str
  	}
  }
  
@@ -188,7 +186,7 @@ index faca939053e3..ede4f552896f 100644
  static int airoha_alloc_gdm_port(struct airoha_eth *eth,
  				 struct device_node *np, int index)
  {
-@@ -2494,6 +2613,12 @@ static int airoha_alloc_gdm_port(struct airoha_eth *eth,
+@@ -2516,6 +2645,12 @@ static int airoha_alloc_gdm_port(struct
  	if (err)
  		return err;
  
@@ -201,7 +199,7 @@ index faca939053e3..ede4f552896f 100644
  	return register_netdev(dev);
  }
  
-@@ -2589,6 +2714,10 @@ static int airoha_probe(struct platform_device *pdev)
+@@ -2611,6 +2746,10 @@ error_hw_cleanup:
  		if (port && port->dev->reg_state == NETREG_REGISTERED) {
  			unregister_netdev(port->dev);
  			airoha_metadata_dst_free(port);
@@ -212,7 +210,7 @@ index faca939053e3..ede4f552896f 100644
  		}
  	}
  	free_netdev(eth->napi_dev);
-@@ -2616,6 +2745,10 @@ static void airoha_remove(struct platform_device *pdev)
+@@ -2638,6 +2777,10 @@ static void airoha_remove(struct platfor
  		airoha_dev_stop(port->dev);
  		unregister_netdev(port->dev);
  		airoha_metadata_dst_free(port);
@@ -223,11 +221,9 @@ index faca939053e3..ede4f552896f 100644
  	}
  	free_netdev(eth->napi_dev);
  
-diff --git a/drivers/net/ethernet/airoha/airoha_eth.h b/drivers/net/ethernet/airoha/airoha_eth.h
-index 1b0bb1ffb477..8f6732e48edf 100644
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -467,6 +467,10 @@ struct airoha_gdm_port {
+@@ -459,6 +459,10 @@ struct airoha_gdm_port {
  	struct net_device *dev;
  	int id;
  
@@ -238,11 +234,9 @@ index 1b0bb1ffb477..8f6732e48edf 100644
  	struct airoha_hw_stats stats;
  
  	DECLARE_BITMAP(qos_sq_bmap, AIROHA_NUM_QOS_CHANNELS);
-diff --git a/drivers/net/ethernet/airoha/airoha_regs.h b/drivers/net/ethernet/airoha/airoha_regs.h
-index 591b2730d531..9a55b95609c7 100644
 --- a/drivers/net/ethernet/airoha/airoha_regs.h
 +++ b/drivers/net/ethernet/airoha/airoha_regs.h
-@@ -345,6 +345,18 @@
+@@ -350,6 +350,18 @@
  #define IP_FRAGMENT_PORT_MASK		GENMASK(8, 5)
  #define IP_FRAGMENT_NBQ_MASK		GENMASK(4, 0)
  
@@ -261,6 +255,3 @@ index 591b2730d531..9a55b95609c7 100644
  #define REG_MC_VLAN_EN			0x2100
  #define MC_VLAN_EN_MASK			BIT(0)
  
--- 
-2.50.0
-

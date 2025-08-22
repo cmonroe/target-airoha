@@ -30,7 +30,7 @@ Date:   Tue Apr 1 11:42:30 2025 +0200
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -2850,6 +2850,19 @@ static int airoha_register_port_debugfs(
+@@ -2756,6 +2756,19 @@ static int airoha_register_port_debugfs(
  	return 0;
  }
  
@@ -52,7 +52,7 @@ Date:   Tue Apr 1 11:42:30 2025 +0200
  {
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -543,6 +543,9 @@ u32 airoha_rmw(void __iomem *base, u32 o
+@@ -544,6 +544,9 @@ u32 airoha_rmw(void __iomem *base, u32 o
  #define airoha_qdma_clear(qdma, offset, val)			\
  	airoha_rmw((qdma)->regs, (offset), (val), 0)
  

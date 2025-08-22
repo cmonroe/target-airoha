@@ -18,11 +18,9 @@ Signed-off-by: Jakub Kicinski <kuba@kernel.org>
  drivers/net/dsa/mt7530.c | 8 ++------
  1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/dsa/mt7530.c b/drivers/net/dsa/mt7530.c
-index 1c83af805209..5883eb93efb1 100644
 --- a/drivers/net/dsa/mt7530.c
 +++ b/drivers/net/dsa/mt7530.c
-@@ -2591,7 +2591,8 @@ mt7531_setup_common(struct dsa_switch *ds)
+@@ -2531,7 +2531,8 @@ mt7530_setup(struct dsa_switch *ds)
  	if (ret < 0)
  		return ret;
  
@@ -32,18 +30,17 @@ index 1c83af805209..5883eb93efb1 100644
  }
  
  static int
-@@ -2687,11 +2688,6 @@ mt7531_setup(struct dsa_switch *ds)
- 	if (ret)
- 		return ret;
+@@ -2594,12 +2595,7 @@ mt7531_setup_common(struct dsa_switch *d
+ 			     CPORT_SW2FE_STAG_EN | CPORT_FE2SW_STAG_EN);
  
--	/* Setup VLAN ID 0 for VLAN-unaware bridges */
--	ret = mt7530_setup_vlan0(priv);
--	if (ret)
+ 	/* Flush the FDB table */
+-	ret = mt7530_fdb_cmd(priv, MT7530_FDB_FLUSH, NULL);
+-	if (ret < 0)
 -		return ret;
 -
- 	ds->assisted_learning_on_cpu_port = true;
- 	ds->mtu_enforcement_ingress = true;
+-	/* Setup VLAN ID 0 for VLAN-unaware bridges */
+-	return mt7530_setup_vlan0(priv);
++	return mt7530_fdb_cmd(priv, MT7530_FDB_FLUSH, NULL);
+ }
  
--- 
-2.48.1
-
+ static int

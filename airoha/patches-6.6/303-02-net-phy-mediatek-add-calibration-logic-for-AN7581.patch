@@ -29,8 +29,6 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
  4 files changed, 1548 insertions(+), 13 deletions(-)
  create mode 100644 drivers/net/phy/mediatek/an7581.c
 
-diff --git a/drivers/net/phy/mediatek/Makefile b/drivers/net/phy/mediatek/Makefile
-index ac57ecc799fc..3f28cc176959 100644
 --- a/drivers/net/phy/mediatek/Makefile
 +++ b/drivers/net/phy/mediatek/Makefile
 @@ -2,3 +2,5 @@
@@ -39,9 +37,6 @@ index ac57ecc799fc..3f28cc176959 100644
  obj-$(CONFIG_MEDIATEK_GE_SOC_PHY)	+= mtk-ge-soc.o
 +mtk-ge-soc-objs				+= mtk-ge-soc.o
 +mtk-ge-soc-objs				+= an7581.o
-diff --git a/drivers/net/phy/mediatek/an7581.c b/drivers/net/phy/mediatek/an7581.c
-new file mode 100644
-index 000000000000..78f941966773
 --- /dev/null
 +++ b/drivers/net/phy/mediatek/an7581.c
 @@ -0,0 +1,340 @@
@@ -385,11 +380,9 @@ index 000000000000..78f941966773
 +
 +	return 0;
 +}
-diff --git a/drivers/net/phy/mediatek/mtk-ge-soc.c b/drivers/net/phy/mediatek/mtk-ge-soc.c
-index cd09fbf92ef2..880bc5f7d431 100644
 --- a/drivers/net/phy/mediatek/mtk-ge-soc.c
 +++ b/drivers/net/phy/mediatek/mtk-ge-soc.c
-@@ -21,6 +21,7 @@
+@@ -19,6 +19,7 @@
  
  #define MTK_EXT_PAGE_ACCESS			0x1f
  #define MTK_PHY_PAGE_STANDARD			0x0000
@@ -397,7 +390,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  #define MTK_PHY_PAGE_EXTENDED_3			0x0003
  
  #define MTK_PHY_LPI_REG_14			0x14
-@@ -186,6 +187,7 @@
+@@ -184,6 +185,7 @@
  #define MTK_PHY_RG_ANA_CAL_RG0			0xdb
  #define   MTK_PHY_RG_CAL_CKINV			BIT(12)
  #define   MTK_PHY_RG_ANA_CALEN			BIT(8)
@@ -405,7 +398,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  #define   MTK_PHY_RG_ZCALEN_A			BIT(0)
  
  #define MTK_PHY_RG_ANA_CAL_RG1			0xdc
-@@ -196,6 +198,9 @@
+@@ -194,6 +196,9 @@
  
  #define MTK_PHY_RG_ANA_CAL_RG5			0xe0
  #define   MTK_PHY_RG_REXT_TRIM_MASK		GENMASK(13, 8)
@@ -415,7 +408,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  
  #define MTK_PHY_RG_TX_FILTER			0xfe
  
-@@ -217,6 +222,14 @@
+@@ -215,6 +220,14 @@
  #define   MTK_PHY_CR_TX_AMP_OFFSET_C_MASK	GENMASK(13, 8)
  #define   MTK_PHY_CR_TX_AMP_OFFSET_D_MASK	GENMASK(6, 0)
  
@@ -430,7 +423,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  #define MTK_PHY_RG_AD_CAL_COMP			0x17a
  #define   MTK_PHY_AD_CAL_COMP_OUT_MASK		GENMASK(8, 8)
  
-@@ -364,7 +377,8 @@ enum CAL_ITEM {
+@@ -362,7 +375,8 @@ enum CAL_ITEM {
  	TX_OFFSET,
  	TX_AMP,
  	TX_R50,
@@ -440,7 +433,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  };
  
  enum CAL_MODE {
-@@ -377,20 +391,11 @@ struct mtk_socphy_shared {
+@@ -375,20 +389,11 @@ struct mtk_socphy_shared {
  	struct mtk_socphy_priv	priv[4];
  };
  
@@ -462,7 +455,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  	phy_set_bits_mmd(phydev, MDIO_MMD_VEND1, MTK_PHY_RG_AD_CALIN,
  			 MTK_PHY_DA_CALIN_FLAG);
  
-@@ -409,7 +414,42 @@ static int cal_cycle(struct phy_device *phydev, int devad,
+@@ -407,7 +412,42 @@ static int cal_cycle(struct phy_device *
  	ret = phy_read_mmd(phydev, MDIO_MMD_VEND1, MTK_PHY_RG_AD_CAL_COMP);
  	if (ret < 0)
  		return ret;
@@ -506,7 +499,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  	phydev_dbg(phydev, "cal_val: 0x%x, ret: %d\n", cal_val, ret);
  
  	return ret;
-@@ -436,6 +476,84 @@ static int rext_cal_efuse(struct phy_device *phydev, u32 *buf)
+@@ -434,6 +474,84 @@ static int rext_cal_efuse(struct phy_dev
  	return 0;
  }
  
@@ -591,7 +584,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  static int tx_offset_fill_result(struct phy_device *phydev, u16 *buf)
  {
  	phy_modify_mmd(phydev, MDIO_MMD_VEND1, MTK_PHY_RG_CR_TX_AMP_OFFSET_A_B,
-@@ -464,6 +582,174 @@ static int tx_offset_cal_efuse(struct phy_device *phydev, u32 *buf)
+@@ -462,6 +580,174 @@ static int tx_offset_cal_efuse(struct ph
  	return 0;
  }
  
@@ -766,7 +759,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  static int tx_amp_fill_result(struct phy_device *phydev, u16 *buf)
  {
  	const int vals_9481[16] = { 10, 6, 6, 10,
-@@ -582,6 +868,181 @@ static int tx_amp_cal_efuse(struct phy_device *phydev, u32 *buf)
+@@ -580,6 +866,181 @@ static int tx_amp_cal_efuse(struct phy_d
  	return 0;
  }
  
@@ -948,7 +941,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  static int tx_r50_fill_result(struct phy_device *phydev, u16 tx_r50_cal_val,
  			      u8 txg_calen_x)
  {
-@@ -641,6 +1102,166 @@ static int tx_r50_cal_efuse(struct phy_device *phydev, u32 *buf,
+@@ -639,6 +1100,166 @@ static int tx_r50_cal_efuse(struct phy_d
  	return 0;
  }
  
@@ -1115,7 +1108,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  static int tx_vcm_cal_sw(struct phy_device *phydev, u8 rg_txreserve_x)
  {
  	u8 lower_idx, upper_idx, txreserve_val;
-@@ -804,6 +1426,44 @@ static int tx_vcm_cal_sw(struct phy_device *phydev, u8 rg_txreserve_x)
+@@ -802,6 +1423,44 @@ restore:
  	return ret;
  }
  
@@ -1160,7 +1153,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  static void mt798x_phy_common_finetune(struct phy_device *phydev)
  {
  	phy_select_page(phydev, MTK_PHY_PAGE_EXTENDED_52B5);
-@@ -1081,11 +1741,43 @@ static int cal_sw(struct phy_device *phydev, enum CAL_ITEM cal_item,
+@@ -1079,11 +1738,43 @@ static int cal_sw(struct phy_device *phy
  	int ret;
  
  	for (pair_n = start_pair; pair_n <= end_pair; pair_n++) {
@@ -1205,7 +1198,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  		default:
  			return -EINVAL;
  		}
-@@ -1420,8 +2112,10 @@ static int mt7981_phy_probe(struct phy_device *phydev)
+@@ -1411,8 +2102,10 @@ static int mt7981_phy_probe(struct phy_d
  
  static int an7581_phy_probe(struct phy_device *phydev)
  {
@@ -1216,7 +1209,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  
  	/* Toggle pinctrl to enable PHY LED */
  	pinctrl = devm_pinctrl_get_select(&phydev->mdio.dev, "gbe-led");
-@@ -1429,15 +2123,456 @@ static int an7581_phy_probe(struct phy_device *phydev)
+@@ -1420,15 +2113,456 @@ static int an7581_phy_probe(struct phy_d
  		dev_err(&phydev->mdio.bus->dev,
  			"Failed to setup PHY LED pinctrl\n");
  
@@ -1673,7 +1666,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  static int an7581_phy_led_polarity_set(struct phy_device *phydev, int index,
  				       unsigned long modes)
  {
-@@ -1508,6 +2643,7 @@ static struct phy_driver mtk_socphy_driver[] = {
+@@ -1500,6 +2634,7 @@ static struct phy_driver mtk_socphy_driv
  	{
  		PHY_ID_MATCH_EXACT(MTK_GPHY_ID_AN7581),
  		.name		= "Airoha AN7581 PHY",
@@ -1681,7 +1674,7 @@ index cd09fbf92ef2..880bc5f7d431 100644
  		.probe		= an7581_phy_probe,
  		.led_blink_set	= mt798x_phy_led_blink_set,
  		.led_brightness_set = mt798x_phy_led_brightness_set,
-@@ -1515,6 +2651,8 @@ static struct phy_driver mtk_socphy_driver[] = {
+@@ -1507,6 +2642,8 @@ static struct phy_driver mtk_socphy_driv
  		.led_hw_control_set = mt798x_phy_led_hw_control_set,
  		.led_hw_control_get = mt798x_phy_led_hw_control_get,
  		.led_polarity_set = an7581_phy_led_polarity_set,
@@ -1690,8 +1683,6 @@ index cd09fbf92ef2..880bc5f7d431 100644
  	},
  	{
  		PHY_ID_MATCH_EXACT(MTK_GPHY_ID_AN7583),
-diff --git a/drivers/net/phy/mediatek/mtk.h b/drivers/net/phy/mediatek/mtk.h
-index f172f7d671c9..6218f3f89cbf 100644
 --- a/drivers/net/phy/mediatek/mtk.h
 +++ b/drivers/net/phy/mediatek/mtk.h
 @@ -8,6 +8,8 @@
@@ -1755,7 +1746,7 @@ index f172f7d671c9..6218f3f89cbf 100644
  void __mtk_tr_write(struct phy_device *phydev, u8 ch_addr, u8 node_addr,
  		    u8 data_addr, u32 tr_data);
  void __mtk_tr_modify(struct phy_device *phydev, u8 ch_addr, u8 node_addr,
-@@ -103,4 +150,11 @@ int mtk_phy_hw_led_blink_set(struct phy_device *phydev, u8 index,
+@@ -103,4 +150,11 @@ int mtk_phy_hw_led_blink_set(struct phy_
  			     bool blinking);
  void mtk_phy_leds_state_init(struct phy_device *phydev);
  
@@ -1767,6 +1758,3 @@ index f172f7d671c9..6218f3f89cbf 100644
 +int an7581_phy_config_init(struct phy_device *phydev);
 +
  #endif /* _MTK_EPHY_H_ */
--- 
-2.50.0
-

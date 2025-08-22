@@ -19,11 +19,9 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
  .../net/ethernet/airoha/airoha_ppe_debugfs.c   |  2 +-
  3 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/ethernet/airoha/airoha_eth.h b/drivers/net/ethernet/airoha/airoha_eth.h
-index a970b789cf23..cf33d731ad0d 100644
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -615,8 +615,8 @@ int airoha_ppe_setup_tc_block_cb(struct net_device *dev, void *type_data);
+@@ -637,8 +637,8 @@ int airoha_ppe_setup_tc_block_cb(struct
  int airoha_ppe_init(struct airoha_eth *eth);
  void airoha_ppe_deinit(struct airoha_eth *eth);
  void airoha_ppe_init_upd_mem(struct airoha_gdm_port *port);
@@ -34,11 +32,9 @@ index a970b789cf23..cf33d731ad0d 100644
  void airoha_ppe_foe_entry_get_stats(struct airoha_ppe *ppe, u32 hash,
  				    struct airoha_foe_stats64 *stats);
  
-diff --git a/drivers/net/ethernet/airoha/airoha_ppe.c b/drivers/net/ethernet/airoha/airoha_ppe.c
-index 0e217acfc5ef..4dbf2bf187d0 100644
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -498,9 +498,11 @@ static void airoha_ppe_foe_flow_stats_update(struct airoha_ppe *ppe,
+@@ -567,9 +567,11 @@ static void airoha_ppe_foe_flow_stats_up
  		FIELD_PREP(AIROHA_FOE_IB2_NBQ, nbq);
  }
  
@@ -52,7 +48,7 @@ index 0e217acfc5ef..4dbf2bf187d0 100644
  	if (hash < PPE_SRAM_NUM_ENTRIES) {
  		u32 *hwe = ppe->foe + hash * sizeof(struct airoha_foe_entry);
  		struct airoha_eth *eth = ppe->eth;
-@@ -527,6 +529,18 @@ struct airoha_foe_entry *airoha_ppe_foe_get_entry(struct airoha_ppe *ppe,
+@@ -596,6 +598,18 @@ struct airoha_foe_entry *airoha_ppe_foe_
  	return ppe->foe + hash * sizeof(struct airoha_foe_entry);
  }
  
@@ -71,11 +67,9 @@ index 0e217acfc5ef..4dbf2bf187d0 100644
  static bool airoha_ppe_foe_compare_entry(struct airoha_flow_table_entry *e,
  					 struct airoha_foe_entry *hwe)
  {
-diff --git a/drivers/net/ethernet/airoha/airoha_ppe_debugfs.c b/drivers/net/ethernet/airoha/airoha_ppe_debugfs.c
-index 05a756233f6a..992bf2e95984 100644
 --- a/drivers/net/ethernet/airoha/airoha_ppe_debugfs.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe_debugfs.c
-@@ -67,7 +67,7 @@ static int airoha_ppe_debugfs_foe_show(struct seq_file *m, void *private,
+@@ -73,7 +73,7 @@ static int airoha_ppe_debugfs_foe_show(s
  		u32 type, state, ib2, data;
  		bool ipv6 = false;
  
@@ -84,6 +78,3 @@ index 05a756233f6a..992bf2e95984 100644
  		if (!hwe)
  			continue;
  
--- 
-2.50.1
-

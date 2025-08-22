@@ -12,7 +12,7 @@ Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -2433,7 +2433,7 @@ static int airoha_tc_get_htb_get_leaf_qu
+@@ -2425,7 +2425,7 @@ static int airoha_tc_get_htb_get_leaf_qu
  		return -EINVAL;
  	}
  

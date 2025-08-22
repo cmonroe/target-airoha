@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -706,7 +706,6 @@ airoha_ppe_foe_commit_subflow_entry(stru
+@@ -709,7 +709,6 @@ airoha_ppe_foe_commit_subflow_entry(stru
  	u32 mask = AIROHA_FOE_IB1_BIND_PACKET_TYPE | AIROHA_FOE_IB1_BIND_UDP;
  	struct airoha_foe_entry *hwe_p, hwe;
  	struct airoha_flow_table_entry *f;
@@ -8,7 +8,7 @@
  	int type;
  
  	hwe_p = airoha_ppe_foe_get_entry(ppe, hash);
-@@ -723,18 +722,23 @@ airoha_ppe_foe_commit_subflow_entry(stru
+@@ -726,18 +725,23 @@ airoha_ppe_foe_commit_subflow_entry(stru
  
  	memcpy(&hwe, hwe_p, sizeof(*hwe_p));
  	hwe.ib1 = (hwe.ib1 & mask) | (e->data.ib1 & ~mask);
