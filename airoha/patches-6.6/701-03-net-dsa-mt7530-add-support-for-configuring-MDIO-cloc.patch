@@ -1,0 +1,94 @@
+From 8b604a13087f32ec66efd715d385420fa3246061 Mon Sep 17 00:00:00 2001
+From: Christian Marangi <ansuelsmth@gmail.com>
+Date: Sun, 6 Jul 2025 11:33:12 +0200
+Subject: [PATCH 3/3] net: dsa: mt7530: add support for configuring MDIO clock
+
+Airoha SoC source the clock for the internal Switch MDIO bus externally
+and can be configured with the passed clock in DT. Add support for it in
+the generic MDIO function. The MDIO clock is considered optional and
+will be configured to the standard 2.5MHz if the "clock-frequency"
+property is not defined in the "mdio" node.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ drivers/net/dsa/mt7530.c | 23 +++++++++++++++++++++++
+ drivers/net/dsa/mt7530.h |  1 +
+ 2 files changed, 24 insertions(+)
+
+diff --git a/drivers/net/dsa/mt7530.c b/drivers/net/dsa/mt7530.c
+index d70399bce5b9..f0dc884c86a2 100644
+--- a/drivers/net/dsa/mt7530.c
++++ b/drivers/net/dsa/mt7530.c
+@@ -3,6 +3,7 @@
+  * Mediatek MT7530 DSA Switch driver
+  * Copyright (C) 2017 Sean Wang <sean.wang@mediatek.com>
+  */
++#include <linux/clk.h>
+ #include <linux/etherdevice.h>
+ #include <linux/if_bridge.h>
+ #include <linux/iopoll.h>
+@@ -2158,6 +2159,7 @@ mt7530_setup_mdio(struct mt7530_priv *priv)
+ 	struct dsa_switch *ds = priv->ds;
+ 	struct device *dev = priv->dev;
+ 	struct mii_bus *bus;
++	struct clk *clk;
+ 	static int idx;
+ 	int ret = 0;
+ 
+@@ -2195,6 +2197,21 @@ mt7530_setup_mdio(struct mt7530_priv *priv)
+ 			mt7530_free_mdio_irq(priv);
+ 	}
+ 
++	/* MDIO clock is optional and supported only on some SoC */
++	clk = of_clk_get(mnp, 0);
++	if (!IS_ERR_OR_NULL(clk)) {
++		u32 rate;
++
++		clk_prepare_enable(clk);
++
++		if (of_property_read_u32(mnp, "clock-frequency", &rate))
++			rate = 2500000;
++
++		clk_set_rate(clk, rate);
++
++		priv->mdio_clk = clk;
++	}
++
+ out:
+ 	of_node_put(mnp);
+ 	return ret;
+@@ -2991,6 +3008,9 @@ mt753x_setup(struct dsa_switch *ds)
+ 	if (ret && priv->irq_domain)
+ 		mt7530_free_mdio_irq(priv);
+ 
++	if (ret && priv->mdio_clk)
++		clk_disable_unprepare(priv->mdio_clk);
++
+ 	return ret;
+ }
+ 
+@@ -3236,6 +3256,9 @@ mt7530_remove_common(struct mt7530_priv *priv)
+ 	if (priv->irq_domain)
+ 		mt7530_free_mdio_irq(priv);
+ 
++	if (priv->mdio_clk)
++		clk_disable_unprepare(priv->mdio_clk);
++
+ 	dsa_unregister_switch(priv->ds);
+ 
+ 	mutex_destroy(&priv->reg_mutex);
+diff --git a/drivers/net/dsa/mt7530.h b/drivers/net/dsa/mt7530.h
+index c3ea403d7acf..ff5fecc0e21e 100644
+--- a/drivers/net/dsa/mt7530.h
++++ b/drivers/net/dsa/mt7530.h
+@@ -833,6 +833,7 @@ struct mt7530_priv {
+ 	struct regulator	*core_pwr;
+ 	struct regulator	*io_pwr;
+ 	struct gpio_desc	*reset;
++	struct clk		*mdio_clk;
+ 	const struct mt753x_info *info;
+ 	unsigned int		id;
+ 	bool			mcm;
+-- 
+2.48.1
+

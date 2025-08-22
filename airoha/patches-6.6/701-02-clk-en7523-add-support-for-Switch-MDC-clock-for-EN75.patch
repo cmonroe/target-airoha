@@ -1,0 +1,41 @@
+From 7e0b4755c47c1f94911cc758115f32d9ff1d8e3a Mon Sep 17 00:00:00 2001
+From: Christian Marangi <ansuelsmth@gmail.com>
+Date: Sun, 6 Jul 2025 11:13:53 +0200
+Subject: [PATCH 2/3] clk: en7523: add support for Switch MDC clock for EN7581
+
+Airoha EN7581 supports configuring the clock of the internal Switch MDC.
+Add support for it to permit configuration of the MDIO bus clock
+required to permit correct functionality of some PHY.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ drivers/clk/clk-en7523.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/clk/clk-en7523.c b/drivers/clk/clk-en7523.c
+index b3c57aac8480..61285e92bea4 100644
+--- a/drivers/clk/clk-en7523.c
++++ b/drivers/clk/clk-en7523.c
+@@ -312,6 +312,19 @@ static const struct en_clk_desc en7581_base_clks[] = {
+ 		.base_shift = 12,
+ 		.base_values = emmc7581_base,
+ 		.n_base_values = ARRAY_SIZE(emmc7581_base),
++	},
++	{
++		.id = EN7581_CLK_SWITCH_MDC,
++		.name = "switch_mdc",
++
++		.base_reg = REG_CRYPTO_CLKSRC2,
++
++		.base_value = 25000000,
++
++		.div_bits = 4,
++		.div_shift = 8,
++		.div_step = 1,
++		.div_offset = 1,
+ 	}
+ };
+ 
+-- 
+2.48.1
+

@@ -1,0 +1,32 @@
+From 3234b058ee73965b16e813469a0cfe1d14e471ef Mon Sep 17 00:00:00 2001
+From: Christian Marangi <ansuelsmth@gmail.com>
+Date: Tue, 17 Jun 2025 15:31:30 +0200
+Subject: [PATCH] clk: en7523: Permit to probe child for EN7581 clock
+
+Permit to probe child for EN7581 clock to support for SCU SSR (System
+Status Register) node and correctly setup Serdes port modes.
+
+These special bits configure the Serdes port modes that are mutually
+exclusive and setup the periperal for USB 3.0 mode or HSGMII or PCIe
+mode.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ drivers/clk/clk-en7523.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/clk/clk-en7523.c b/drivers/clk/clk-en7523.c
+index b3c57aac8480..c2addcf9ad8b 100644
+--- a/drivers/clk/clk-en7523.c
++++ b/drivers/clk/clk-en7523.c
+@@ -1179,6 +1179,7 @@ static const struct en_clk_soc_data en7523_data = {
+ };
+ 
+ static const struct en_clk_soc_data en7581_data = {
++	.probe_child = true,
+ 	.base_clks = en7581_base_clks,
+ 	/* We increment num_clocks by 1 to account for additional PCIe clock */
+ 	.num_clocks = ARRAY_SIZE(en7581_base_clks) + 1,
+-- 
+2.48.1
+

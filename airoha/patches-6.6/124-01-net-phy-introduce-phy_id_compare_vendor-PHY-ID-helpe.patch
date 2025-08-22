@@ -1,0 +1,60 @@
+From 27de2b220df04da017cff2b2b17c1400499de43e Mon Sep 17 00:00:00 2001
+From: Christian Marangi <ansuelsmth@gmail.com>
+Date: Tue, 19 Aug 2025 18:12:14 +0200
+Subject: [PATCH 1/2] net: phy: introduce phy_id_compare_vendor() PHY ID helper
+
+Introduce phy_id_compare_vendor() PHY ID helper to compare a PHY ID with
+the PHY ID Vendor using the generic PHY ID Vendor mask.
+
+While at it also rework the PHY_ID_MATCH macro and move the mask to
+dedicated define so that PHY driver can make use of the mask if needed.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ include/linux/phy.h | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/phy.h b/include/linux/phy.h
+index 74c1bcf64b3c..173567b86617 100644
+--- a/include/linux/phy.h
++++ b/include/linux/phy.h
+@@ -1260,9 +1260,13 @@ struct phy_driver {
+ #define to_phy_driver(d) container_of_const(to_mdio_common_driver(d),		\
+ 				      struct phy_driver, mdiodrv)
+ 
+-#define PHY_ID_MATCH_EXACT(id) .phy_id = (id), .phy_id_mask = GENMASK(31, 0)
+-#define PHY_ID_MATCH_MODEL(id) .phy_id = (id), .phy_id_mask = GENMASK(31, 4)
+-#define PHY_ID_MATCH_VENDOR(id) .phy_id = (id), .phy_id_mask = GENMASK(31, 10)
++#define PHY_ID_MATCH_EXTACT_MASK GENMASK(31, 0)
++#define PHY_ID_MATCH_MODEL_MASK GENMASK(31, 4)
++#define PHY_ID_MATCH_VENDOR_MASK GENMASK(31, 10)
++
++#define PHY_ID_MATCH_EXACT(id) .phy_id = (id), .phy_id_mask = PHY_ID_MATCH_EXTACT_MASK
++#define PHY_ID_MATCH_MODEL(id) .phy_id = (id), .phy_id_mask = PHY_ID_MATCH_MODEL_MASK
++#define PHY_ID_MATCH_VENDOR(id) .phy_id = (id), .phy_id_mask = PHY_ID_MATCH_VENDOR_MASK
+ 
+ /**
+  * phy_id_compare - compare @id1 with @id2 taking account of @mask
+@@ -1278,6 +1282,19 @@ static inline bool phy_id_compare(u32 id1, u32 id2, u32 mask)
+ 	return !((id1 ^ id2) & mask);
+ }
+ 
++/**
++ * phy_id_compare_vendor - compare @id with @vendor mask
++ * @id: PHY ID
++ * @vendor: PHY Vendor mask
++ *
++ * Return true if the bits from @id match @vendor using the
++ * generic PHY Vendor mask.
++ */
++static inline bool phy_id_compare_vendor(u32 id, u32 vendor_mask)
++{
++	return phy_id_compare(id, vendor_mask, PHY_ID_MATCH_VENDOR_MASK);
++}
++
+ /**
+  * phydev_id_compare - compare @id with the PHY's Clause 22 ID
+  * @phydev: the PHY device
+-- 
+2.50.0
+

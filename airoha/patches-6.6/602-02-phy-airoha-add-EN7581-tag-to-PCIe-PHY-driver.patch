@@ -1,0 +1,110 @@
+From 24bfe68804ad7c69d8f295642bf1c54d9863c6a5 Mon Sep 17 00:00:00 2001
+From: Christian Marangi <ansuelsmth@gmail.com>
+Date: Fri, 6 Jun 2025 20:57:01 +0200
+Subject: [PATCH 2/4] phy: airoha: add EN7581 tag to PCIe PHY driver
+
+In preparation for support of Airoha AN7583 PCIe PHY driver, add EN7581
+tag to PCIe PHY driver and register header.
+
+This is needed to better differentiate the 2 driver and 2 register
+header between EN7581 and AN7583 that require a very different
+setup process to make the PCIe port work.
+
+Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+---
+ MAINTAINERS                                                 | 6 +++---
+ drivers/phy/airoha/Kconfig                                  | 6 +++---
+ drivers/phy/airoha/Makefile                                 | 2 +-
+ ...phy-airoha-pcie-regs.h => phy-airoha-en7581-pcie-regs.h} | 0
+ .../airoha/{phy-airoha-pcie.c => phy-airoha-en7581-pcie.c}  | 6 +++---
+ 5 files changed, 10 insertions(+), 10 deletions(-)
+ rename drivers/phy/airoha/{phy-airoha-pcie-regs.h => phy-airoha-en7581-pcie-regs.h} (100%)
+ rename drivers/phy/airoha/{phy-airoha-pcie.c => phy-airoha-en7581-pcie.c} (99%)
+
+# diff --git a/MAINTAINERS b/MAINTAINERS
+# index 2f30432916a3..2ea56cd21c8a 100644
+# --- a/MAINTAINERS
+# +++ b/MAINTAINERS
+# @@ -730,13 +730,13 @@ S:	Maintained
+#  F:	Documentation/devicetree/bindings/net/airoha,en7581-eth.yaml
+#  F:	drivers/net/ethernet/airoha/
+ 
+# -AIROHA PCIE PHY DRIVER
+# +AIROHA EN7581 PCIE PHY DRIVER
+#  M:	Lorenzo Bianconi <lorenzo@kernel.org>
+#  L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+#  S:	Maintained
+#  F:	Documentation/devicetree/bindings/phy/airoha,en7581-pcie-phy.yaml
+# -F:	drivers/phy/airoha/phy-airoha-pcie-regs.h
+# -F:	drivers/phy/airoha/phy-airoha-pcie.c
+# +F:	drivers/phy/airoha/phy-airoha-en7581-pcie-regs.h
+# +F:	drivers/phy/airoha/phy-airoha-en7581-pcie.c
+ 
+#  AIROHA SPI SNFI DRIVER
+#  M:	Lorenzo Bianconi <lorenzo@kernel.org>
+diff --git a/drivers/phy/airoha/Kconfig b/drivers/phy/airoha/Kconfig
+index 1674134ea664..08cc1fe4a11c 100644
+--- a/drivers/phy/airoha/Kconfig
++++ b/drivers/phy/airoha/Kconfig
+@@ -2,12 +2,12 @@
+ #
+ # Phy drivers for Airoha platforms
+ #
+-config PHY_AIROHA_PCIE
+-	tristate "Airoha PCIe-PHY Driver"
++config PHY_AIROHA_EN7581_PCIE
++	tristate "Airoha EN7581 PCIe-PHY Driver"
+ 	depends on ARCH_AIROHA || COMPILE_TEST
+ 	depends on OF
+ 	select GENERIC_PHY
+ 	help
+-	  Say Y here to add support for Airoha PCIe PHY driver.
++	  Say Y here to add support for Airoha EN7581 PCIe PHY driver.
+ 	  This driver create the basic PHY instance and provides initialize
+ 	  callback for PCIe GEN3 port.
+diff --git a/drivers/phy/airoha/Makefile b/drivers/phy/airoha/Makefile
+index 616dc96302af..f8949a291486 100644
+--- a/drivers/phy/airoha/Makefile
++++ b/drivers/phy/airoha/Makefile
+@@ -1,2 +1,2 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+-obj-$(CONFIG_PHY_AIROHA_PCIE)		+= phy-airoha-pcie.o
++obj-$(CONFIG_PHY_AIROHA_EN7581_PCIE)	+= phy-airoha-en7581-pcie.o
+diff --git a/drivers/phy/airoha/phy-airoha-pcie-regs.h b/drivers/phy/airoha/phy-airoha-en7581-pcie-regs.h
+similarity index 100%
+rename from drivers/phy/airoha/phy-airoha-pcie-regs.h
+rename to drivers/phy/airoha/phy-airoha-en7581-pcie-regs.h
+diff --git a/drivers/phy/airoha/phy-airoha-pcie.c b/drivers/phy/airoha/phy-airoha-en7581-pcie.c
+similarity index 99%
+rename from drivers/phy/airoha/phy-airoha-pcie.c
+rename to drivers/phy/airoha/phy-airoha-en7581-pcie.c
+index 56e9ade8a9fd..ea448cdf9ae0 100644
+--- a/drivers/phy/airoha/phy-airoha-pcie.c
++++ b/drivers/phy/airoha/phy-airoha-en7581-pcie.c
+@@ -13,7 +13,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/slab.h>
+ 
+-#include "phy-airoha-pcie-regs.h"
++#include "phy-airoha-en7581-pcie-regs.h"
+ 
+ #define LEQ_LEN_CTRL_MAX_VAL	7
+ #define FREQ_LOCK_MAX_ATTEMPT	10
+@@ -1279,12 +1279,12 @@ MODULE_DEVICE_TABLE(of, airoha_pcie_phy_of_match);
+ static struct platform_driver airoha_pcie_phy_driver = {
+ 	.probe	= airoha_pcie_phy_probe,
+ 	.driver	= {
+-		.name = "airoha-pcie-phy",
++		.name = "airoha-en7581-pcie-phy",
+ 		.of_match_table = airoha_pcie_phy_of_match,
+ 	},
+ };
+ module_platform_driver(airoha_pcie_phy_driver);
+ 
+-MODULE_DESCRIPTION("Airoha PCIe PHY driver");
++MODULE_DESCRIPTION("Airoha EN7581 PCIe PHY driver");
+ MODULE_AUTHOR("Lorenzo Bianconi <lorenzo@kernel.org>");
+ MODULE_LICENSE("GPL");
+-- 
+2.48.1
+

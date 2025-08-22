@@ -1,0 +1,28 @@
+#
+# Copyright (C) 2015 OpenWrt.org
+#
+
+. /lib/functions/uci-defaults.sh
+
+board_config_update
+
+board=$(board_name)
+
+case "$board" in
+airoha,an7581-evb-10g)
+	ucidef_set_led_netdev "eth1-port-link" "ETH1-PORT-LINK" "mt7530-0:1c:green:lan-0" "eth1" "link_10 link_100 link_1000 link_2500 link_5000 link_10000"
+	ucidef_set_led_netdev "eth1-port-activity" "ETH1-PORT-ACTIVITY" "mt7530-0:1c:green:lan-1" "eth1" "tx rx"
+	ucidef_set_led_netdev "eth2-port-link" "ETH2-PORT-LINK" "mt7530-0:1d:green:lan-0" "eth2" "link_10 link_100 link_1000 link_2500 link_5000 link_10000"
+	ucidef_set_led_netdev "eth2-port-activity" "ETH2-PORT-ACTIVITY" "mt7530-0:1d:green:lan-1" "eth2" "tx rx"
+	ucidef_set_led_usbport "usb1" "USB 1" "green:usb-1" "usb1-port1" "usb2-port1"
+	ucidef_set_led_usbport "usb2" "USB 2" "green:usb-2" "usb3-port1" "usb4-port1"
+	;;
+airoha,an7581-evb)
+	ucidef_set_led_usbport "usb1" "USB 1" "green:usb-1" "usb1-port1" "usb2-port1"
+	ucidef_set_led_usbport "usb2" "USB 2" "green:usb-2" "usb3-port1" "usb4-port1"
+	;;
+esac
+
+board_config_flush
+
+exit 0
