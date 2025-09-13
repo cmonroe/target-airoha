@@ -471,6 +471,14 @@
 			clock-frequency = <1843200>;
 		};
 
+		watchdog@1fbf0100 {
+			compatible = "airoha,en7581-wdt";
+			reg = <0x0 0x1fbf0100 0x0 0x38>;
+
+			clocks = <&scuclk EN7523_CLK_BUS>;
+			clock-names = "bus";
+		};
+
 		uart2: serial@1fbf0300 {
 			compatible = "airoha,en7523-uart";
 			reg = <0x0 0x1fbf0300 0x0 0x30>;
@@ -538,7 +546,7 @@
 		};
 
 		pcie0: pcie@1fc20000 {
-			compatible = "airoha,an7583-pcie";
+			compatible = "airoha,an7583-pcie-gen3";
 			device_type = "pci";
 			linux,pci-domain = <0>;
 			#address-cells = <3>;
@@ -555,9 +563,8 @@
 
 			ranges = <0x02000000 0 0x20000000 0x0 0x20000000 0 0x4000000>;
 
-			resets = <&scuclk AN7583_PCIE0_RST>,
-				 <&scuclk AN7583_PCIE1_RST>;
-			reset-names = "phy-lane0", "phy-lane1";
+			resets = <&scuclk AN7583_PCIE0_RST>;
+			reset-names = "phy-lane0";
 
 			mediatek,pbus-csr = <&pbus_csr 0x0 0x4>;
 
@@ -587,23 +594,23 @@
 			#size-cells = <2>;
 
 			reg = <0x0 0x1fa92000 0x0 0x1670>;
-			reg-names = "pcie-mac";
+			reg-names = "port1";
 
 			clocks = <&scuclk EN7523_CLK_PCIE>;
-			clock-names = "sys-ck";
+			clock-names = "sys_ck1";
 
 			phys = <&pciephy>;
-			phy-names = "pcie-phy";
+			phy-names = "pcie-phy1";
 
 			ranges = <0x02000000 0 0x24000000 0x0 0x24000000 0 0x4000000>;
 
-			resets = <&scuclk AN7583_PCIE0_RST>,
-				 <&scuclk AN7583_PCIE1_RST>;
-			reset-names = "phy-lane0", "phy-lane1";
+			resets = <&scuclk AN7583_PCIE1_RST>;
+			reset-names = "pcie-rst1";
 
 			mediatek,pbus-csr = <&pbus_csr 0x8 0xc>;
 
 			interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "pcie_irq";
 			bus-range = <0x00 0xff>;
 			#interrupt-cells = <1>;
 			interrupt-map-mask = <0 0 0 7>;

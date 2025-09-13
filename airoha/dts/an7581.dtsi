@@ -376,6 +376,14 @@
 		};
 	};
 
+	sound {
+		compatible = "airoha,an7581-i2s";
+
+		platform {
+			sound-dai = <&afe>;
+		};
+	};
+
 	soc {
 		compatible = "simple-bus";
 		#address-cells = <2>;
@@ -433,6 +441,12 @@
 			clock-frequency = <7372800>;
 
 			status = "disabled";
+		};
+
+		afe: afe@1fbe2200 {
+			compatible = "airoha,an7581-afe";
+			reg = <0x1fbe2200 0x9000>;
+			interrupts = <GIC_SPI 48 IRQ_TYPE_LEVEL_HIGH>;
 		};
 
 		uart4: serial@1fbf0600 {
