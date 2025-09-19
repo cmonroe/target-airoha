@@ -17,9 +17,9 @@ define Device/dragontail
   DEVICE_DTS := an7581-smartrg-evb-emmc-an8831
   DEVICE_DTS_DIR := ../dts
   DEVICE_PACKAGES := kmod-i2c-an7581
-  ARTIFACT/preloader.bin := an7581-preloader smartrg_rfb
-  ARTIFACT/bl31-uboot.fip := an7581-bl31-uboot smartrg_rfb
-  ARTIFACT/bl2-bl31-uboot.bin := an7581-emmc-bl2-bl31-uboot smartrg_rfb
+  ARTIFACT/preloader.bin := an7581-preloader smartrg_dragontail
+  ARTIFACT/bl31-uboot.fip := an7581-bl31-uboot smartrg_dragontail
+  ARTIFACT/bl2-bl31-uboot.bin := an7581-emmc-bl2-bl31-uboot smartrg_dragontail
   ARTIFACTS := bl2-bl31-uboot.bin preloader.bin bl31-uboot.fip
   DTC_FLAGS += -@
   IMAGES := root.squashfs img img.run
@@ -90,7 +90,9 @@ define Build/SrgFit
 	   	-i "k1" -k $@ -a $(KERNEL_LOADADDR) -e $(if $(KERNEL_ENTRY),$(KERNEL_ENTRY),$(KERNEL_LOADADDR)) -C lzma -h "crc32" -h "sha1" \
 		-i "rdisk" -r $(STAGING_DIR_IMAGE)/$(IMG_PREFIX)-initramfs.cpio.gz -h "crc32" -h "sha1" \
 		-i "SDG-an7581-rfb" -d $(KDIR)/image-an7581-smartrg-evb-emmc-an8831.dtb -h "crc32" -h "sha1" \
-		-c "303" -K k1 -R rdisk -D "SDG-an7581-rfb"
+		-i "SDG-8716v" -d $(KDIR)/image-an7581-smartrg-evb-emmc-an8831.dtb -h "crc32" -h "sha1" \
+		-c "303" -K k1 -R rdisk -D "SDG-an7581-rfb" \
+		-c "600" -K k1 -R rdisk -D "SDG-8716v"
 
 	PATH=$(LINUX_DIR)/scripts/dtc:$(PATH) mkimage -f $@.its $@.new
 	@mv -f $@.new $@
