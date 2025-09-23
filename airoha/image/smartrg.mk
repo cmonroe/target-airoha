@@ -5,7 +5,7 @@ BINNAME:=$(IMG_PREFIX)-dragontail-root.squashfs
 VERNAME:=$(VERSION_NUMBER)-$(subst DEVICE_,,$(PROFILE))
 
 define Device/dragontail
-  KERNEL_LOADADDR = 0x83200000
+  KERNEL_LOADADDR = 0x80088000
   KERNEL_SUFFIX := -fit-multi.itb
   KERNEL_INSTALL := 1
   KERNEL_NAME := Image
