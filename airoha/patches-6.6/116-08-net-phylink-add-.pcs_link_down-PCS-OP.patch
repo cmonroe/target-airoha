@@ -22,8 +22,8 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
 
 --- a/drivers/net/phy/phylink.c
 +++ b/drivers/net/phy/phylink.c
-@@ -1106,6 +1106,12 @@ static void phylink_pcs_link_up(struct p
- 		pcs->ops->pcs_link_up(pcs, neg_mode, interface, speed, duplex);
+@@ -1153,6 +1153,12 @@ static unsigned int phylink_inband_caps(
+ 	return phylink_pcs_inband_caps(pcs, interface);
  }
  
 +static void phylink_pcs_link_down(struct phylink_pcs *pcs)
@@ -35,18 +35,18 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
  static void phylink_pcs_poll_stop(struct phylink *pl)
  {
  	if (pl->cfg_link_an_mode == MLO_AN_INBAND)
-@@ -1437,6 +1443,8 @@ static void phylink_link_down(struct phy
+@@ -1691,6 +1697,8 @@ static void phylink_link_down(struct phy
  
  	if (ndev)
  		netif_carrier_off(ndev);
 +	phylink_pcs_link_down(pl->pcs);
 +
- 	pl->mac_ops->mac_link_down(pl->config, pl->cur_link_an_mode,
+ 	pl->mac_ops->mac_link_down(pl->config, pl->act_link_an_mode,
  				   pl->cur_interface);
  	phylink_info(pl, "Link is Down\n");
 --- a/include/linux/phylink.h
 +++ b/include/linux/phylink.h
-@@ -507,6 +507,7 @@ struct phylink_pcs {
+@@ -442,6 +442,7 @@ struct phylink_pcs {
   * @pcs_an_restart: restart 802.3z BaseX autonegotiation.
   * @pcs_link_up: program the PCS for the resolved link configuration
   *               (where necessary).
@@ -54,7 +54,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
   */
  struct phylink_pcs_ops {
  	int (*pcs_validate)(struct phylink_pcs *pcs, unsigned long *supported,
-@@ -526,6 +527,7 @@ struct phylink_pcs_ops {
+@@ -463,6 +464,7 @@ struct phylink_pcs_ops {
  	void (*pcs_an_restart)(struct phylink_pcs *pcs);
  	void (*pcs_link_up)(struct phylink_pcs *pcs, unsigned int neg_mode,
  			    phy_interface_t interface, int speed, int duplex);

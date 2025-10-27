@@ -16,7 +16,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
 
 --- a/include/linux/phy.h
 +++ b/include/linux/phy.h
-@@ -1183,9 +1183,13 @@ struct phy_driver {
+@@ -1214,9 +1214,13 @@ struct phy_driver {
  #define PHY_ANY_ID "MATCH ANY PHY"
  #define PHY_ANY_UID 0xffffffff
  
@@ -33,7 +33,7 @@ Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
  
  /**
   * phy_id_compare - compare @id1 with @id2 taking account of @mask
-@@ -1202,6 +1206,19 @@ static inline bool phy_id_compare(u32 id
+@@ -1233,6 +1237,19 @@ static inline bool phy_id_compare(u32 id
  }
  
  /**
