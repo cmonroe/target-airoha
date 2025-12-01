@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 /dts-v1/;
 
+/* Bootloader installs ATF here */
+/memreserve/ 0x80000000 0x200000;
+
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
@@ -17,6 +20,7 @@
 	chosen {
 		bootargs = "console=ttyS0,115200 earlycon";
 		stdout-path = "serial0:115200n8";
+		linux,usable-memory-range = <0x0 0x80200000 0x0 0x1fe00000>;
 	};
 
 	memory@80000000 {
@@ -72,20 +76,6 @@
 			function = LED_FUNCTION_STATUS;
 			gpios = <&en7581_pinctrl 20 GPIO_ACTIVE_LOW>;
 			default-state = "on";
-		};
-
-		led-4 {
-			color = <LED_COLOR_ID_GREEN>;
-			function = LED_FUNCTION_USB;
-			function-enumerator = <2>;
-			gpios = <&en7581_pinctrl 34 GPIO_ACTIVE_LOW>;
-		};
-
-		led-5 {
-			color = <LED_COLOR_ID_GREEN>;
-			function = LED_FUNCTION_USB;
-			function-enumerator = <1>;
-			gpios = <&en7581_pinctrl 35 GPIO_ACTIVE_LOW>;
 		};
 	};
 };
@@ -164,14 +154,36 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		bl2@0 {
-			label = "bl2";
-			reg = <0x0 0x20000>;
+		bootloader@0 {
+			label = "bootloader";
+			reg = <0x00000000 0x00080000>;
+			read-only;
 		};
 
-		ubi@20000 {
-			label = "ubi";
-			reg = <0x20000 0x0>;
+		art@200000 {
+			label = "art";
+			reg = <0x00200000 0x00400000>;
+		};
+
+		tclinux@600000 {
+			label = "tclinux";
+			reg = <0x00600000 0x03200000>;
+		};
+
+		tclinux_slave@3800000 {
+			label = "tclinux_alt";
+			reg = <0x03800000 0x03200000>;
+		};
+
+		rootfs_data@6a00000 {
+			label = "rootfs_data";
+			reg = <0x06a00000 0x01400000>;
+		};
+
+		reserved_bmt@7e00000 {
+			label = "reserved_bmt";
+			reg = <0x07e00000 0x00200000>;
+			read-only;
 		};
 	};
 };
@@ -184,46 +196,11 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie0_rst_pins>;
 	status = "okay";
-
-	pcie@0,0 {
-		reg = <0x0000 0 0 0 0>;
-		wifi@0,0 {
-			compatible = "mediatek,mt76";
-			reg = <0x0000 0 0 0 0>;
-			airoha,npu = <&npu>;
-			airoha,eth = <&eth>;
-		};
-	};
 };
 
 &pcie1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie1_rst_pins>;
-	status = "okay";
-
-	pcie@1,0 {
-		reg = <0x0000 0 0 0 0>;
-		wifi@1,0 {
-			compatible = "mediatek,mt76";
-			reg = <0x0000 0 0 0 0>;
-			airoha,npu = <&npu>;
-			airoha,eth = <&eth>;
-		};
-	};
-};
-
-&usb0 {
-	status = "okay";
-};
-
-&usb1 {
-	status = "okay";
-
-	mediatek,u3p-dis-msk = <0x1>;
-	phys = <&usb1_u2 PHY_TYPE_USB2>;
-};
-
-&npu {
 	status = "okay";
 };
 
@@ -235,15 +212,6 @@
 	status = "okay";
 };
 
-&gdm4 {
-	status = "okay";
-
-	sfp = <&sfp1>;
-
-	managed = "in-band-status";
-	phy-mode = "usxgmii";
-};
-
 &switch {
 	pinctrl-names = "default";
 	pinctrl-0 = <&mdio_pins>;
@@ -251,45 +219,41 @@
 };
 
 &gsw_phy1 {
-	pinctrl-names = "gbe-led";
+	pinctrl-names = "led";
 	pinctrl-0 = <&gswp1_led0_pins>;
 	status = "okay";
 };
 
 &gsw_phy1_led0 {
 	status = "okay";
-	active-low;
 };
 
 &gsw_phy2 {
-	pinctrl-names = "gbe-led";
+	pinctrl-names = "led";
 	pinctrl-0 = <&gswp2_led0_pins>;
 	status = "okay";
 };
 
 &gsw_phy2_led0 {
 	status = "okay";
-	active-low;
 };
 
 &gsw_phy3 {
-	pinctrl-names = "gbe-led";
+	pinctrl-names = "led";
 	pinctrl-0 = <&gswp3_led0_pins>;
 	status = "okay";
 };
 
 &gsw_phy3_led0 {
 	status = "okay";
-	active-low;
 };
 
 &gsw_phy4 {
-	pinctrl-names = "gbe-led";
+	pinctrl-names = "led";
 	pinctrl-0 = <&gswp4_led0_pins>;
 	status = "okay";
 };
 
 &gsw_phy4_led0 {
 	status = "okay";
-	active-low;
 };
