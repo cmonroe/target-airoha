@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 /dts-v1/;
 
+/* Bootloader installs ATF here */
+/memreserve/ 0x80000000 0x200000;
+
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
+#include "an7581.dtsi"
 #include "an7581-smartrg-dragontail.dtsi"
 
 / {
@@ -21,6 +25,7 @@
 	chosen {
 		bootargs = "console=ttyS0,115200 earlycon";
 		stdout-path = "serial0:115200n8";
+		linux,usable-memory-range = <0x0 0x80200000 0x0 0x1fe00000>;
 	};
 
 	memory@80000000 {
@@ -36,32 +41,6 @@
 			label = "reset";
 			linux,code = <KEY_RESTART>;
 			gpios = <&en7581_pinctrl 0 GPIO_ACTIVE_LOW>;
-		};
-	};
-
-	pwmleds-0 {
-		compatible = "pwm-leds";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pwm_gpio16_idx8_pins>;
-
-		pwm-0 {
-			label = "wps:green";
-			pwms = <&en7581_pwm 8 4000000 0>;
-			max-brightness = <255>;
-			active-low;
-		};
-	};
-
-	pwmleds-1 {
-		compatible = "pwm-leds";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pwm_gpio25_idx9_pins>;
-
-		pwm-0 {
-			label = "xPonLos:red";
-			pwms = <&en7581_pwm 9 4000000 0>;
-			max-brightness = <255>;
-			active-low;
 		};
 	};
 };
@@ -102,43 +81,38 @@
 		};
 	};
 
-	pwm_gpio16_idx8_pins: pwm-gpio16-idx8-pins {
-		function = "pwm";
-		pins = "gpio16";
-		output-enable;
-	};
-
-	pwm_gpio25_idx9_pins: pwm-gpio25-idx9-pins {
-		function = "pwm";
-		pins = "gpio25";
-		output-enable;
+	pcie2_rst_pins: pcie2-rst-pins {
+		conf {
+			pins = "pcie_reset2";
+			drive-open-drain = <1>;
+		};
 	};
 
 	gswp1_led0_pins: gswp1-led0-pins {
 		mux {
-			function = "phy1_led1";
-			pins = "gpio43";
+			function = "phy1_led0";
+			pins = "gpio33";
 		};
 	};
 
 	gswp2_led0_pins: gswp2-led0-pins {
 		mux {
-			function = "phy2_led1";
-			pins = "gpio44";
+			function = "phy2_led0";
+			pins = "gpio34";
 		};
 	};
 
 	gswp3_led0_pins: gswp3-led0-pins {
 		mux {
-			function = "phy3_led1";
-			pins = "gpio45";
+			function = "phy3_led0";
+			pins = "gpio35";
 		};
 	};
 
 	gswp4_led0_pins: gswp4-led0-pins {
 		mux {
-			function = "phy4_led1";
-			pins = "gpio46";
+			function = "phy4_led0";
+			pins = "gpio42";
 		};
 	};
 
@@ -148,6 +122,17 @@
 			groups = "emmc";
 		};
 	};
+};
+
+&usb0 {
+	status = "disabled";
+};
+
+&usb1 {
+	status = "disabled";
+
+	mediatek,u3p-dis-msk = <0x1>;
+	phys = <&usb1_phy PHY_TYPE_USB2>;
 };
 
 &mmc0 {
@@ -234,15 +219,9 @@
 	};
 };
 
-&npu {
-	status = "okay";
-};
-
-&eth {
-	status = "okay";
-};
-
-&gdm1 {
+&pcie2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pcie2_rst_pins>;
 	status = "okay";
 };
 
@@ -253,8 +232,8 @@
 
 		firmware-name = "as21x1x_fw.bin";
 
-		reset-deassert-us = <350000>;
-		reset-assert-us = <200000>;
+		reset-deassert-us = <1000000>;
+		reset-assert-us = <1000000>;
 		reset-gpios = <&en7581_pinctrl 27 GPIO_ACTIVE_LOW>;
 
 		leds {
@@ -280,13 +259,25 @@
 	};
 };
 
+&npu {
+	status = "okay";
+};
+
+&eth {
+	status = "okay";
+};
+
+&gdm1 {
+	status = "okay";
+};
+
 &gdm2 {
 	/* PON */
 	status = "disabled";
 };
 
 &gdm4 {
-	status = "okay";
+	status = "disabled";
 	label = "lan1";
 
 	phy-handle = <&phy31>;
@@ -300,55 +291,47 @@
 };
 
 &gsw_port1 {
-	/**
-	 * disabling port1/phy1 causes the
-	 * driver to fail initialization
-	 */
-	label = "unused1"; 
+	status = "disabled";
 };
 
 &gsw_phy1 {
-	pinctrl-names = "gbe-led";
+	pinctrl-names = "led";
 	pinctrl-0 = <&gswp1_led0_pins>;
 	status = "okay";
 };
 
 &gsw_phy1_led0 {
 	status = "okay";
-	active-low;
 };
 
 &gsw_phy2 {
-	pinctrl-names = "gbe-led";
+	pinctrl-names = "led";
 	pinctrl-0 = <&gswp2_led0_pins>;
 	status = "okay";
 };
 
 &gsw_phy2_led0 {
 	status = "okay";
-	active-low;
 };
 
 &gsw_phy3 {
-	pinctrl-names = "gbe-led";
+	pinctrl-names = "led";
 	pinctrl-0 = <&gswp3_led0_pins>;
 	status = "okay";
 };
 
 &gsw_phy3_led0 {
 	status = "okay";
-	active-low;
 };
 
 &gsw_phy4 {
-	pinctrl-names = "gbe-led";
+	pinctrl-names = "led";
 	pinctrl-0 = <&gswp4_led0_pins>;
 	status = "okay";
 };
 
 &gsw_phy4_led0 {
 	status = "okay";
-	active-low;
 };
 
 &gsw_port4 {
