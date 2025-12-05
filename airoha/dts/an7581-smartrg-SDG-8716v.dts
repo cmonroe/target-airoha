@@ -157,7 +157,16 @@
 &i2c1 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c1_pins>;
-	status = "disabled";
+	status = "okay";
+
+	/**
+	 * !!!! WARNING !!!!
+	 * i2c1 won't function unless you poke the iomux register
+	 *
+	 * devmem 0x1fa20214 32 0x00002000
+	 *
+	 * Airoha needs to fix this in their driver
+	 */
 
 	system-leds@30 {
 		compatible = "srg,sysled";
@@ -285,8 +294,6 @@
 };
 
 &switch {
-	pinctrl-names = "default";
-	pinctrl-0 = <&mdio_pins>;
 	status = "okay";
 };
 
@@ -294,43 +301,15 @@
 	status = "disabled";
 };
 
-&gsw_phy1 {
-	pinctrl-names = "led";
-	pinctrl-0 = <&gswp1_led0_pins>;
-	status = "okay";
-};
-
-&gsw_phy1_led0 {
-	status = "okay";
-};
-
 &gsw_phy2 {
-	pinctrl-names = "led";
-	pinctrl-0 = <&gswp2_led0_pins>;
-	status = "okay";
-};
-
-&gsw_phy2_led0 {
 	status = "okay";
 };
 
 &gsw_phy3 {
-	pinctrl-names = "led";
-	pinctrl-0 = <&gswp3_led0_pins>;
-	status = "okay";
-};
-
-&gsw_phy3_led0 {
 	status = "okay";
 };
 
 &gsw_phy4 {
-	pinctrl-names = "led";
-	pinctrl-0 = <&gswp4_led0_pins>;
-	status = "okay";
-};
-
-&gsw_phy4_led0 {
 	status = "okay";
 };
 
