@@ -1,0 +1,27 @@
+--- a/drivers/net/ethernet/airoha/airoha_ppe.c
++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
+@@ -16,6 +16,15 @@
+ #include "airoha_regs.h"
+ #include "airoha_eth.h"
+ 
++#ifdef ADTN_MODS
++u32 airoha_ppe_foe_get_entry_hash(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe);
++void airoha_ppe_clear_sram_table_flow(struct airoha_ppe *ppe,uint entry_idx);
++void airoha_ppe_clear_sram_table_all(struct airoha_ppe *ppe);
++void airoha_ppe_clean_sram_table(void);
++void airoha_ppe_delete_entry(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, uint entry_idx);
++bool airoha_ppe_foe_compare_entry(struct airoha_flow_table_entry *e, struct airoha_foe_entry *hwe);
++#endif
++
+ extern int airoha_set_ppe_mac(struct airoha_foe_entry *foe_entry, struct net_device *dev, char* src_mac, char*dst_mac, u16 pppid);
+ extern int (*ra_sw_nat_hook_clean_table) (void);
+ extern void airoha_ppe_hook_init(void);
+@@ -649,7 +658,7 @@ static void airoha_ppe_foe_flow_stats_up
+ 		FIELD_PREP(AIROHA_FOE_IB2_NBQ, nbq);
+ }
+ 
+-static struct airoha_foe_entry *
++struct airoha_foe_entry *
+ airoha_ppe_foe_get_entry_locked(struct airoha_ppe *ppe, u32 hash)
+ {
+ 	u32 sram_num_entries = airoha_ppe_get_total_sram_num_entries(ppe);

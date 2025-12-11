@@ -1,0 +1,20 @@
+--- a/drivers/net/phy/mediatek/Makefile
++++ b/drivers/net/phy/mediatek/Makefile
+@@ -1,4 +1,17 @@
+ # SPDX-License-Identifier: GPL-2.0
++EXTRA_CFLAGS += -DTCPHY_SUPPORT
++EXTRA_CFLAGS += -DTCPHY_DEBUG
++EXTRA_CFLAGS += -DLINUX_OS
++
++
+ obj-$(CONFIG_MTK_NET_PHYLIB)		+= mtk-phy-lib.o
+ obj-$(CONFIG_MEDIATEK_GE_PHY)		+= mtk-ge.o
+ obj-$(CONFIG_MEDIATEK_GE_SOC_PHY)	+= mtk-ge-soc.o
++mtk-ge-soc-objs				+= tcetherphy_7583_VendorCMD.o
++mtk-ge-soc-objs				+= tcetherphy_7583_CommonDefine.o
++mtk-ge-soc-objs				+= tcetherphy_7583_Framework.o
++mtk-ge-soc-objs				+= tcetherphy_7583_Function.o
++mtk-ge-soc-objs				+= tcetherphy_7583_Patch.o
++mtk-ge-soc-objs				+= tcetherphy_7583_PhyReg.o
++mtk-ge-soc-objs				+= arht_ephy_api_debugfs.o
++

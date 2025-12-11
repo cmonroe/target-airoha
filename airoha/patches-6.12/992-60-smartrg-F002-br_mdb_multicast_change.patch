@@ -1,0 +1,95 @@
+--- a/net/bridge/br_mdb.c
++++ b/net/bridge/br_mdb.c
+@@ -517,6 +517,8 @@ static size_t rtnl_mdb_nlmsg_size(const
+ 	       rtnl_mdb_nlmsg_pg_size(pg);
+ }
+ 
++int (*arht_update_hwnat_multicast_mdb_hook)(struct br_ip* addr) = NULL;
++EXPORT_SYMBOL(arht_update_hwnat_multicast_mdb_hook);
+ void br_mdb_notify(struct net_device *dev,
+ 		   struct net_bridge_mdb_entry *mp,
+ 		   struct net_bridge_port_group *pg,
+@@ -528,6 +530,9 @@ void br_mdb_notify(struct net_device *de
+ 
+ 	br_switchdev_mdb_notify(dev, mp, pg, type);
+ 
++	if(arht_update_hwnat_multicast_mdb_hook)
++		arht_update_hwnat_multicast_mdb_hook(&mp->addr);
++
+ 	skb = nlmsg_new(rtnl_mdb_nlmsg_size(pg), GFP_ATOMIC);
+ 	if (!skb)
+ 		goto errout;
+--- a/net/bridge/br_multicast.c
++++ b/net/bridge/br_multicast.c
+@@ -5229,3 +5229,71 @@ void br_mdb_hash_fini(struct net_bridge
+ 	rhashtable_destroy(&br->sg_port_tbl);
+ 	rhashtable_destroy(&br->mdb_hash_tbl);
+ }
++
++int br_multicast_get_fwd_ports(struct net_device* br_dev,struct br_ip* addr,struct net_device* ports[],int nport);
++int (*br_multicast_nlmsg_send_hook)(struct br_ip* addr) = NULL;
++//should be called under rcu_read_lock() and spin_lock(br->multicast_lock)
++int br_multicast_get_fwd_ports(struct net_device* br_dev,struct br_ip* addr,struct net_device* ports[],int nport)
++{
++	struct net_bridge *br = netdev_priv(br_dev);
++	struct net_bridge_mdb_entry *mdst;
++	struct net_bridge_port_group *p;
++	bool allow_mode_include = true;
++	int cnt = 0;
++	
++	mdst = br_mdb_ip_get_rcu(br,addr);
++	if (mdst == NULL)
++	{
++		memset(&addr->src.ip6, 0, sizeof(addr->src.ip6));
++		mdst = br_mdb_ip_get_rcu(br,addr);
++		if (mdst == NULL) 
++			return 0;
++	}
++
++	if (br_multicast_is_star_g(&mdst->addr))
++		allow_mode_include = false;	
++	
++	p = rcu_dereference(mdst->ports);
++	while(p)
++	{
++		if ((!allow_mode_include && p->filter_mode == MCAST_INCLUDE) || (p->flags & MDB_PG_FLAGS_BLOCKED))	
++			goto skip;
++		
++		ports[cnt++] = p->key.port->dev;
++		if (cnt >= nport)	
++			return -1;
++skip:			
++		p = rcu_dereference(p->next);
++	}
++	return cnt;
++}
++
++void br_multicast_spin_lock(struct net_device* br_dev);
++void br_multicast_spin_lock(struct net_device* br_dev)
++{
++	struct net_bridge *br = netdev_priv(br_dev);
++	spin_lock(&br->multicast_lock);
++}
++
++void br_multicast_spin_unlock(struct net_device* br_dev);
++void br_multicast_spin_unlock(struct net_device* br_dev)
++{
++	struct net_bridge *br = netdev_priv(br_dev);
++	spin_unlock(&br->multicast_lock);
++}
++
++void br_multicast_hook_notify(struct br_ip* addr,int filter_mode);
++void br_multicast_hook_notify(struct br_ip* addr,int filter_mode)
++{
++	if (br_multicast_is_star_g(addr) && filter_mode == MCAST_INCLUDE)
++		return;
++	
++	if (br_multicast_nlmsg_send_hook)
++		br_multicast_nlmsg_send_hook(addr);
++}
++
++EXPORT_SYMBOL(br_multicast_get_fwd_ports);
++EXPORT_SYMBOL(br_multicast_spin_lock);
++EXPORT_SYMBOL(br_multicast_spin_unlock);
++EXPORT_SYMBOL(br_multicast_nlmsg_send_hook);
++

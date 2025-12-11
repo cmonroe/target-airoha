@@ -1,0 +1,108 @@
+--- a/drivers/net/pcs/airoha/pcs-airoha-common.c
++++ b/drivers/net/pcs/airoha/pcs-airoha-common.c
+@@ -909,6 +909,8 @@ static const struct regmap_config airoha
+ 	.reg_stride = 4,
+ };
+ 
++static struct serdes_common_phy *serdes_common_phy = NULL;
++
+ static int airoha_pcs_probe(struct platform_device *pdev)
+ {
+ 	struct regmap_config syscon_config = airoha_pcs_regmap_config;
+@@ -917,6 +919,11 @@ static int airoha_pcs_probe(struct platf
+ 	struct airoha_pcs_priv *priv;
+ 	void *base;
+ 	int ret;
++	if (!serdes_common_phy){
++		serdes_common_phy = devm_kzalloc(&pdev->dev, sizeof(struct serdes_common_phy), GFP_KERNEL);
++		if (!serdes_common_phy)
++			return -ENOMEM;
++	}
+ 
+ 	data = of_device_get_match_data(dev);
+ 
+@@ -985,6 +992,13 @@ static int airoha_pcs_probe(struct platf
+ 	if (IS_ERR(base) && PTR_ERR(base) != -ENOENT)
+ 		return PTR_ERR(base);
+ 
++	
++	if(of_device_is_compatible(dev->of_node,"airoha,an7581-pcs-pon")){	
++				serdes_common_phy->pon_pma_phy_rg_base = base;		
++	}else if(of_device_is_compatible(dev->of_node,"airoha,an7581-pcs-eth")){
++				serdes_common_phy->xfi_pma_phy_rg_base= base;
++	}
++
+ 	syscon_config.name = "xfi_pma";
+ 	priv->xfi_pma = devm_regmap_init_mmio(dev, base, &syscon_config);
+ 	if (IS_ERR(priv->xfi_pma))
+@@ -993,7 +1007,13 @@ static int airoha_pcs_probe(struct platf
+ 	base = devm_platform_ioremap_resource_byname(pdev, "xfi_ana");
+ 	if (IS_ERR(base) && PTR_ERR(base) != -ENOENT)
+ 		return PTR_ERR(base);
+-
++	
++	if(of_device_is_compatible(dev->of_node,"airoha,an7581-pcs-pon")){	
++				serdes_common_phy->pon_ana_pxp_phy_rg_base = base;
++	}else if(of_device_is_compatible(dev->of_node,"airoha,an7581-pcs-eth")){
++				serdes_common_phy->xfi_ana_pxp_phy_rg_base = base;
++	}
++	
+ 	syscon_config.name = "xfi_ana";
+ 	priv->xfi_ana = devm_regmap_init_mmio(dev, base, &syscon_config);
+ 	if (IS_ERR(priv->xfi_ana))
+@@ -1035,6 +1055,39 @@ static int airoha_pcs_probe(struct platf
+ 
+ 	return 0;
+ }
++void __iomem* Get_Base(u32 base);
++void __iomem* Get_Base(u32 base)
++{
++	printk("\ncommon_phy Get_Base:0x%x\n",base);	
++	switch (base){		
++						
++		case 0x1fa7a000:			
++			printk("\nserdes_common_phy->xfi_ana_pxp_phy_rg_base:0x%lx\n",(long unsigned)serdes_common_phy->xfi_ana_pxp_phy_rg_base);	
++			return serdes_common_phy->xfi_ana_pxp_phy_rg_base; 			
++			break;
++			
++		case 0x1fa7b000:			
++			printk("\nserdes_common_phy->xfi_pma_phy_rg_base:0x%lx\n",(long unsigned)serdes_common_phy->xfi_pma_phy_rg_base);	
++			return serdes_common_phy->xfi_pma_phy_rg_base; 			
++			break;
++
++		case 0x1fa8a000:
++			printk("\nserdes_common_phy->pon_ana_pxp_phy_rg_base:0x%lx\n",(long unsigned)serdes_common_phy->pon_ana_pxp_phy_rg_base);	
++			return serdes_common_phy->pon_ana_pxp_phy_rg_base; 			
++			break;
++			
++		case 0x1fa8b000:
++			printk("\nserdes_common_phy->pon_pma_phy_rg_base:0x%lx\n",(long unsigned)serdes_common_phy->pon_pma_phy_rg_base);	
++			return serdes_common_phy->pon_pma_phy_rg_base; 			
++			break;
++			
++		default :
++			printk("base addr not 10G Serdes Common PHY addr!ex: 0x1fa5a000, 0x1fa7a000, 0x1fa8a000\n");
++			return NULL;
++			break;	};
++}
++EXPORT_SYMBOL(Get_Base);
++
+ 
+ static const struct airoha_pcs_match_data an7581_pcs_eth = {
+ 	.port_type = AIROHA_PCS_ETH,
+--- a/drivers/net/pcs/airoha/pcs-airoha.h
++++ b/drivers/net/pcs/airoha/pcs-airoha.h
+@@ -1162,6 +1162,13 @@ enum pon_eo_buf_vals {
+ 	EO_BUF_MAX,
+ };
+ 
++struct serdes_common_phy {	
++	void __iomem *xfi_ana_pxp_phy_rg_base; /* xfi_ana_pxp physical address */	
++	void __iomem *xfi_pma_phy_rg_base; /* xfi_pma physical address */	
++	void __iomem *pon_ana_pxp_phy_rg_base; /* pon_ana_pxp physical address */	
++	void __iomem *pon_pma_phy_rg_base; /* pon_pma physical address */
++};
++
+ enum xfi_port_type {
+ 	AIROHA_PCS_ETH,
+ 	AIROHA_PCS_PON,

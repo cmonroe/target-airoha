@@ -1,0 +1,317 @@
+--- a/drivers/net/ethernet/airoha/airoha_ppe_debugfs.c
++++ b/drivers/net/ethernet/airoha/airoha_ppe_debugfs.c
+@@ -5,6 +5,10 @@
+  */
+ 
+ #include "airoha_eth.h"
++#include "airoha_regs.h"
++
++int airoha_debug_level = AIROHA_DEBUG_LEVEL_NONE;
++extern struct airoha_eth *glb_eth;
+ 
+ static void airoha_debugfs_ppe_print_tuple(struct seq_file *m,
+ 					   void *src_addr, void *dest_addr,
+@@ -138,6 +142,10 @@ static int airoha_ppe_debugfs_foe_show(s
+ 			data = hwe->ipv6.data;
+ 			ib2 = hwe->ipv6.ib2;
+ 			l2 = &hwe->ipv6.l2;
++		} else if(type == PPE_PKT_TYPE_BRIDGE){
++			data = hwe->bridge32.data;
++			ib2 = hwe->bridge32.ib2;
++			l2 = &hwe->bridge32.l2;
+ 		} else {
+ 			data = hwe->ipv4.data;
+ 			ib2 = hwe->ipv4.ib2;
+@@ -147,11 +155,16 @@ static int airoha_ppe_debugfs_foe_show(s
+ 		}
+ 
+ 		airoha_ppe_foe_entry_get_stats(ppe, i, &stats);
+-
++		if(type ==PPE_PKT_TYPE_BRIDGE){
++		*((__be32 *)h_dest) = cpu_to_be32(hwe->bridge32.dest_mac_hi);
++		*((__be16 *)&h_dest[4]) = cpu_to_be16(hwe->bridge32.dest_mac_lo);
++		*((__be32 *)h_source) = cpu_to_be32(hwe->bridge32.src_mac_hi);
++		*((__be16 *)&h_source[4]) = cpu_to_be16(hwe->bridge32.src_mac_lo);
++		}else {
+ 		*((__be32 *)h_dest) = cpu_to_be32(l2->dest_mac_hi);
+ 		*((__be16 *)&h_dest[4]) = cpu_to_be16(l2->dest_mac_lo);
+ 		*((__be32 *)h_source) = cpu_to_be32(l2->src_mac_hi);
+-
++		}
+ 		seq_printf(m, " eth=%pM->%pM etype=%04x data=%08x"
+ 			      " vlan=%d,%d ib1=%08x ib2=%08x"
+ 			      " packets=%llu bytes=%llu\n",
+@@ -175,6 +188,137 @@ static int airoha_ppe_debugfs_foe_bind_s
+ }
+ DEFINE_SHOW_ATTRIBUTE(airoha_ppe_debugfs_foe_bind);
+ 
++static ssize_t airoha_debug_level_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
++{
++    char level_str[3];
++    snprintf(level_str, sizeof(level_str), "%d\n", airoha_debug_level);
++    return simple_read_from_buffer(buf, count, ppos, level_str, sizeof(level_str));
++}
++
++static ssize_t airoha_debug_level_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
++{
++    char level_str[3];
++    int level;
++
++    if (count > sizeof(level_str))
++        return -EINVAL;
++
++    if (copy_from_user(level_str, buf, count))
++        return -EFAULT;
++
++    level_str[count] = '\0';
++    if (kstrtoint(level_str, 10, &level))
++        return -EINVAL;
++
++    if (level < AIROHA_DEBUG_LEVEL_NONE || level > AIROHA_DEBUG_LEVEL_DBG)
++        return -EINVAL;
++
++    airoha_debug_level = level;
++    return count;
++}
++
++// File operations for the fast path enable control
++static ssize_t airoha_fast_bit_enable_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
++{
++    char enable_str[100];
++	struct airoha_eth *eth = glb_eth;
++	if (IS_ERR(eth)) {
++		return PTR_ERR(eth);
++	}
++    int len = snprintf(enable_str, sizeof(enable_str), "wan_fastpath %u\nlan_fastpath %u\nxsi_ether_fastpath %u\n",
++                       eth->qdma_init.wan_fastpath, eth->qdma_init.lan_fastpath,
++					   eth->qdma_init.xsi_ether_fastpath);
++    return simple_read_from_buffer(buf, count, ppos, enable_str, len);
++}
++
++static ssize_t airoha_fast_bit_enable_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
++{
++    char input_str[64];
++	struct airoha_eth *eth = glb_eth;
++	u32 val = 0;
++
++	if (IS_ERR(eth)) {
++		return PTR_ERR(eth);
++	}
++    if (count >= sizeof(input_str))
++        return -EINVAL;
++
++    if (copy_from_user(input_str, buf, count))
++        return -EFAULT;
++
++    input_str[count] = '\0';
++
++	/* wan_fastpath [0/1 - hwnat fastpath to GDM2]
++	 * lan_fastpath [0/1 -  hwnat fastpath to GDM1]
++	 * xsi_ether_fastpath [0/1 - hwnat fastpath to HSGMII/XFI]
++	 */
++	 if (strncmp(input_str, "wan_fastpath", 12) == 0) {
++		if (sscanf(input_str, "wan_fastpath %u", &val) == 1) {
++			eth->qdma_init.wan_fastpath = val;
++		}
++	 } else if (strncmp(input_str, "lan_fastpath", 12) == 0) {
++		if (sscanf(input_str, "lan_fastpath %u", &val) == 1) {
++			eth->qdma_init.lan_fastpath = val;
++		}
++	 } else if (strncmp(input_str, "xsi_ether_fastpath", 18) == 0) {
++		if (sscanf(input_str, "xsi_ether_fastpath %u", &val) == 1) {
++			eth->qdma_init.xsi_ether_fastpath = val;
++		}
++	 } else if(strncmp(input_str, "help", 4) == 0) {
++		pr_info("Usage echo [Parameter] [Value] > /sys/kernel/debug/airoha_ppe/fast_and_slow_path\n"
++		"Parameter:\n" "wan_fastpath [0/1 - hwnat fastpath to GDM2]\n"
++		"lan_fastpath [0/1 - hwnat fastpath to GDM1]\n"
++		"xsi_ether_fastpath [0/1 - hwnat fastpath to HSGMII/XFI]\n");
++	 } else {
++		return -EINVAL;
++	 }
++
++    return count;
++}
++static ssize_t airoha_bind_age_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
++{
++	char input_str[64];
++	unsigned int tcp, udp, tcp_fin, non_l4, i;
++	struct airoha_eth *eth = glb_eth;
++
++	if (count >= sizeof(input_str))
++		return -EINVAL;
++	if (copy_from_user(input_str, buf, count))
++		return -EFAULT;
++	input_str[count] = '\0';
++	if (sscanf(input_str, "%u %u %u %u", &tcp, &udp, &tcp_fin, &non_l4) != 4)
++		return -EINVAL;
++
++	for (i = 0; i < PPE_NUM; i++) {
++		airoha_fe_rmw(eth, REG_PPE_BND_AGE0(i),
++                              PPE_BIND_AGE0_DELTA_NON_L4 |
++                              PPE_BIND_AGE0_DELTA_UDP,
++                              FIELD_PREP(PPE_BIND_AGE0_DELTA_NON_L4, non_l4) |
++                              FIELD_PREP(PPE_BIND_AGE0_DELTA_UDP, udp));
++                airoha_fe_rmw(eth, REG_PPE_BND_AGE1(i),
++                              PPE_BIND_AGE1_DELTA_TCP_FIN |
++                              PPE_BIND_AGE1_DELTA_TCP,
++                              FIELD_PREP(PPE_BIND_AGE1_DELTA_TCP_FIN, tcp_fin) |
++                              FIELD_PREP(PPE_BIND_AGE1_DELTA_TCP, tcp));
++	}
++
++	return count;
++}
++static const struct file_operations airoha_debug_level_fops = {
++    .read = airoha_debug_level_read,
++    .write = airoha_debug_level_write,
++};
++
++static const struct file_operations airoha_fast_and_slow_path_fops = {
++    .read = airoha_fast_bit_enable_read,
++    .write = airoha_fast_bit_enable_write,
++};
++
++static const struct file_operations airoha_bind_age_fops = {
++    .write = airoha_bind_age_write,
++};
++
++
+ int airoha_ppe_debugfs_init(struct airoha_ppe *ppe)
+ {
+ 	ppe->debugfs_dir = debugfs_create_dir("ppe", NULL);
+@@ -182,6 +326,12 @@ int airoha_ppe_debugfs_init(struct airoh
+ 			    &airoha_ppe_debugfs_foe_all_fops);
+ 	debugfs_create_file("bind", 0444, ppe->debugfs_dir, ppe,
+ 			    &airoha_ppe_debugfs_foe_bind_fops);
++	debugfs_create_file("debug_level", 0644, ppe->debugfs_dir, NULL, 
++				&airoha_debug_level_fops);
++	debugfs_create_file("fast_and_slow_path", 0644, ppe->debugfs_dir, NULL, 
++				&airoha_fast_and_slow_path_fops);
++	debugfs_create_file("bind_age", 0644, ppe->debugfs_dir, NULL,
++                                &airoha_bind_age_fops);
+ 
+ 	return 0;
+ }
+--- a/drivers/net/ethernet/airoha/airoha_regs.h
++++ b/drivers/net/ethernet/airoha/airoha_regs.h
+@@ -66,9 +66,11 @@
+ #define PSE_CFG_PORT_ID_MASK		GENMASK(27, 24)
+ #define PSE_CFG_QUEUE_ID_MASK		GENMASK(20, 16)
+ #define PSE_CFG_WR_EN_MASK		BIT(8)
++#define PSE_CFG_OQFCEN_SEL              BIT(4)
+ #define PSE_CFG_OQRSV_SEL_MASK		BIT(0)
+ 
+ #define REG_FE_PSE_QUEUE_CFG_VAL	0x0084
++#define PSE_CFG_OQ_FC_ON                BIT(17)
+ #define PSE_CFG_OQ_RSV_MASK		GENMASK(13, 0)
+ 
+ #define PSE_FQ_CFG			0x008c
+@@ -122,6 +124,7 @@
+ #define CDM_CRSN_QSEL_REASON_MASK(_n)	\
+ 	GENMASK(4 + (((_n) % 4) << 3),	(((_n) % 4) << 3))
+ 
++
+ #define REG_GDM_FWD_CFG(_n)		GDM_BASE(_n)
+ #define GDM_PAD_EN_MASK			BIT(28)
+ #define GDM_DROP_CRC_ERR_MASK		BIT(23)
+@@ -156,6 +159,14 @@
+ #define MBI_RX_AGE_SEL_MASK		GENMASK(26, 25)
+ #define MBI_TX_AGE_SEL_MASK		GENMASK(18, 17)
+ 
++#define REG_GDM4_CHN_RLS                       (GDM4_BASE + 0x20)
++#define REG_GDM4_MBI_RX_BUSY      BIT(27)
++#define REG_GDM4_MBI_RX_TERMINATE      BIT(24)
++#define REG_GDM4_MBI_TX_BUSY      BIT(19)
++#define REG_GDM4_MBI_TX_TERMINATE      BIT(16)
++#define REG_GDM4_TX_CHN_ID      GENMASK(8, 4)
++#define REG_GDM4_TX_CHN_DN      BIT(1)
++#define REG_GDM4_TX_CHN_EN      BIT(0)
+ #define REG_GDM_TXCHN_EN(_n)		(GDM_BASE(_n) + 0x24)
+ #define REG_GDM_RXCHN_EN(_n)		(GDM_BASE(_n) + 0x28)
+ 
+@@ -163,6 +174,7 @@
+ #define FE_CPORT_PAD			BIT(26)
+ #define FE_CPORT_PORT_XFC_MASK		BIT(25)
+ #define FE_CPORT_QUEUE_XFC_MASK		BIT(24)
++#define REG_PPE1_DFT_CPORT_0 	(0xE48)
+ 
+ #define REG_FE_GDM_MIB_CLEAR(_n)	(GDM_BASE(_n) + 0xf0)
+ #define FE_GDM_MIB_RX_CLEAR_MASK	BIT(1)
+@@ -336,6 +348,7 @@
+ #define PPE_SRAM_CTRL_ACK_MASK			BIT(31)
+ #define PPE_SRAM_CTRL_DUAL_SUCESS_MASK		BIT(30)
+ #define PPE_SRAM_CTRL_ENTRY_MASK		GENMASK(23, 8)
++#define PPE_SRAM_CTRL_ENTRY_SHIFT				(8)
+ #define PPE_SRAM_WR_DUAL_DIRECTION_MASK		BIT(2)
+ #define PPE_SRAM_CTRL_WR_MASK			BIT(1)
+ #define PPE_SRAM_CTRL_REQ_MASK			BIT(0)
+@@ -442,6 +455,9 @@
+ 	 ((_n) == 1) ? 0x002c + ((_b) << 3) :	\
+ 		       0x0028 + ((_b) << 3))
+ 
++#define REG_TXQ_TOTALTHR 		0x000010A4
++#define REG_TXQ_CHNLTHR_CFG 	0x000010A8
++#define REG_TXQ_QUEUETHR_CFG 	0x000010AC
+ /* QDMA_CSR_INT_ENABLE1 */
+ #define RX15_COHERENT_INT_MASK		BIT(31)
+ #define RX14_COHERENT_INT_MASK		BIT(30)
+@@ -616,9 +632,8 @@
+ 	 RX19_DONE_INT_MASK | RX18_DONE_INT_MASK |	\
+ 	 RX17_DONE_INT_MASK | RX16_DONE_INT_MASK)
+ 
++#define RX_DONE_INT_MASK	(RX_DONE_HIGH_INT_MASK | RX_DONE_LOW_INT_MASK)
+ #define RX_DONE_HIGH_OFFSET	fls(RX_DONE_HIGH_INT_MASK)
+-#define RX_DONE_INT_MASK	\
+-	((RX_DONE_HIGH_INT_MASK << RX_DONE_HIGH_OFFSET) | RX_DONE_LOW_INT_MASK)
+ 
+ #define INT_RX2_MASK(_n)				\
+ 	((RX_NO_CPU_DSCP_HIGH_INT_MASK & (_n)) |	\
+@@ -817,11 +832,6 @@
+ #define REG_TRTCM_DATA_LOW(_n)		((_n) + 0x8)
+ #define REG_TRTCM_DATA_HIGH(_n)		((_n) + 0xc)
+ 
+-#define RATE_LIMIT_PARAM_RW_MASK	BIT(31)
+-#define RATE_LIMIT_PARAM_RW_DONE_MASK	BIT(30)
+-#define RATE_LIMIT_PARAM_TYPE_MASK	GENMASK(29, 28)
+-#define RATE_LIMIT_METER_GROUP_MASK	GENMASK(27, 26)
+-#define RATE_LIMIT_PARAM_INDEX_MASK	GENMASK(23, 16)
+ 
+ #define REG_TXWRR_MODE_CFG		0x1020
+ #define TWRR_WEIGHT_SCALE_MASK		BIT(31)
+@@ -886,9 +896,16 @@
+ #define QDMA_ETH_TXMSG_PTP_MASK		BIT(12)
+ #define QDMA_ETH_TXMSG_ACNT_G1_MASK	GENMASK(10, 6)	/* 0x1f do not count */
+ #define QDMA_ETH_TXMSG_ACNT_G0_MASK	GENMASK(5, 0)	/* 0x3f do not count */
++/* TX MSG2 */
++#define QDMA_ETH_TXMSG_SW_UDF GENMASK(31, 16)
++#define QDMA_ETH_TXMSG_METER_G2_MASK	GENMASK(15, 12)	/* 0xf  no meters */
++#define QDMA_ETH_TXMSG_METER_G1_MASK   GENMASK(11, 7)	/* 0x1f no meters*/
++#define QDMA_ETH_TXMSG_ACNT_G2_MASK	GENMASK(6, 0)
++
+ 
+ /* RX MSG0 */
+ #define QDMA_ETH_RXMSG_SPTAG		GENMASK(21, 14)
++#define QDMA_ETH_RXMSG_SPTAG_PINGPONG		GENMASK(29, 14)
+ /* RX MSG1 */
+ #define QDMA_ETH_RXMSG_DEI_MASK		BIT(31)
+ #define QDMA_ETH_RXMSG_IP6_MASK		BIT(30)
+@@ -932,4 +949,19 @@ struct airoha_qdma_fwd_desc {
+ 	__le32 rsv1;
+ };
+ 
++/* QDMA_CSR_QOS_AGING_CFG */
++#define QDMA_CSR_QOS_AGING_CFG			0x10bc
++#define QDMA_QOS_AGING_EN				BIT(31)
++#define QDMA_QOS_AGING_METHOD			BIT(30)
++#define QDMA_QOS_AGING_FAST_REPLACE		BIT(29)
++
++#define PSE_FC_CFG						(0x0098)
++#define PSE_PORT7_SHARE_DIS				BIT(23)
++#define FE_RESET_GLO					(0x0004)
++#define REG_FE_CORE_RESET					BIT(0)
++#define GDM4_MBI_ARB_RX_RST	            GENMASK(9, 8)
++#define GDM4_MBI_ARB_TX_RST	            GENMASK(11, 10)
++
++
++
+ #endif /* AIROHA_REGS_H */

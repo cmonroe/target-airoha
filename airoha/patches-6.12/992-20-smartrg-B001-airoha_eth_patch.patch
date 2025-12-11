@@ -1,0 +1,1527 @@
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -3,6 +3,7 @@
+  * Copyright (c) 2024 AIROHA Inc
+  * Author: Lorenzo Bianconi <lorenzo@kernel.org>
+  */
++#include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_net.h>
+ #include <linux/of_reserved_mem.h>
+@@ -15,8 +16,77 @@
+ #include <net/pkt_cls.h>
+ #include <uapi/linux/ppp_defs.h>
+ 
++#include <linux/regmap.h>
++#include <linux/of_platform.h>
++#include <linux/device.h>
++#include <linux/of_reserved_mem.h>
++#include <linux/dma-mapping.h>
++#include <linux/nvmem-consumer.h>
+ #include "airoha_regs.h"
+ #include "airoha_eth.h"
++#include "eth_sal.h"
++
++unchar ethmac_addr[6] = {0x00, 0xAA, 0xBB, 0x01, 0x23, 0x40};
++
++struct airoha_eth *glb_eth;
++EXPORT_SYMBOL(glb_eth);
++extern int (*wan_speed_test_pinpong_handle_hook)(struct sk_buff*);
++extern int arht_ppe_multicast_handler(struct airoha_ppe *ppe, struct sk_buff* skb);
++extern int (*arht_xpon_igmp_sfu_enable_hook)(struct net_device *port_dev);
++extern int arht_ppe_multicast_set_valid(struct sk_buff* skb);
++extern int airoha_is_pon_sfu_mode(void);
++extern int (*airoha_pon_sfu_point_to_point_transmit_hook)(struct sk_buff *skb, u32 sptag);
++
++int is_ethmac_nvmem_cell_available(struct airoha_eth *eth);
++int get_ethmac_from_dts(struct airoha_eth *eth);
++
++struct pwan_msg{
++	u32 msg0 ;
++	u32 msg1 ;
++	u32 msg2 ;
++	u32 msg3 ;
++};
++
++int is_ethmac_nvmem_cell_available(struct airoha_eth *eth)
++{
++	struct device * dev = eth->dev;
++	struct nvmem_cell *ethmac_cell = NULL;
++	ethmac_cell = nvmem_cell_get(dev, "mac");
++	if(IS_ERR(ethmac_cell)) {
++		dev_err(dev, "nvmem cell error uinfor: %ld\n",PTR_ERR(ethmac_cell));
++		if(PTR_ERR(ethmac_cell) == -EPROBE_DEFER)
++			return -EPROBE_DEFER;
++	}
++	
++	return 0;
++}
++
++int get_ethmac_from_dts(struct airoha_eth *eth){
++	struct nvmem_cell *ethmac_cell = NULL;
++	void *ethmac_data = NULL;
++	uint8_t *ethmac_byte_ptr = NULL;
++	size_t ethmac_retlen = 0;
++	
++	struct device * dev = eth->dev;
++	ethmac_cell = nvmem_cell_get(dev, "mac");
++	
++	if(!IS_ERR(ethmac_cell)){
++		ethmac_data = nvmem_cell_read(ethmac_cell, &ethmac_retlen);
++		if(!IS_ERR(ethmac_data)){
++			ethmac_byte_ptr = (uint8_t *)ethmac_data;
++			if(ethmac_byte_ptr[0] != 0 || ethmac_byte_ptr[1] != 0 || ethmac_byte_ptr[2] != 0 
++			|| ethmac_byte_ptr[3] != 0 || ethmac_byte_ptr[4] != 0 || ethmac_byte_ptr[5] != 0){
++				memcpy(ethmac_addr, ethmac_byte_ptr, 6);
++				printk("get ethmac=%02x:%02x:%02x:%02x:%02x:%02x \n", ethmac_addr[0],ethmac_addr[1],ethmac_addr[2],ethmac_addr[3],ethmac_addr[4],ethmac_addr[5]);
++			}
++			kfree(ethmac_data);
++		}else{
++			printk("get ethmac data fail\n");
++		}
++		nvmem_cell_put(ethmac_cell);
++	}
++	return 0;
++}
+ 
+ u32 airoha_rr(void __iomem *base, u32 offset)
+ {
+@@ -75,7 +145,10 @@ static void airoha_qdma_irq_disable(stru
+ #if defined(CONFIG_PCS_AIROHA)
+ static bool airhoa_is_phy_external(struct airoha_gdm_port *port)
+ {
+-	return port->id != 1;
++	if((port->id == 1)||(port->id == 2))
++		return 0;
++	else 
++		return 1;
+ }
+ #endif
+ 
+@@ -156,35 +229,35 @@ static void airoha_fe_maccr_init(struct
+ 
+ static void airoha_fe_vip_setup(struct airoha_eth *eth)
+ {
+-	airoha_fe_wr(eth, REG_FE_VIP_PATN(3), ETH_P_PPP_DISC);
+-	airoha_fe_wr(eth, REG_FE_VIP_EN(3), PATN_FCPU_EN_MASK | PATN_EN_MASK);
+-
+-	airoha_fe_wr(eth, REG_FE_VIP_PATN(4), PPP_LCP);
+-	airoha_fe_wr(eth, REG_FE_VIP_EN(4),
+-		     PATN_FCPU_EN_MASK | FIELD_PREP(PATN_TYPE_MASK, 1) |
+-		     PATN_EN_MASK);
++	// airoha_fe_wr(eth, REG_FE_VIP_PATN(3), ETH_P_PPP_DISC);
++	// airoha_fe_wr(eth, REG_FE_VIP_EN(3), PATN_FCPU_EN_MASK | PATN_EN_MASK);
+ 
+-	airoha_fe_wr(eth, REG_FE_VIP_PATN(6), PPP_IPCP);
+-	airoha_fe_wr(eth, REG_FE_VIP_EN(6),
+-		     PATN_FCPU_EN_MASK | FIELD_PREP(PATN_TYPE_MASK, 1) |
+-		     PATN_EN_MASK);
+-
+-	airoha_fe_wr(eth, REG_FE_VIP_PATN(7), PPP_CHAP);
+-	airoha_fe_wr(eth, REG_FE_VIP_EN(7),
+-		     PATN_FCPU_EN_MASK | FIELD_PREP(PATN_TYPE_MASK, 1) |
+-		     PATN_EN_MASK);
++	// airoha_fe_wr(eth, REG_FE_VIP_PATN(4), PPP_LCP);
++	// airoha_fe_wr(eth, REG_FE_VIP_EN(4),
++	//       PATN_FCPU_EN_MASK | FIELD_PREP(PATN_TYPE_MASK, 1) |
++	//       PATN_EN_MASK);
++
++	// airoha_fe_wr(eth, REG_FE_VIP_PATN(6), PPP_IPCP);
++	// airoha_fe_wr(eth, REG_FE_VIP_EN(6),
++	//       PATN_FCPU_EN_MASK | FIELD_PREP(PATN_TYPE_MASK, 1) |
++	// 	     PATN_EN_MASK);
++
++	// airoha_fe_wr(eth, REG_FE_VIP_PATN(7), PPP_CHAP);
++	// airoha_fe_wr(eth, REG_FE_VIP_EN(7),
++	//      PATN_FCPU_EN_MASK | FIELD_PREP(PATN_TYPE_MASK, 1) |
++	//      PATN_EN_MASK);
+ 
+ 	/* BOOTP (0x43) */
+-	airoha_fe_wr(eth, REG_FE_VIP_PATN(8), 0x43);
+-	airoha_fe_wr(eth, REG_FE_VIP_EN(8),
+-		     PATN_FCPU_EN_MASK | PATN_SP_EN_MASK |
+-		     FIELD_PREP(PATN_TYPE_MASK, 4) | PATN_EN_MASK);
++	// airoha_fe_wr(eth, REG_FE_VIP_PATN(8), 0x43);
++	// airoha_fe_wr(eth, REG_FE_VIP_EN(8),
++	// 	     PATN_FCPU_EN_MASK | PATN_SP_EN_MASK |
++	// 	     FIELD_PREP(PATN_TYPE_MASK, 4) | PATN_EN_MASK);
+ 
+ 	/* BOOTP (0x44) */
+-	airoha_fe_wr(eth, REG_FE_VIP_PATN(9), 0x44);
+-	airoha_fe_wr(eth, REG_FE_VIP_EN(9),
+-		     PATN_FCPU_EN_MASK | PATN_SP_EN_MASK |
+-		     FIELD_PREP(PATN_TYPE_MASK, 4) | PATN_EN_MASK);
++	// airoha_fe_wr(eth, REG_FE_VIP_PATN(9), 0x44);
++	// airoha_fe_wr(eth, REG_FE_VIP_EN(9),
++	// 	     PATN_FCPU_EN_MASK | PATN_SP_EN_MASK |
++	// 	     FIELD_PREP(PATN_TYPE_MASK, 4) | PATN_EN_MASK);
+ 
+ 	/* ISAKMP */
+ 	airoha_fe_wr(eth, REG_FE_VIP_PATN(10), 0x1f401f4);
+@@ -198,15 +271,15 @@ static void airoha_fe_vip_setup(struct a
+ 		     PATN_EN_MASK);
+ 
+ 	/* DHCPv6 */
+-	airoha_fe_wr(eth, REG_FE_VIP_PATN(12), 0x2220223);
+-	airoha_fe_wr(eth, REG_FE_VIP_EN(12),
+-		     PATN_FCPU_EN_MASK | PATN_DP_EN_MASK | PATN_SP_EN_MASK |
+-		     FIELD_PREP(PATN_TYPE_MASK, 4) | PATN_EN_MASK);
+-
+-	airoha_fe_wr(eth, REG_FE_VIP_PATN(19), PPP_PAP);
+-	airoha_fe_wr(eth, REG_FE_VIP_EN(19),
+-		     PATN_FCPU_EN_MASK | FIELD_PREP(PATN_TYPE_MASK, 1) |
+-		     PATN_EN_MASK);
++	// airoha_fe_wr(eth, REG_FE_VIP_PATN(12), 0x2220223);
++	// airoha_fe_wr(eth, REG_FE_VIP_EN(12),
++	// 	     PATN_FCPU_EN_MASK | PATN_DP_EN_MASK | PATN_SP_EN_MASK |
++	// 	     FIELD_PREP(PATN_TYPE_MASK, 4) | PATN_EN_MASK);
++
++	// airoha_fe_wr(eth, REG_FE_VIP_PATN(19), PPP_PAP);
++	// airoha_fe_wr(eth, REG_FE_VIP_EN(19),
++	// 	     PATN_FCPU_EN_MASK | FIELD_PREP(PATN_TYPE_MASK, 1) |
++	// 	     PATN_EN_MASK);
+ 
+ 	/* ETH->ETH_P_1905 (0x893a) */
+ 	airoha_fe_wr(eth, REG_FE_VIP_PATN(20), 0x893a);
+@@ -286,6 +359,29 @@ static int airoha_fe_set_pse_oq_rsv(stru
+ 	return 0;
+ }
+ 
++static void airoha_fe_pse_oq_set_fc_disable(struct airoha_eth *eth
++					, u32 port, u32 queue)
++{
++#ifdef CONFIG_NET_AIROHA_FLOW_STATS
++	airoha_fe_wr(eth, REG_FE_PSE_QUEUE_CFG_WR, 
++			FIELD_PREP(PSE_CFG_PORT_ID_MASK, port) |
++			FIELD_PREP(PSE_CFG_QUEUE_ID_MASK, queue));
++	airoha_fe_rmw(eth, REG_FE_PSE_QUEUE_CFG_VAL, 
++			PSE_CFG_OQ_FC_ON |
++			PSE_CFG_OQ_RSV_MASK,
++			FIELD_PREP(PSE_CFG_OQ_FC_ON, 0) |
++			FIELD_PREP(PSE_CFG_OQ_RSV_MASK, 0x20));
++	airoha_fe_wr(eth, REG_FE_PSE_QUEUE_CFG_WR,
++			FIELD_PREP(PSE_CFG_PORT_ID_MASK, port) |
++			FIELD_PREP(PSE_CFG_QUEUE_ID_MASK, queue) |
++			PSE_CFG_WR_EN_MASK |
++			PSE_CFG_OQFCEN_SEL |
++			PSE_CFG_OQRSV_SEL_MASK);
++#endif
++
++	return;
++}
++
+ static void airoha_fe_pse_ports_init(struct airoha_eth *eth)
+ {
+ 	const u32 pse_port_num_queues[] = {
+@@ -340,8 +436,12 @@ static void airoha_fe_pse_ports_init(str
+ 		airoha_fe_set_pse_oq_rsv(eth, FE_PSE_PORT_CDM2, q,
+ 					 PSE_QUEUE_RSV_PAGES);
+ 	/* CDM3 */
+-	for (q = 0; q < pse_port_num_queues[FE_PSE_PORT_CDM3] - 1; q++)
++	for (q = 0; q < pse_port_num_queues[FE_PSE_PORT_CDM3] - 1; q++){
+ 		airoha_fe_set_pse_oq_rsv(eth, FE_PSE_PORT_CDM3, q, 0);
++		if(q == 5 || q == 6){
++			airoha_fe_pse_oq_set_fc_disable(eth, FE_PSE_PORT_CDM3, q);
++		}
++	}
+ 	/* CDM4 */
+ 	for (q = 4; q < pse_port_num_queues[FE_PSE_PORT_CDM4]; q++)
+ 		airoha_fe_set_pse_oq_rsv(eth, FE_PSE_PORT_CDM4, q,
+@@ -466,9 +566,9 @@ static int airoha_fe_init(struct airoha_
+ 		      FIELD_PREP(PSE_IQ_RES2_P5_MASK, 0x40) |
+ 		      FIELD_PREP(PSE_IQ_RES2_P4_MASK, 0x34));
+ 
+-	/* enable FE copy engine for MC/KA/DPI */
++	/* enable FE copy engine for KA/DPI */
+ 	airoha_fe_wr(eth, REG_FE_PCE_CFG,
+-		     PCE_DPI_EN_MASK | PCE_KA_EN_MASK | PCE_MC_EN_MASK);
++		     PCE_DPI_EN_MASK | PCE_KA_EN_MASK);
+ 	/* set vip queue selection to ring 1 */
+ 	airoha_fe_rmw(eth, REG_CDM_FWD_CFG(1), CDM_VIP_QSEL_MASK,
+ 		      FIELD_PREP(CDM_VIP_QSEL_MASK, 0x4));
+@@ -591,6 +691,51 @@ static int airoha_qdma_fill_rx_queue(str
+ 	return nframes;
+ }
+ 
++static int airoha_check_pon_rx_hook(void *pMsg,struct sk_buff *skb, uint pktLen)
++{
++	/*
++	PON RX process hook 
++	Ruturn: if pwan_cb_rx_hook return success iterate to next packet otherwise it go to eth rx
++	*/
++	if(pwan_cb_rx_hook){
++		pwan_cb_rx_hook(pMsg,QDMA_RX_DSCP_MSG_LENS,skb,pktLen);
++	}else{
++		return PON_RX_FAIL;
++	}
++
++	return PON_RX_SUCCESS;
++}
++
++static void airoha_get_entry_bind(u32 msg1, struct airoha_queue *q, struct airoha_eth *eth, u32 sptag)
++{
++	u32 reason;
++	u32 hash = FIELD_GET(AIROHA_RXD4_FOE_ENTRY, msg1);
++	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "Hash: %u\n", hash);
++	if (hash < PPE_SRAM_NUM_ENTRIES)
++		skb_set_hash(q->skb, hash,
++				 PKT_HASH_TYPE_L4);
++
++	reason = FIELD_GET(AIROHA_RXD4_PPE_CPU_REASON, msg1);
++	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "CPU_REASON: %u\n", reason);
++	if (reason == PPE_CPU_REASON_HIT_UNBIND_RATE_REACHED){
++		struct airoha_flow_table_entry *flow_e = airoha_flow_table_entry_get_by_hash(eth->ppe, hash);
++		if(flow_e){
++			flow_e->ingress_dev_idx = LAN_IDX_FROM_SPTAG(sptag);
++			if(airoha_get_lan_id(q->skb->dev)==ETH2)
++				flow_e->ingress_dev_idx = ETH2;
++		}
++		airoha_ppe_check_skb(&eth->ppe->dev, q->skb, hash, false);
++		if(arht_xpon_igmp_sfu_enable_hook == NULL){
++			arht_ppe_multicast_handler(eth->ppe, q->skb);
++		}
++	}
++	else{
++		if(airoha_is_pon_sfu_mode()){
++			q->skb->l4_hash = 0;
++		}
++ 	}
++}
++
+ static int airoha_qdma_get_gdm_port(struct airoha_eth *eth,
+ 				    struct airoha_qdma_desc *desc)
+ {
+@@ -624,19 +769,22 @@ static int airoha_qdma_rx_process(struct
+ 	struct airoha_eth *eth = qdma->eth;
+ 	int qid = q - &qdma->q_rx[0];
+ 	int done = 0;
++	int sport, VirIfIdx = 0;
+ 
+ 	while (done < budget) {
+ 		struct airoha_queue_entry *e = &q->entry[q->tail];
+ 		struct airoha_qdma_desc *desc = &q->desc[q->tail];
+-		u32 hash, reason, msg1 = le32_to_cpu(desc->msg1);
++		u32 msg1 = le32_to_cpu(desc->msg1),sptag;
+ 		struct page *page = virt_to_head_page(e->buf);
+ 		u32 desc_ctrl = le32_to_cpu(desc->ctrl);
+ 		struct airoha_gdm_port *port;
+ 		int data_len, len, p;
+-
++		struct pwan_msg pMsg;
+ 		if (!(desc_ctrl & QDMA_DESC_DONE_MASK))
+ 			break;
+ 
++
++
+ 		q->tail = (q->tail + 1) % q->ndesc;
+ 		q->queued--;
+ 
+@@ -654,6 +802,11 @@ static int airoha_qdma_rx_process(struct
+ 			goto free_frag;
+ 
+ 		port = eth->ports[p];
++		pMsg.msg0 = le32_to_cpu(desc->msg0);
++		pMsg.msg1 = le32_to_cpu(desc->msg1);
++		pMsg.msg2 = le32_to_cpu(desc->msg2);
++		pMsg.msg3 = le32_to_cpu(desc->msg3);
++		
+ 		if (!q->skb) { /* first buffer */
+ 			q->skb = napi_build_skb(e->buf, q->buf_size);
+ 			if (!q->skb)
+@@ -686,7 +839,7 @@ static int airoha_qdma_rx_process(struct
+ 			 * DMA descriptor. Report DSA tag to the DSA stack
+ 			 * via skb dst info.
+ 			 */
+-			u32 sptag = FIELD_GET(QDMA_ETH_RXMSG_SPTAG,
++			sptag = FIELD_GET(QDMA_ETH_RXMSG_SPTAG,
+ 					      le32_to_cpu(desc->msg0));
+ 
+ 			if (sptag < ARRAY_SIZE(port->dsa_meta) &&
+@@ -694,19 +847,50 @@ static int airoha_qdma_rx_process(struct
+ 				skb_dst_set_noref(q->skb,
+ 						  &port->dsa_meta[sptag]->dst);
+ 		}
++		
++		airoha_get_entry_bind(msg1, q, eth , sptag);
++		done++;
++		sport = FIELD_GET(AIROHA_RXD4_SPORT, le32_to_cpu(desc->msg1));
++		if(sport == FE_PSE_PORT_CDM1){
++			VirIfIdx = FIELD_GET(QDMA_ETH_RXMSG_SPTAG_PINGPONG, pMsg.msg0);
++			if(wan_speed_test_pinpong_handle_hook && (VirIfIdx == DP_SPEED_UP)){
++				u32 hash = FIELD_GET(AIROHA_RXD4_FOE_ENTRY, msg1);
++				q->skb->mark = DP_SPEED_UP;
++				skb_set_hash(q->skb, hash,PKT_HASH_TYPE_L4);
++				wan_speed_test_pinpong_handle_hook(q->skb);
++				q->skb = NULL;
++				continue;
++			}
++		}
+ 
+-		hash = FIELD_GET(AIROHA_RXD4_FOE_ENTRY, msg1);
+-		if (hash != AIROHA_RXD4_FOE_ENTRY)
+-			skb_set_hash(q->skb, jhash_1word(hash, 0),
+-				     PKT_HASH_TYPE_L4);
+-
+-		reason = FIELD_GET(AIROHA_RXD4_PPE_CPU_REASON, msg1);
+-		if (reason == PPE_CPU_REASON_HIT_UNBIND_RATE_REACHED)
+-			airoha_ppe_check_skb(&eth->ppe->dev, q->skb, hash,
+-					     false);
+ 
+-		done++;
+-		napi_gro_receive(&q->napi, q->skb);
++		if(p==1
++			&& (airoha_check_pon_rx_hook((void *)&pMsg,q->skb,len)==PON_RX_SUCCESS)){
++			/*
++			check for pon rx success
++			*/
++		}
++		else{
++			if(wan_speed_test_hook && wan_speed_test_hook(q->skb)==SPEED_TEST_SUCCESS)
++			{
++				/*do nothing*/				
++			}
++			else if(airoha_pon_sfu_point_to_point_transmit_hook)
++			{
++				if(airoha_pon_sfu_point_to_point_transmit_hook(q->skb, sptag)){
++					q->skb = NULL;
++					continue;
++				}
++				else{
++					napi_gro_receive(&q->napi, q->skb);
++				}
++			}
++			else
++			{
++				napi_gro_receive(&q->napi, q->skb);
++			}
++		}
++
+ 		q->skb = NULL;
+ 		continue;
+ free_frag:
+@@ -919,7 +1103,17 @@ static int airoha_qdma_tx_napi_poll(stru
+ 			u16 queue = skb_get_queue_mapping(skb);
+ 			struct netdev_queue *txq;
+ 
+-			txq = netdev_get_tx_queue(skb->dev, queue);
++			if((eth->ports[1] != NULL) && (qdma == &eth->qdma[1])){
++
++				struct airoha_gdm_port *port = eth->ports[1];
++				struct net_device *wan_dev = port->dev;
++				
++				txq = netdev_get_tx_queue(wan_dev, queue);
++			}
++			else{
++				txq = netdev_get_tx_queue(skb->dev, queue);
++			}
++
+ 			netdev_tx_completed_queue(txq, 1, skb->len);
+ 			if (netif_tx_queue_stopped(txq) &&
+ 			    q->ndesc - q->queued >= q->free_thr)
+@@ -1177,6 +1371,7 @@ static void airoha_qdma_init_qos(struct
+ 			FIELD_PREP(SLA_FAST_TICK_MASK, 25));
+ 	airoha_qdma_rmw(qdma, REG_SLA_TRTCM_CFG, SLA_SLOW_TICK_RATIO_MASK,
+ 			FIELD_PREP(SLA_SLOW_TICK_RATIO_MASK, 40));
++	airoha_dp_api_qdma_rxring_default_config(qdma);		
+ }
+ 
+ static void airoha_qdma_init_qos_stats(struct airoha_qdma *qdma)
+@@ -1203,6 +1398,9 @@ static void airoha_qdma_init_qos_stats(s
+ static int airoha_qdma_hw_init(struct airoha_qdma *qdma)
+ {
+ 	int i;
++	airoha_qdma_wr(qdma, REG_TXQ_TOTALTHR, 0x39992e00);
++	airoha_qdma_wr(qdma, REG_TXQ_CHNLTHR_CFG, 0x39990400);
++	airoha_qdma_wr(qdma, REG_TXQ_QUEUETHR_CFG, 0x20000020);
+ 
+ 	for (i = 0; i < ARRAY_SIZE(qdma->irq_banks); i++) {
+ 		/* clear pending irqs */
+@@ -1260,6 +1458,8 @@ static int airoha_qdma_hw_init(struct ai
+ 	airoha_qdma_set(qdma, REG_TXQ_CNGST_CFG,
+ 			TXQ_CNGST_DROP_EN | TXQ_CNGST_DEI_DROP_EN);
+ 	airoha_qdma_init_qos_stats(qdma);
++	airoha_qdma_set(qdma, QDMA_CSR_QOS_AGING_CFG, QDMA_QOS_AGING_EN);
++	airoha_qdma_set(qdma, QDMA_CSR_QOS_AGING_CFG, QDMA_QOS_AGING_FAST_REPLACE);
+ 
+ 	return 0;
+ }
+@@ -1348,6 +1548,55 @@ static int airoha_qdma_init_irq_banks(st
+ 	return 0;
+ }
+ 
++static int airoha_qdma_multicast_init(struct airoha_eth *eth)
++{
++	int chnl_idx = 0;
++	struct airoha_qdma *qdma = &eth->qdma[0];
++	uint MULTICAST_FORCE_PORT[MULTICAST_MAX_CHANNEL];
++	
++	if(eth->airoha_chip_id == ID_EN7581){
++	uint temp[] = { ((1<<5)|0), ((1<<5)|1), ((1<<5)|2), ((1<<5)|3), 
++														 ((1<<5)|4), ((1<<5)|5), ((0<<5)|0), ((4<<5)|0), 
++														 ((3<<5)|0), ((3<<5)|1), ((3<<5)|4), ((3<<5)|5),
++														 ((9<<5)|1), ((9<<5)|0), ((2<<5)|0), ((6<<5)|0),
++														};
++	memcpy(MULTICAST_FORCE_PORT, temp, sizeof(temp));
++	}
++	else{
++	uint temp[] = { ((1<<5)|0), ((1<<5)|1), ((1<<5)|2), ((1<<5)|3), 
++														 ((1<<5)|4), ((1<<5)|5), ((0<<5)|0), ((4<<5)|0), 
++														 ((3<<5)|0), ((3<<5)|1), ((9<<5)|4), ((9<<5)|5),
++														 ((9<<5)|1), ((3<<5)|0), ((2<<5)|0), ((6<<5)|0),
++														};
++	memcpy(MULTICAST_FORCE_PORT, temp, sizeof(temp));
++	}	
++	uint MULTICAST_SPECIAL_TAG[MULTICAST_MAX_CHANNEL] = { 0x0001, 0x0002, 0x0004, 0x0008, 
++														  0x0010, 0x0020, 0x0000, 0x0000, 
++														  0x0000, 0x0000, 0x0000, 0x0000,
++														  0x0000, 0x0000, 0x0000, 0x0000,
++														};
++	uint MULTICAST_KEEP_SPTAG_HIFIELD[MULTICAST_MAX_CHANNEL] = { 1, 1, 1, 1, 1, 1, 0, 0, 
++																 0, 0, 0, 0, 0, 0, 0, 0,
++																};
++	
++	for( chnl_idx = 0; chnl_idx < MULTICAST_MAX_CHANNEL; chnl_idx++ ){
++		/* init multicast fport info */
++		qdmaSetMulticastFport(qdma, chnl_idx, MULTICAST_FORCE_PORT[chnl_idx]);
++
++		/* init multicast sp_tag info */
++		qdmaSetMulticastSptag(qdma, chnl_idx, MULTICAST_SPECIAL_TAG[chnl_idx]);
++
++		/* init multicast sp_tag hi-field keep or not */
++		if( MULTICAST_KEEP_SPTAG_HIFIELD[chnl_idx] > 0 ){
++			qdmaEnableMulticastSptagKeepHi(qdma, chnl_idx);
++		}else{
++			qdmaDisableMulticastSptagKeepHi(qdma, chnl_idx);
++		}
++	}
++
++	return 0;
++}
++
+ static int airoha_qdma_init(struct platform_device *pdev,
+ 			    struct airoha_eth *eth,
+ 			    struct airoha_qdma *qdma)
+@@ -1381,7 +1630,17 @@ static int airoha_qdma_init(struct platf
+ 	if (err)
+ 		return err;
+ 
+-	return airoha_qdma_hw_init(qdma);
++	err = airoha_qdma_hw_init(qdma);
++	if (err)
++		return err;
++
++	err = airoha_dp_api_debugfs_init(eth);
++	if (err)
++		return err;
++
++	airoha_qdma_multicast_init(eth);
++
++	return 0;
+ }
+ 
+ static int airoha_hw_init(struct platform_device *pdev,
+@@ -1939,6 +2198,18 @@ static int airoha_get_fe_port(struct air
+ 	}
+ }
+ 
++
++static uint airoha_eth_get_channel_by_port(struct airoha_gdm_port *port, u16 sptag)
++{
++	u16 tag = (sptag&0xFF);
++	
++	if(port->id == 4)
++		return HSGMII_LAN_ETH_CHNL;
++	else{
++		return LAN_IDX_FROM_TX_SPTAG(tag);
++	}
++
++}
+ static netdev_tx_t airoha_dev_xmit(struct sk_buff *skb,
+ 				   struct net_device *dev)
+ {
+@@ -1950,15 +2221,16 @@ static netdev_tx_t airoha_dev_xmit(struc
+ 	struct airoha_queue *q;
+ 	LIST_HEAD(tx_list);
+ 	void *data;
+-	int i, qid;
++	int i, qid, channel;
+ 	u16 index;
+ 	u8 fport;
+ 
+ 	qid = skb_get_queue_mapping(skb) % ARRAY_SIZE(qdma->q_tx);
+ 	tag = airoha_get_dsa_tag(skb, dev);
+-
++	channel = airoha_eth_get_channel_by_port(port,tag);
++	
+ 	msg0 = FIELD_PREP(QDMA_ETH_TXMSG_CHAN_MASK,
+-			  qid / AIROHA_NUM_QOS_QUEUES) |
++			  channel % AIROHA_MAX_NUM_CHANNELS ) |
+ 	       FIELD_PREP(QDMA_ETH_TXMSG_QUEUE_MASK,
+ 			  qid % AIROHA_NUM_QOS_QUEUES) |
+ 	       FIELD_PREP(QDMA_ETH_TXMSG_SP_TAG_MASK, tag);
+@@ -1989,6 +2261,10 @@ static netdev_tx_t airoha_dev_xmit(struc
+ 	if (WARN_ON_ONCE(!q->ndesc))
+ 		goto error;
+ 
++	arht_ppe_multicast_set_valid(skb);
++	
++	airoha_qdma_lan_tx(skb, tag, fport, channel, qid);
++	
+ 	spin_lock_bh(&q->lock);
+ 
+ 	txq = netdev_get_tx_queue(dev, qid);
+@@ -2279,255 +2555,10 @@ static int airoha_tc_setup_qdisc_ets(str
+ 	}
+ }
+ 
+-static int airoha_qdma_get_rl_param(struct airoha_qdma *qdma, int queue_id,
+-				    u32 addr, enum trtcm_param_type param,
+-				    u32 *val_low, u32 *val_high)
+-{
+-	u32 idx = QDMA_METER_IDX(queue_id), group = QDMA_METER_GROUP(queue_id);
+-	u32 val, config = FIELD_PREP(RATE_LIMIT_PARAM_TYPE_MASK, param) |
+-			  FIELD_PREP(RATE_LIMIT_METER_GROUP_MASK, group) |
+-			  FIELD_PREP(RATE_LIMIT_PARAM_INDEX_MASK, idx);
+-
+-	airoha_qdma_wr(qdma, REG_TRTCM_CFG_PARAM(addr), config);
+-	if (read_poll_timeout(airoha_qdma_rr, val,
+-			      val & RATE_LIMIT_PARAM_RW_DONE_MASK,
+-			      USEC_PER_MSEC, 10 * USEC_PER_MSEC, true, qdma,
+-			      REG_TRTCM_CFG_PARAM(addr)))
+-		return -ETIMEDOUT;
+-
+-	*val_low = airoha_qdma_rr(qdma, REG_TRTCM_DATA_LOW(addr));
+-	if (val_high)
+-		*val_high = airoha_qdma_rr(qdma, REG_TRTCM_DATA_HIGH(addr));
+-
+-	return 0;
+-}
+-
+-static int airoha_qdma_set_rl_param(struct airoha_qdma *qdma, int queue_id,
+-				    u32 addr, enum trtcm_param_type param,
+-				    u32 val)
+-{
+-	u32 idx = QDMA_METER_IDX(queue_id), group = QDMA_METER_GROUP(queue_id);
+-	u32 config = RATE_LIMIT_PARAM_RW_MASK |
+-		     FIELD_PREP(RATE_LIMIT_PARAM_TYPE_MASK, param) |
+-		     FIELD_PREP(RATE_LIMIT_METER_GROUP_MASK, group) |
+-		     FIELD_PREP(RATE_LIMIT_PARAM_INDEX_MASK, idx);
+-
+-	airoha_qdma_wr(qdma, REG_TRTCM_DATA_LOW(addr), val);
+-	airoha_qdma_wr(qdma, REG_TRTCM_CFG_PARAM(addr), config);
+-
+-	return read_poll_timeout(airoha_qdma_rr, val,
+-				 val & RATE_LIMIT_PARAM_RW_DONE_MASK,
+-				 USEC_PER_MSEC, 10 * USEC_PER_MSEC, true,
+-				 qdma, REG_TRTCM_CFG_PARAM(addr));
+-}
+-
+-static int airoha_qdma_set_rl_config(struct airoha_qdma *qdma, int queue_id,
+-				     u32 addr, bool enable, u32 enable_mask)
+-{
+-	u32 val;
+-	int err;
+-
+-	err = airoha_qdma_get_rl_param(qdma, queue_id, addr, TRTCM_MISC_MODE,
+-				       &val, NULL);
+-	if (err)
+-		return err;
+-
+-	val = enable ? val | enable_mask : val & ~enable_mask;
+-
+-	return airoha_qdma_set_rl_param(qdma, queue_id, addr, TRTCM_MISC_MODE,
+-					val);
+-}
+-
+-static int airoha_qdma_set_rl_token_bucket(struct airoha_qdma *qdma,
+-					   int queue_id, u32 rate_val,
+-					   u32 bucket_size)
+-{
+-	u32 val, config, tick, unit, rate, rate_frac;
+-	int err;
+-
+-	err = airoha_qdma_get_rl_param(qdma, queue_id, REG_INGRESS_TRTCM_CFG,
+-				       TRTCM_MISC_MODE, &config, NULL);
+-	if (err)
+-		return err;
+-
+-	val = airoha_qdma_rr(qdma, REG_INGRESS_TRTCM_CFG);
+-	tick = FIELD_GET(INGRESS_FAST_TICK_MASK, val);
+-	if (config & TRTCM_TICK_SEL)
+-		tick *= FIELD_GET(INGRESS_SLOW_TICK_RATIO_MASK, val);
+-	if (!tick)
+-		return -EINVAL;
+-
+-	unit = (config & TRTCM_PKT_MODE) ? 1000000 / tick : 8000 / tick;
+-	if (!unit)
+-		return -EINVAL;
+-
+-	rate = rate_val / unit;
+-	rate_frac = rate_val % unit;
+-	rate_frac = FIELD_PREP(TRTCM_TOKEN_RATE_MASK, rate_frac) / unit;
+-	rate = FIELD_PREP(TRTCM_TOKEN_RATE_MASK, rate) |
+-	       FIELD_PREP(TRTCM_TOKEN_RATE_FRACTION_MASK, rate_frac);
+-
+-	err = airoha_qdma_set_rl_param(qdma, queue_id, REG_INGRESS_TRTCM_CFG,
+-				       TRTCM_TOKEN_RATE_MODE, rate);
+-	if (err)
+-		return err;
+-
+-	val = bucket_size;
+-	if (!(config & TRTCM_PKT_MODE))
+-		val = max_t(u32, val, MIN_TOKEN_SIZE);
+-	val = min_t(u32, __fls(val), MAX_TOKEN_SIZE_OFFSET);
+-
+-	return airoha_qdma_set_rl_param(qdma, queue_id, REG_INGRESS_TRTCM_CFG,
+-					TRTCM_BUCKETSIZE_SHIFT_MODE, val);
+-}
+-
+-static int airoha_qdma_init_rl_config(struct airoha_qdma *qdma, int queue_id,
+-				      bool enable, enum trtcm_unit_type unit)
+-{
+-	bool tick_sel = queue_id == 0 || queue_id == 2 || queue_id == 8;
+-	enum trtcm_param mode = TRTCM_METER_MODE;
+-	int err;
+-
+-	mode |= unit == TRTCM_PACKET_UNIT ? TRTCM_PKT_MODE : 0;
+-	err = airoha_qdma_set_rl_config(qdma, queue_id, REG_INGRESS_TRTCM_CFG,
+-					enable, mode);
+-	if (err)
+-		return err;
+-
+-	return airoha_qdma_set_rl_config(qdma, queue_id, REG_INGRESS_TRTCM_CFG,
+-					 tick_sel, TRTCM_TICK_SEL);
+-}
+-
+-static int airoha_qdma_get_trtcm_param(struct airoha_qdma *qdma, int channel,
+-				       u32 addr, enum trtcm_param_type param,
+-				       enum trtcm_mode_type mode,
+-				       u32 *val_low, u32 *val_high)
+-{
+-	u32 idx = QDMA_METER_IDX(channel), group = QDMA_METER_GROUP(channel);
+-	u32 val, config = FIELD_PREP(TRTCM_PARAM_TYPE_MASK, param) |
+-			  FIELD_PREP(TRTCM_METER_GROUP_MASK, group) |
+-			  FIELD_PREP(TRTCM_PARAM_INDEX_MASK, idx) |
+-			  FIELD_PREP(TRTCM_PARAM_RATE_TYPE_MASK, mode);
+-
+-	airoha_qdma_wr(qdma, REG_TRTCM_CFG_PARAM(addr), config);
+-	if (read_poll_timeout(airoha_qdma_rr, val,
+-			      val & TRTCM_PARAM_RW_DONE_MASK,
+-			      USEC_PER_MSEC, 10 * USEC_PER_MSEC, true,
+-			      qdma, REG_TRTCM_CFG_PARAM(addr)))
+-		return -ETIMEDOUT;
+-
+-	*val_low = airoha_qdma_rr(qdma, REG_TRTCM_DATA_LOW(addr));
+-	if (val_high)
+-		*val_high = airoha_qdma_rr(qdma, REG_TRTCM_DATA_HIGH(addr));
+-
+-	return 0;
+-}
+-
+-static int airoha_qdma_set_trtcm_param(struct airoha_qdma *qdma, int channel,
+-				       u32 addr, enum trtcm_param_type param,
+-				       enum trtcm_mode_type mode, u32 val)
+-{
+-	u32 idx = QDMA_METER_IDX(channel), group = QDMA_METER_GROUP(channel);
+-	u32 config = TRTCM_PARAM_RW_MASK |
+-		     FIELD_PREP(TRTCM_PARAM_TYPE_MASK, param) |
+-		     FIELD_PREP(TRTCM_METER_GROUP_MASK, group) |
+-		     FIELD_PREP(TRTCM_PARAM_INDEX_MASK, idx) |
+-		     FIELD_PREP(TRTCM_PARAM_RATE_TYPE_MASK, mode);
+-
+-	airoha_qdma_wr(qdma, REG_TRTCM_DATA_LOW(addr), val);
+-	airoha_qdma_wr(qdma, REG_TRTCM_CFG_PARAM(addr), config);
+-
+-	return read_poll_timeout(airoha_qdma_rr, val,
+-				 val & TRTCM_PARAM_RW_DONE_MASK,
+-				 USEC_PER_MSEC, 10 * USEC_PER_MSEC, true,
+-				 qdma, REG_TRTCM_CFG_PARAM(addr));
+-}
+-
+-static int airoha_qdma_set_trtcm_config(struct airoha_qdma *qdma, int channel,
+-					u32 addr, enum trtcm_mode_type mode,
+-					bool enable, u32 enable_mask)
+-{
+-	u32 val;
+-
+-	if (airoha_qdma_get_trtcm_param(qdma, channel, addr, TRTCM_MISC_MODE,
+-					mode, &val, NULL))
+-		return -EINVAL;
+-
+-	val = enable ? val | enable_mask : val & ~enable_mask;
+-
+-	return airoha_qdma_set_trtcm_param(qdma, channel, addr, TRTCM_MISC_MODE,
+-					   mode, val);
+-}
+-
+-static int airoha_qdma_set_trtcm_token_bucket(struct airoha_qdma *qdma,
+-					      int channel, u32 addr,
+-					      enum trtcm_mode_type mode,
+-					      u32 rate_val, u32 bucket_size)
+-{
+-	u32 val, config, tick, unit, rate, rate_frac;
+-	int err;
+-
+-	if (airoha_qdma_get_trtcm_param(qdma, channel, addr, TRTCM_MISC_MODE,
+-					mode, &config, NULL))
+-		return -EINVAL;
+-
+-	val = airoha_qdma_rr(qdma, addr);
+-	tick = FIELD_GET(INGRESS_FAST_TICK_MASK, val);
+-	if (config & TRTCM_TICK_SEL)
+-		tick *= FIELD_GET(INGRESS_SLOW_TICK_RATIO_MASK, val);
+-	if (!tick)
+-		return -EINVAL;
+-
+-	unit = (config & TRTCM_PKT_MODE) ? 1000000 / tick : 8000 / tick;
+-	if (!unit)
+-		return -EINVAL;
+-
+-	rate = rate_val / unit;
+-	rate_frac = rate_val % unit;
+-	rate_frac = FIELD_PREP(TRTCM_TOKEN_RATE_MASK, rate_frac) / unit;
+-	rate = FIELD_PREP(TRTCM_TOKEN_RATE_MASK, rate) |
+-	       FIELD_PREP(TRTCM_TOKEN_RATE_FRACTION_MASK, rate_frac);
+-
+-	err = airoha_qdma_set_trtcm_param(qdma, channel, addr,
+-					  TRTCM_TOKEN_RATE_MODE, mode, rate);
+-	if (err)
+-		return err;
+-
+-	val = max_t(u32, bucket_size, MIN_TOKEN_SIZE);
+-	val = min_t(u32, __fls(val), MAX_TOKEN_SIZE_OFFSET);
+-
+-	return airoha_qdma_set_trtcm_param(qdma, channel, addr,
+-					   TRTCM_BUCKETSIZE_SHIFT_MODE,
+-					   mode, val);
+-}
+-
+-static int airoha_qdma_set_tx_rate_limit(struct airoha_gdm_port *port,
+-					 int channel, u32 rate,
+-					 u32 bucket_size)
+-{
+-	int i, err;
+-
+-	for (i = 0; i <= TRTCM_PEAK_MODE; i++) {
+-		err = airoha_qdma_set_trtcm_config(port->qdma, channel,
+-						   REG_EGRESS_TRTCM_CFG, i,
+-						   !!rate, TRTCM_METER_MODE);
+-		if (err)
+-			return err;
+-
+-		err = airoha_qdma_set_trtcm_token_bucket(port->qdma, channel,
+-							 REG_EGRESS_TRTCM_CFG,
+-							 i, rate, bucket_size);
+-		if (err)
+-			return err;
+-	}
+-
+-	return 0;
+-}
+-
+ static int airoha_tc_htb_alloc_leaf_queue(struct airoha_gdm_port *port,
+ 					  struct tc_htb_qopt_offload *opt)
+ {
+-	u32 channel = TC_H_MIN(opt->classid) % AIROHA_NUM_QOS_CHANNELS;
++	u32 channel = TC_H_MIN(opt->classid) % AIROHA_MAX_NUM_CHANNELS;
+ 	u32 rate = div_u64(opt->rate, 1000) << 3; /* kbps */
+ 	struct net_device *dev = port->dev;
+ 	int num_tx_queues = dev->real_num_tx_queues;
+@@ -2561,121 +2592,6 @@ static int airoha_tc_htb_alloc_leaf_queu
+ 
+ 	return 0;
+ }
+-
+-static int airoha_qdma_set_rx_meter(struct airoha_gdm_port *port,
+-				    u32 rate, u32 bucket_size,
+-				    enum trtcm_unit_type unit_type)
+-{
+-	struct airoha_qdma *qdma = port->qdma;
+-	int i;
+-
+-	for (i = 0; i < ARRAY_SIZE(qdma->q_rx); i++) {
+-		int err;
+-
+-		if (!qdma->q_rx[i].ndesc)
+-			continue;
+-
+-		err = airoha_qdma_init_rl_config(qdma, i, !!rate, unit_type);
+-		if (err)
+-			return err;
+-
+-		err = airoha_qdma_set_rl_token_bucket(qdma, i, rate,
+-						      bucket_size);
+-		if (err)
+-			return err;
+-	}
+-
+-	return 0;
+-}
+-
+-static int airoha_tc_matchall_act_validate(struct tc_cls_matchall_offload *f)
+-{
+-	const struct flow_action *actions = &f->rule->action;
+-	const struct flow_action_entry *act;
+-
+-	if (!flow_action_has_entries(actions)) {
+-		NL_SET_ERR_MSG_MOD(f->common.extack,
+-				   "filter run with no actions");
+-		return -EINVAL;
+-	}
+-
+-	if (!flow_offload_has_one_action(actions)) {
+-		NL_SET_ERR_MSG_MOD(f->common.extack,
+-				   "only once action per filter is supported");
+-		return -EOPNOTSUPP;
+-	}
+-
+-	act = &actions->entries[0];
+-	if (act->id != FLOW_ACTION_POLICE) {
+-		NL_SET_ERR_MSG_MOD(f->common.extack, "unsupported action");
+-		return -EOPNOTSUPP;
+-	}
+-
+-	if (act->police.exceed.act_id != FLOW_ACTION_DROP) {
+-		NL_SET_ERR_MSG_MOD(f->common.extack,
+-				   "invalid exceed action id");
+-		return -EOPNOTSUPP;
+-	}
+-
+-	if (act->police.notexceed.act_id != FLOW_ACTION_ACCEPT) {
+-		NL_SET_ERR_MSG_MOD(f->common.extack,
+-				   "invalid notexceed action id");
+-		return -EOPNOTSUPP;
+-	}
+-
+-	if (act->police.notexceed.act_id == FLOW_ACTION_ACCEPT &&
+-	    !flow_action_is_last_entry(actions, act)) {
+-		NL_SET_ERR_MSG_MOD(f->common.extack,
+-				   "action accept must be last");
+-		return -EOPNOTSUPP;
+-	}
+-
+-	if (act->police.peakrate_bytes_ps || act->police.avrate ||
+-	    act->police.overhead || act->police.mtu) {
+-		NL_SET_ERR_MSG_MOD(f->common.extack,
+-				   "peakrate/avrate/overhead/mtu unsupported");
+-		return -EOPNOTSUPP;
+-	}
+-
+-	return 0;
+-}
+-
+-static int airoha_dev_tc_matchall(struct net_device *dev,
+-				  struct tc_cls_matchall_offload *f)
+-{
+-	enum trtcm_unit_type unit_type = TRTCM_BYTE_UNIT;
+-	struct airoha_gdm_port *port = netdev_priv(dev);
+-	u32 rate = 0, bucket_size = 0;
+-
+-	switch (f->command) {
+-	case TC_CLSMATCHALL_REPLACE: {
+-		const struct flow_action_entry *act;
+-		int err;
+-
+-		err = airoha_tc_matchall_act_validate(f);
+-		if (err)
+-			return err;
+-
+-		act = &f->rule->action.entries[0];
+-		if (act->police.rate_pkt_ps) {
+-			rate = act->police.rate_pkt_ps;
+-			bucket_size = act->police.burst_pkt;
+-			unit_type = TRTCM_PACKET_UNIT;
+-		} else {
+-			rate = div_u64(act->police.rate_bytes_ps, 1000);
+-			rate = rate << 3; /* Kbps */
+-			bucket_size = act->police.burst;
+-		}
+-		fallthrough;
+-	}
+-	case TC_CLSMATCHALL_DESTROY:
+-		return airoha_qdma_set_rx_meter(port, rate, bucket_size,
+-						unit_type);
+-	default:
+-		return -EOPNOTSUPP;
+-	}
+-}
+-
+ static int airoha_dev_setup_tc_block_cb(enum tc_setup_type type,
+ 					void *type_data, void *cb_priv)
+ {
+@@ -2689,8 +2605,6 @@ static int airoha_dev_setup_tc_block_cb(
+ 	switch (type) {
+ 	case TC_SETUP_CLSFLOWER:
+ 		return airoha_ppe_setup_tc_block_cb(&eth->ppe->dev, type_data);
+-	case TC_SETUP_CLSMATCHALL:
+-		return airoha_dev_tc_matchall(dev, type_data);
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -2742,14 +2656,14 @@ static void airoha_tc_remove_htb_queue(s
+ 	struct net_device *dev = port->dev;
+ 
+ 	netif_set_real_num_tx_queues(dev, dev->real_num_tx_queues - 1);
+-	airoha_qdma_set_tx_rate_limit(port, queue + 1, 0, 0);
++	airoha_qdma_set_tx_rate_limit(port, queue, 0, 0);
+ 	clear_bit(queue, port->qos_sq_bmap);
+ }
+ 
+ static int airoha_tc_htb_delete_leaf_queue(struct airoha_gdm_port *port,
+ 					   struct tc_htb_qopt_offload *opt)
+ {
+-	u32 channel = TC_H_MIN(opt->classid) % AIROHA_NUM_QOS_CHANNELS;
++	u32 channel = TC_H_MIN(opt->classid) % AIROHA_MAX_NUM_CHANNELS;
+ 
+ 	if (!test_bit(channel, port->qos_sq_bmap)) {
+ 		NL_SET_ERR_MSG_MOD(opt->extack, "invalid queue id");
+@@ -2765,7 +2679,7 @@ static int airoha_tc_htb_destroy(struct
+ {
+ 	int q;
+ 
+-	for_each_set_bit(q, port->qos_sq_bmap, AIROHA_NUM_QOS_CHANNELS)
++	for_each_set_bit(q, port->qos_sq_bmap, AIROHA_MAX_NUM_CHANNELS)
+ 		airoha_tc_remove_htb_queue(port, q);
+ 
+ 	return 0;
+@@ -2774,7 +2688,7 @@ static int airoha_tc_htb_destroy(struct
+ static int airoha_tc_get_htb_get_leaf_queue(struct airoha_gdm_port *port,
+ 					    struct tc_htb_qopt_offload *opt)
+ {
+-	u32 channel = TC_H_MIN(opt->classid) % AIROHA_NUM_QOS_CHANNELS;
++	u32 channel = TC_H_MIN(opt->classid) % AIROHA_MAX_NUM_CHANNELS;
+ 
+ 	if (!test_bit(channel, port->qos_sq_bmap)) {
+ 		NL_SET_ERR_MSG_MOD(opt->extack, "invalid queue id");
+@@ -2814,6 +2728,10 @@ static int airoha_dev_tc_setup(struct ne
+ 			       void *type_data)
+ {
+ 	struct airoha_gdm_port *port = netdev_priv(dev);
++	struct airoha_qdma *qdma = port->qdma;
++	struct airoha_eth *eth = qdma->eth;
++	
++	airoha_eth_monitor_workqueue_init(eth);
+ 
+ 	switch (type) {
+ 	case TC_SETUP_QDISC_ETS:
+@@ -2854,7 +2772,11 @@ static struct phylink_pcs *airoha_phylin
+ 	struct airoha_gdm_port *port = container_of(config, struct airoha_gdm_port,
+ 						    phylink_config);
+ 
+-	return port->pcs;
++	//return port->pcs;
++	if(interface == PHY_INTERFACE_MODE_2500BASEX)
++		return NULL;
++	else
++		return port->pcs;
+ }
+ 
+ static void airoha_mac_config(struct phylink_config *config, unsigned int mode,
+@@ -2957,8 +2879,9 @@ static const struct phylink_mac_ops airo
+ 
+ static int airoha_setup_phylink(struct net_device *dev)
+ {
++	struct device_node *pcs_np, *np = dev->dev.of_node;
+ 	struct airoha_gdm_port *port = netdev_priv(dev);
+-	struct device_node *np = dev->dev.of_node;
++	struct platform_device *pdev;
+ 	phy_interface_t phy_mode;
+ 	struct phylink *phylink;
+ 	int err;
+@@ -2969,6 +2892,27 @@ static int airoha_setup_phylink(struct n
+ 		return err;
+ 	}
+ 
++	pcs_np = of_parse_phandle(np, "pcs", 0);
++	if (!pcs_np)
++		return -ENODEV;
++
++	if (!of_device_is_available(pcs_np)) {
++		of_node_put(pcs_np);
++		return -ENODEV;
++	}
++
++	pdev = of_find_device_by_node(pcs_np);
++	of_node_put(pcs_np);
++	if (!pdev || !platform_get_drvdata(pdev)) {
++		if (pdev)
++			put_device(&pdev->dev);
++		return -EPROBE_DEFER;
++	}
++
++	port->xfi_mac = dev_get_regmap(&pdev->dev, "xfi_mac");
++	if (IS_ERR(port->xfi_mac))
++		return PTR_ERR(port->xfi_mac);
++
+ 	port->phylink_config.dev = &dev->dev;
+ 	port->phylink_config.type = PHYLINK_NETDEV;
+ 	port->phylink_config.mac_capabilities = MAC_ASYM_PAUSE | MAC_SYM_PAUSE |
+@@ -3060,17 +3004,18 @@ static int airoha_alloc_gdm_port(struct
+ 	err = netif_set_real_num_tx_queues(dev, AIROHA_NUM_TX_RING);
+ 	if (err)
+ 		return err;
+-
+-	err = of_get_ethdev_address(np, dev);
+-	if (err) {
+-		if (err == -EPROBE_DEFER)
+-			return err;
+-
++	
++	if (!is_valid_ether_addr(ethmac_addr)){
+ 		eth_hw_addr_random(dev);
+ 		dev_info(eth->dev, "generated random MAC address %pM\n",
+ 			 dev->dev_addr);
+ 	}
+-
++	else
++		eth_hw_addr_set(dev,ethmac_addr);
++		
++    dev_info(eth->dev, "MAC address %pM\n",
++			 dev->dev_addr);
++	
+ 	port = netdev_priv(dev);
+ 	u64_stats_init(&port->stats.syncp);
+ 	spin_lock_init(&port->stats.lock);
+@@ -3102,6 +3047,22 @@ free_metadata_dst:
+ 	return err;
+ }
+ 
++
++
++
++/* For lan1~4, set to slow path by default
++ * For ethx (10G ETH. Pon) set path by setting value 
++ * Uplink: slow by default . Downlink: Fast by default
++ */
++static void airoha_eth_qdma_fastpath_default_cfg(struct airoha_eth *eth)
++{
++	eth->qdma_init.wan_fastpath = 0;
++	eth->qdma_init.lan_fastpath = 0;
++	eth->qdma_init.xsi_ether_fastpath = 1;
++
++	return;
++}
++
+ static int airoha_probe(struct platform_device *pdev)
+ {
+ 	struct reset_control_bulk_data *xsi_rsts;
+@@ -3189,7 +3150,12 @@ static int airoha_probe(struct platform_
+ 			goto error_napi_stop;
+ 		}
+ 	}
++	
++	
++	airoha_eth_qdma_fastpath_default_cfg(eth);
+ 
++	glb_eth = eth;
++	
+ 	return 0;
+ 
+ error_napi_stop:
+@@ -3230,6 +3196,8 @@ static void airoha_remove(struct platfor
+ 		airoha_hw_cleanup(&eth->qdma[i]);
+ 	}
+ 
++	airoha_eth_monitor_workqueue_exit(eth);
++
+ 	for (i = 0; i < ARRAY_SIZE(eth->ports); i++) {
+ 		struct airoha_gdm_port *port = eth->ports[i];
+ 
+--- a/drivers/net/ethernet/airoha/airoha_eth.h
++++ b/drivers/net/ethernet/airoha/airoha_eth.h
+@@ -13,32 +13,41 @@
+ #include <linux/kernel.h>
+ #include <linux/netdevice.h>
+ #include <linux/reset.h>
+-#include <linux/soc/airoha/airoha_offload.h>
+ #include <net/dsa.h>
++#include "arht_hook/ecnt_hook_qdma_type.h"
++#include <linux/soc/airoha/airoha_offload.h>
+ 
+ #define AIROHA_MAX_NUM_GDM_PORTS	4
+ #define AIROHA_MAX_NUM_QDMA		2
+ #define AIROHA_MAX_NUM_IRQ_BANKS	4
+ #define AIROHA_MAX_DSA_PORTS		7
++#define AIROHA_LAN_PREFIX "lan"
++#define AIROHA_min_GSW_LAN_PORTS    1
++#define AIROHA_MAX_GSW_LAN_PORTS	4
+ #define AIROHA_MAX_NUM_RSTS		3
+ #define AIROHA_MAX_MTU			9216
+ #define AIROHA_MAX_PACKET_SIZE		2048
++#define AIROHA_MAX_NUM_CHANNELS		32
+ #define AIROHA_NUM_QOS_CHANNELS		4
+ #define AIROHA_NUM_QOS_QUEUES		8
+ #define AIROHA_NUM_TX_RING		32
+ #define AIROHA_NUM_RX_RING		32
+ #define AIROHA_NUM_NETDEV_TX_RINGS	(AIROHA_NUM_TX_RING + \
+-					 AIROHA_NUM_QOS_CHANNELS)
++					 AIROHA_MAX_NUM_CHANNELS)
+ #define AIROHA_FE_MC_MAX_VLAN_TABLE	64
+ #define AIROHA_FE_MC_MAX_VLAN_PORT	16
+ #define AIROHA_NUM_TX_IRQ		2
+-#define HW_DSCP_NUM			2048
++#define HW_DSCP_NUM			16384
+ #define IRQ_QUEUE_LEN(_n)		((_n) ? 1024 : 2048)
+ #define TX_DSCP_NUM			1024
+ #define RX_DSCP_NUM(_n)			\
+ 	((_n) ==  2 ? 128 :		\
+-	 (_n) == 11 ? 128 :		\
++	 (_n) == 11 ? 1024 :		\
+ 	 (_n) == 15 ? 128 :		\
++	 (_n) ==  9 ? 128 :		\
++	 (_n) ==  8 ? 128 :		\
++	 (_n) ==  7 ? 128 :	    \
++	 (_n) ==  1 ? 128 :		\
+ 	 (_n) ==  0 ? 1024 : 16)
+ 
+ #define PSE_RSV_PAGES			128
+@@ -47,6 +56,7 @@
+ #define QDMA_METER_IDX(_n)		((_n) & 0xff)
+ #define QDMA_METER_GROUP(_n)		(((_n) >> 8) & 0x3)
+ 
++#define PPE_NUM				2
+ #define PPE_SRAM_NUM_ENTRIES		(8 * 1024)
+ #define PPE_STATS_NUM_ENTRIES		(4 * 1024)
+ #define PPE_DRAM_NUM_ENTRIES		(16 * 1024)
+@@ -57,6 +67,27 @@
+ #define MTK_HDR_XMIT_TAGGED_TPID_8100	1
+ #define MTK_HDR_XMIT_TAGGED_TPID_88A8	2
+ 
++/* XFI_MAC */
++#define AIROHA_PCS_XFI_MAC_XFI_GIB_CFG		0x0
++#define   AIROHA_PCS_XFI_RX_FRAG_LEN		GENMASK(26, 22)
++#define   AIROHA_PCS_XFI_TX_FRAG_LEN		GENMASK(21, 17)
++#define   AIROHA_PCS_XFI_IPG_NUM		GENMASK(15, 10)
++#define   AIROHA_PCS_XFI_TX_FC_EN		BIT(5)
++#define   AIROHA_PCS_XFI_RX_FC_EN		BIT(4)
++#define   AIROHA_PCS_XFI_RXMPI_STOP		BIT(3)
++#define   AIROHA_PCS_XFI_RXMBI_STOP		BIT(2)
++#define   AIROHA_PCS_XFI_TXMPI_STOP		BIT(1)
++#define   AIROHA_PCS_XFI_TXMBI_STOP		BIT(0)
++#define AIROHA_PCS_XFI_MAC_XFI_LOGIC_RST	0x10
++#define   AIROHA_PCS_XFI_MAC_LOGIC_RST		BIT(0)
++#define AIROHA_PCS_XFI_MAC_XFI_MACADDRH		0x60
++#define   AIROHA_PCS_XFI_MAC_MACADDRH		GENMASK(15, 0)
++#define AIROHA_PCS_XFI_MAC_XFI_MACADDRL		0x64
++#define   AIROHA_PCS_XFI_MAC_MACADDRL		GENMASK(31, 0)
++#define AIROHA_PCS_XFI_MAC_XFI_CNT_CLR		0x100
++#define   AIROHA_PCS_XFI_GLB_CNT_CLR		BIT(0)
++
++
+ enum {
+ 	QDMA_INT_REG_IDX0,
+ 	QDMA_INT_REG_IDX1,
+@@ -80,6 +111,17 @@ enum {
+ };
+ 
+ enum {
++	ARHT_GSW_LANPORT_1 = 0,
++	ARHT_GSW_LANPORT_2,
++	ARHT_GSW_LANPORT_3,
++	ARHT_GSW_LANPORT_4,
++	ARHT_ETH_PORT_0,
++	ARHT_ETH_PORT_1,
++	ARHT_ETH_PORT_2,
++	ARHT_ETH_PORT_MAX,
++};
++
++enum {
+ 	XSI_PCIE0_VIP_PORT_MASK	= BIT(22),
+ 	XSI_PCIE1_VIP_PORT_MASK	= BIT(23),
+ 	XSI_USB_VIP_PORT_MASK	= BIT(25),
+@@ -124,6 +166,7 @@ enum {
+ 	FE_PSE_PORT_PPE2,
+ 	FE_PSE_PORT_GDM4,
+ 	FE_PSE_PORT_CDM5,
++	FE_PSE_PORT_MCST = 0xe,
+ 	FE_PSE_PORT_DROP = 0xf,
+ };
+ 
+@@ -236,6 +279,12 @@ struct airoha_hw_stats {
+ };
+ 
+ enum {
++	PPE_CPU_REASON_HIT_BIND_KEEPALIVE_UC_OLD_HDR = 0x13,	/* Hit bind and keep alive with unicast old-header packet */
++	PPE_CPU_REASON_HIT_BIND_KEEPALIVE_MC_NEW_HDR = 0x14,	/* Hit bind and keep alive with multicast new-header packet */
++	PPE_CPU_REASON_HIT_BIND_KEEPALIVE_DUP_OLD_HDR = 0x15,	/* Hit bind and keep alive with duplicate old-header packet */
++};
++
++enum {
+ 	AIROHA_FOE_STATE_INVALID,
+ 	AIROHA_FOE_STATE_UNBIND,
+ 	AIROHA_FOE_STATE_BIND,
+@@ -334,6 +383,41 @@ struct airoha_foe_bridge {
+ 
+ 	struct airoha_foe_mac_info l2;
+ };
++struct hop_info{
++	u32 :20;
++	u32 hop3:3;	/* hop id 3 */
++	u32 hop2:3;	/* hop id 2 */
++	u32 hop1:3;	/* hop id 1 */
++	u32 hop0:3;	/* hop id 0 */
++	};
++
++struct airoha_foe_bridge32 {
++	u32 dest_mac_hi;
++
++	u16 in_vlan;
++	u16 dest_mac_lo;
++
++	u32 info_hsk_l2;
++
++	u32 src_mac_hi;
++
++	u16 sptag;
++	u16 src_mac_lo;
++
++	u32 rsv1[2];
++
++	struct hop_info hop;
++
++	u32 rsv2;
++	
++	u32 data;
++	
++	u32 ib2;
++
++	struct airoha_foe_mac_info_common l2;
++
++	u32 meter;
++};
+ 
+ struct airoha_foe_ipv4_tuple {
+ 	u32 src_ip;
+@@ -410,6 +494,7 @@ struct airoha_foe_entry {
+ 		struct {
+ 			u32 ib1;
+ 			union {
++				struct airoha_foe_bridge32 bridge32;
+ 				struct airoha_foe_bridge bridge;
+ 				struct airoha_foe_ipv4 ipv4;
+ 				struct airoha_foe_ipv4_dslite dslite;
+@@ -468,6 +553,15 @@ enum airoha_flow_entry_type {
+ 	FLOW_TYPE_L2_SUBFLOW,
+ };
+ 
++enum magic {
++	PON = 1,
++	ETH2 = 2,
++	LAN1 = 3,
++	LAN2 = 4,
++	LAN3 = 5,
++	LAN4 = 6,
++};
++
+ struct airoha_flow_table_entry {
+ 	union {
+ 		struct hlist_node list; /* PPE L3 flow entry */
+@@ -483,12 +577,17 @@ struct airoha_flow_table_entry {
+ 	struct airoha_foe_stats64 stats;
+ 	enum airoha_flow_entry_type type;
+ 
++	enum magic e_magic; /* egress interface */
++	bool tx_modified;
++
+ 	struct rhash_head node;
+ 	unsigned long cookie;
++	u32 ingress_dev_idx;
+ 
+ 	/* Must be last --ends in a flexible-array member. */
+ 	struct airoha_foe_entry data;
+ };
++#define WIFI_DEV 0xcc
+ 
+ struct airoha_wdma_info {
+ 	u8 idx;
+@@ -498,7 +597,7 @@ struct airoha_wdma_info {
+ };
+ 
+ /* RX queue to IRQ mapping: BIT(q) in IRQ(n) */
+-#define RX_IRQ0_BANK_PIN_MASK			0x839f
++#define RX_IRQ0_BANK_PIN_MASK			0xbb9f
+ #define RX_IRQ1_BANK_PIN_MASK			0x7fe00000
+ #define RX_IRQ2_BANK_PIN_MASK			0x20
+ #define RX_IRQ3_BANK_PIN_MASK			0x40
+@@ -508,6 +607,19 @@ struct airoha_wdma_info {
+ 	 ((_n) == 1) ? RX_IRQ1_BANK_PIN_MASK :	\
+ 	 RX_IRQ0_BANK_PIN_MASK)
+ 
++#define LAN_IDX_FROM_SPTAG(_sptag)		\
++		(((_sptag) == 4) ? LAN4 :	\
++		 ((_sptag) == 3) ? LAN3 :	\
++		 ((_sptag) == 2) ? LAN2 :	\
++		 ((_sptag) == 1) ? LAN1 : 0)
++		 
++		 
++#define LAN_IDX_FROM_TX_SPTAG(_sptag)		\
++		(((_sptag) == 16)? 4 :	\
++		 ((_sptag) == 8) ? 3 :	\
++		 ((_sptag) == 4) ? 2 :	\
++		 ((_sptag) == 2) ? 1 : 0)		 
++
+ struct airoha_irq_bank {
+ 	struct airoha_qdma *qdma;
+ 
+@@ -540,11 +652,12 @@ struct airoha_gdm_port {
+ 	struct phylink *phylink;
+ 	struct phylink_config phylink_config;
+ 	struct phylink_pcs *pcs;
++	struct regmap *xfi_mac;
+ #endif
+ 
+ 	struct airoha_hw_stats stats;
+ 
+-	DECLARE_BITMAP(qos_sq_bmap, AIROHA_NUM_QOS_CHANNELS);
++	DECLARE_BITMAP(qos_sq_bmap, AIROHA_MAX_NUM_CHANNELS);
+ 
+ 	/* qos stats counters */
+ 	u64 cpu_tx_packets;
+@@ -553,6 +666,7 @@ struct airoha_gdm_port {
+ 	struct metadata_dst *dsa_meta[AIROHA_MAX_DSA_PORTS];
+ };
+ 
++#define AIROHA_RXD4_SPORT			GENMASK(25, 21)
+ #define AIROHA_RXD4_PPE_CPU_REASON	GENMASK(20, 16)
+ #define AIROHA_RXD4_FOE_ENTRY		GENMASK(15, 0)
+ 
+@@ -584,6 +698,19 @@ struct airoha_eth_soc_data {
+ 	} ops;
+ };
+ 
++enum airoha_eth_id {
++	ID_EN7581 = 0,
++	ID_AN7583 = 1,
++};
++struct airoha_eth_chip;
++
++/* fastpath slowpath settings */
++struct qdma_init {
++	u32 wan_fastpath;
++	u32 lan_fastpath;
++	u32 xsi_ether_fastpath;
++};
++
+ struct airoha_eth {
+ 	struct device *dev;
+ 
+@@ -604,6 +731,9 @@ struct airoha_eth {
+ 
+ 	struct airoha_qdma qdma[AIROHA_MAX_NUM_QDMA];
+ 	struct airoha_gdm_port *ports[AIROHA_MAX_NUM_GDM_PORTS];
++	enum airoha_eth_id airoha_chip_id;
++	struct qdma_init qdma_init;
++	bool work_started;
+ };
+ 
+ u32 airoha_rr(void __iomem *base, u32 offset);
+@@ -662,6 +792,7 @@ int airoha_ppe_init(struct airoha_eth *e
+ void airoha_ppe_deinit(struct airoha_eth *eth);
+ void airoha_ppe_init_upd_mem(struct airoha_gdm_port *port);
+ u32 airoha_ppe_get_total_num_entries(struct airoha_ppe *ppe);
++struct airoha_foe_entry *airoha_ppe_foe_get_entry_locked(struct airoha_ppe *ppe, u32 hash);
+ struct airoha_foe_entry *airoha_ppe_foe_get_entry(struct airoha_ppe *ppe,
+ 						  u32 hash);
+ void airoha_ppe_foe_entry_get_stats(struct airoha_ppe *ppe, u32 hash,
+@@ -675,5 +806,101 @@ static inline int airoha_ppe_debugfs_ini
+ 	return 0;
+ }
+ #endif
++#define FOE_ENTRY_NUM(skb)		skb_get_hash(skb)
++
++#define QDMA_RX_DSCP_MSG_LENS	(16)
++
++enum {
++	PON_RX_SUCCESS=0,
++	PON_RX_FAIL,
++};
++extern int (*pwan_cb_rx_hook)(void *pMsg, uint msgLen, struct sk_buff *skb, uint pktLen);
++
++#define SPEED_TEST_SUCCESS	0
++extern int (*wan_speed_test_hook)(struct sk_buff*);
++
++struct port_info {
++    unsigned long int tsid:8;
++    unsigned long int channel:5;
++    unsigned long int nbq:5;
++    unsigned long int fast:1;
++    unsigned long int txq:4;
++    unsigned long int atm_pppoa:1;
++    unsigned long int atm_ipoa:1;
++    unsigned long int atm_vc_mux:1;
++    unsigned long int eth_macSTagEn:1;
++	unsigned long int eth_is_wan:1;
++    unsigned long int ds_to_qdma:1;
++    unsigned long int ds_need_offload:1;
++    unsigned long int force_high_priority_ring:1;
++	unsigned long int txq_is_valid:1;
++    unsigned long int stag:16;
++    unsigned long int magic:16;
++	unsigned long int udf:8;//add for inode wifi 
++};
++#define DP_SPEED_UP 304
++
++int speedtest_tx_offload(struct sk_buff * skb, struct airoha_foe_entry *foe_entry,struct airoha_ppe *ppe,struct port_info *pinfo);
++int SendToPpe(struct sk_buff * skb);
++int airoha_eth_fast_tx(struct sk_buff *skb, int channel);
++extern struct airoha_eth *glb_eth;
++extern int (*ra_sw_nat_hook_sendto_ppe)(struct sk_buff *skb);
++extern int (*offload_eth_fast_tx_hook)(struct sk_buff *skb, int channel);
++
++extern u32 gsw_speed[4];
++int qdma_wan_tx(struct sk_buff *skb, u32 msg0, u32 msg1, struct port_info *pinfo);
++void airoha_ppe_foe_flow_update_pon_offload(struct airoha_ppe *ppe, struct sk_buff *skb, struct port_info *pinfo);
++struct airoha_flow_table_entry *airoha_flow_table_entry_get_by_hash(struct airoha_ppe *ppe, u32 hash);
++
++#define AIROHA_DEBUG_LEVEL_NONE 0
++#define AIROHA_DEBUG_LEVEL_ERR  1
++#define AIROHA_DEBUG_LEVEL_WARN 2
++#define AIROHA_DEBUG_LEVEL_INFO 3
++#define AIROHA_DEBUG_LEVEL_DBG  4
++
++// Global variable to store the debug level
++extern int airoha_debug_level;
++
++// Macro to control logging based on the debug level
++#define AIROHA_LOG(level, fmt, ...) \
++    do { \
++        if (level <= airoha_debug_level) \
++            printk(fmt, ##__VA_ARGS__); \
++    } while (0)
++
++extern int airoha_upstream_fast_path_enable;
++extern int airoha_downstream_fast_path_enable;
++extern void airoha_dp_api_qdma_rxring_default_config(struct airoha_qdma *qdma);
++extern int airoha_dp_api_debugfs_init(struct airoha_eth *eth);
++extern void UpdateShrinkTable(int index,const u8 *addr);
++void airoha_qdma_lan_tx(struct sk_buff *skb,u32 tag,u8 fport,int channel,int qid);
++int airoha_get_lan_id(struct net_device *dev);
++void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
++void airoha_fe_core_reset(struct airoha_eth *eth);
++
++
++
++/*QDMA Multicast*/
++#define MULTICAST_SPTAG_KEEP_HI_EN_SHIFT			(31)
++#define MULTICAST_SPTAG_KEEP_HI_EN_MASK				(0x1<<MULTICAST_SPTAG_KEEP_HI_EN_SHIFT)
++#define MULTICAST_SPTAG_KEEP_HI_ENABLE				(1)
++#define MULTICAST_SPTAG_KEEP_HI_DISABLE				(0)
++#define MULTICAST_SPTAG_SHIFT						(0)
++#define MULTICAST_SPTAG_MASK						(0xFFFF<<MULTICAST_SPTAG_SHIFT)
++#define MULTICAST_FPORT_SHIFT						(16)
++#define MULTICAST_FPORT_MASK						(0x1FF<<MULTICAST_FPORT_SHIFT)
++
++#define QDMA_CSR_MULTICAST_MODIFY_FPORT(chnl)		(0x0880+(chnl<<2))
++
++#define qdmaSetMulticastFport(qdma, chnl, val)				airoha_qdma_rmw(qdma, QDMA_CSR_MULTICAST_MODIFY_FPORT(chnl), MULTICAST_FPORT_MASK, (val<<MULTICAST_FPORT_SHIFT))
++#define qdmaSetMulticastSptag(qdma, chnl, val)				airoha_qdma_rmw(qdma, QDMA_CSR_MULTICAST_MODIFY_FPORT(chnl), MULTICAST_SPTAG_MASK, (val<<MULTICAST_SPTAG_SHIFT))
++#define qdmaEnableMulticastSptagKeepHi(qdma, chnl)			airoha_qdma_set(qdma, QDMA_CSR_MULTICAST_MODIFY_FPORT(chnl), (MULTICAST_SPTAG_KEEP_HI_ENABLE << MULTICAST_SPTAG_KEEP_HI_EN_SHIFT))
++#define qdmaDisableMulticastSptagKeepHi(qdma, chnl)			airoha_qdma_clear(qdma, QDMA_CSR_MULTICAST_MODIFY_FPORT(chnl), (MULTICAST_SPTAG_KEEP_HI_ENABLE << MULTICAST_SPTAG_KEEP_HI_EN_SHIFT))
++
++#define MULTICAST_MAX_CHANNEL					(16)
++#define HSGMII_LAN_ETH_CHNL						(13)
++
++
++
+ 
+ #endif /* AIROHA_ETH_H */
