@@ -21,12 +21,12 @@
 	chosen {
 		bootargs = "console=ttyS0,115200 earlycon";
 		stdout-path = "serial0:115200n8";
-		linux,usable-memory-range = <0x0 0x80200000 0x0 0x1fe00000>;
+		linux,usable-memory-range = <0x0 0x80200000 0x0 0x7fe00000>;
 	};
 
 	memory@80000000 {
 		device_type = "memory";
-		reg = <0x0 0x80000000 0x2 0x00000000>;
+		reg = <0x0 0x80000000 0x0 0x80000000>;
 	};
 };
 
@@ -129,8 +129,50 @@
 	#size-cells = <0>;
 
 	card@0 {
+		#address-cells = <0>;
+		#size-cells = <0>;
 		compatible = "mmc-card";
 		reg = <0>;
+
+		block {
+			compatible = "block-device";
+
+			partitions {
+				block-partition-factory {
+					partname = "factory";
+
+					nvmem-layout {
+						compatible = "fixed-layout";
+						#address-cells = <1>;
+						#size-cells = <1>;
+
+						eeprom_factory_0: eeprom@0 {
+							reg = <0x0 0x1e00>;
+						};
+
+						pon_factory_1d0000: pon@1d0000 {
+							reg = <0x1d0000 0x400>;
+						};
+
+						onu_type_factory_1e0000: onu_type@1e0000 {
+							reg = <0x1e0000 0x10>;
+						};
+					};
+				};
+
+				block-partition-mfginfo {
+					partname = "mfginfo";
+
+					nvmem-layout {
+						compatible = "adtran,mfginfo";
+
+						macaddr: mfg-mac {
+							#nvmem-cell-cells = <1>;
+						};
+					};
+				};
+			};
+		};
 	};
 };
 
@@ -142,16 +184,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie0_rst_pins>;
 	status = "okay";
-
-	pcie@0,0 {
-		reg = <0x0000 0 0 0 0>;
-		wifi@0,0 {
-			compatible = "mediatek,mt76";
-			reg = <0x0000 0 0 0 0>;
-			airoha,npu = <&npu>;
-			airoha,eth = <&eth>;
-		};
-	};
 };
 
 &pcie1 {
@@ -161,11 +193,40 @@
 
 	pcie@1,0 {
 		reg = <0x0000 0 0 0 0>;
-		wifi@1,0 {
-			compatible = "mediatek,mt76";
+		#address-cells = <3>;
+		#size-cells = <2>;
+
+		radio0: mt7996@0,0 {
 			reg = <0x0000 0 0 0 0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+
 			airoha,npu = <&npu>;
 			airoha,eth = <&eth>;
+			nvmem-cells = <&eeprom_factory_0>;
+			nvmem-cell-names = "eeprom";
+			ieee80211-freq-limit = <2400000 2500000>, <5170000 5835000>, <5945000 7125000>;
+
+			band@0 {
+				/* 2.4 GHz */
+				reg = <0>;
+				nvmem-cells = <&macaddr 0x4>;
+				nvmem-cell-names = "mac-address";
+			};
+
+			band@1 {
+				/* 5 GHz */
+				reg = <1>;
+				nvmem-cells = <&macaddr 0xa>;
+				nvmem-cell-names = "mac-address";
+			};
+
+			band@2 {
+				/* 6 GHz */
+				reg = <2>;
+				nvmem-cells = <&macaddr 0x6>;
+				nvmem-cell-names = "mac-address";
+			};
 		};
 	};
 };
@@ -173,6 +234,24 @@
 &pcie2 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie2_rst_pins>;
+	status = "okay";
+};
+
+&pon_bob {
+	nvmem-cells = <&pon_factory_1d0000>, <&onu_type_factory_1e0000>;
+	nvmem-cell-names = "bob_data", "onu_type";
+
+	status = "okay";
+};
+
+&pon_phy {
+	status = "okay";
+};
+
+&xpon_mac {
+	nvmem-cells = <&onu_type_factory_1e0000>, <&macaddr 0x0>;
+	nvmem-cell-names = "onu_type", "pon_mac";
+
 	status = "okay";
 };
 
@@ -251,21 +330,33 @@
 };
 
 &gdm1 {
+	nvmem-cells = <&macaddr 0x0>;
+	nvmem-cell-names = "mac-address";
+	label = "dsa0";
+
 	status = "okay";
 };
 
 &gdm2 {
-	status = "disabled";
+	nvmem-cells = <&macaddr 0x0>;
+	nvmem-cell-names = "mac-address";
 
+/*
 	phy-handle = <&as21xx_0>;
 	phy-mode = "usxgmii";
+*/
+
+	status = "okay";
 };
 
 &gdm4 {
-	status = "disabled";
-
+	nvmem-cells = <&macaddr 0x1>;
+	nvmem-cell-names = "mac-address";
+	label = "lan1";
 	phy-handle = <&as21xx_1>;
 	phy-mode = "usxgmii";
+
+	status = "disabled";
 };
 
 &switch {

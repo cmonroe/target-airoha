@@ -10,12 +10,6 @@
 		             <GIC_SPI 34 IRQ_TYPE_LEVEL_HIGH>; // DYINGGASP INT 18+16
 	};
 
-	pcm@1fbd0000 {
-	compatible = "airoha,airoha-pcm";
-	reg = <0x0 0x1fbd0000 0x0 0x4fff>;
-	interrupts = <GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>;
-	};
-
 	pon_phy: pon_phy@1faf0000 {
 		compatible = "econet,ecnt-pon_phy";
 		reg = <0x0 0x1faf0000 0x0 0x1fff>,			// PON_PHY_ASIC_RG range
@@ -28,15 +22,19 @@
 			  //<0x0 0x1fa7B000 0x0 0xfff>,     	// xfi_pma
 			  //<0x0 0x1fa8A000 0x0 0xfff>,     	// pon_ana_pxp
 			  //<0x0 0x1fa8B000 0x0 0xfff>;  	    // pon_pma
-	interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>;  // XPON_PHY_INTR 27+16 move to common
-	txDis-gpios = <&en7581_pinctrl 38 GPIO_ACTIVE_LOW>; // tx disable
-	txBen-gpios = <&en7581_pinctrl 41 GPIO_ACTIVE_LOW>; // for 7581 xepon&gepon BEN
-	rxDis-gpios = <&en7581_pinctrl 39 GPIO_ACTIVE_LOW>; // LED_PHY_VCC_DISABLE
+		interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>;      // XPON_PHY_INTR 27+16 move to common
+		txDis-gpios = <&en7581_pinctrl 38 GPIO_ACTIVE_LOW>; // tx disable
+		txBen-gpios = <&en7581_pinctrl 41 GPIO_ACTIVE_LOW>; // for 7581 xepon&gepon BEN
+		rxDis-gpios = <&en7581_pinctrl 39 GPIO_ACTIVE_LOW>; // LED_PHY_VCC_DISABLE
 	};
 	
-	xpon_led{
-	compatible = "airoha,airoha-xpon_led";
-	pon-gpios = <&en7581_pinctrl 28 GPIO_ACTIVE_LOW>;   // xpon_status
-	los-gpios = <&en7581_pinctrl 25 GPIO_ACTIVE_LOW>;   // xpon_los
+	pon_led: xpon_led {
+		compatible = "airoha,airoha-xpon_led";
+		pon-gpios = <&en7581_pinctrl 28 GPIO_ACTIVE_LOW>;   // xpon_status
+		los-gpios = <&en7581_pinctrl 25 GPIO_ACTIVE_LOW>;   // xpon_los
+	};
+
+	pon_bob: bob_nvm {
+		compatible = "airoha,airoha-bob";
 	};
 };
