@@ -1,22 +1,86 @@
---- a/drivers/net/ethernet/airoha/airoha_ppe.c
-+++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -16,6 +16,15 @@
- #include "airoha_regs.h"
- #include "airoha_eth.h"
+--- a/drivers/net/ethernet/airoha/arht_dp_api.c
++++ b/drivers/net/ethernet/airoha/arht_dp_api.c
+@@ -175,8 +175,6 @@ QDMA_Private_T *gpQdmaPriv = NULL ;
+ extern struct airoha_eth *glb_eth;
+ extern int (*airoha_ppe_foe_commit_entry_ptr)(struct airoha_ppe *ppe,struct airoha_foe_entry *e,u32 hash,bool rx_wlan);
  
-+#ifdef ADTN_MODS
+-extern u32 airoha_ppe_foe_get_entry_hash(struct airoha_foe_entry *hwe);
+-
+ extern bool airoha_ppe_foe_compare_entry(struct airoha_flow_table_entry *e,
+ 					 struct airoha_foe_entry *hwe);
+ extern void airoha_ppe_delete_entry(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, uint entry_idx);
+@@ -9452,14 +9450,14 @@ void airoha_ppe_foe_flow_update_eth_offl
+ 		airoha_ppe_pon_sfu_bind(ppe, hwe, skb, pinfo, fport);
+ 		goto unlock;
+ 	}
+-	
+-	index = airoha_ppe_foe_get_entry_hash(hwe);
++
++	index = airoha_ppe_foe_get_entry_hash(ppe, hwe);
+ 	hlist_for_each_entry_safe(e, n, &ppe->foe_flow[index], list) {
+ 		if (airoha_ppe_foe_compare_entry(e, hwe)) {
+ 			if(e->tx_modified){
+ 				goto unlock;
+ 			}
+-			type = FIELD_GET(AIROHA_FOE_IB1_BIND_PACKET_TYPE, e->data.ib1);			
++			type = FIELD_GET(AIROHA_FOE_IB1_BIND_PACKET_TYPE, e->data.ib1);
+ 			dscp = get_dscp_from_skb(skb, type);
+ 			
+ 			switch (type) {
+@@ -9535,8 +9533,8 @@ void airoha_ppe_foe_flow_update_pon_offl
+ 		airoha_ppe_pon_sfu_bind(ppe, hwe, skb, pinfo, 2);
+ 		goto unlock;
+ 	}
+-		
+-	index = airoha_ppe_foe_get_entry_hash(hwe);
++
++	index = airoha_ppe_foe_get_entry_hash(ppe, hwe);
+ 	hlist_for_each_entry_safe(e, n, &ppe->foe_flow[index], list) {
+ 		if (airoha_ppe_foe_compare_entry(e, hwe)) {
+ 			if(e->tx_modified){
+@@ -10149,9 +10147,9 @@ void airoha_ppe_foe_flow_update_wifi_npu
+ 	
+ 	type = FIELD_GET(AIROHA_FOE_IB1_BIND_PACKET_TYPE, hwe->ib1);
+ 	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "Packet type:%d\n", type);
+-	index = airoha_ppe_foe_get_entry_hash(hwe);
+-	
+-	if(airoha_ppe_is_wifi2G_dev(skb->dev)){		
++	index = airoha_ppe_foe_get_entry_hash(ppe, hwe);
++
++	if(airoha_ppe_is_wifi2G_dev(skb->dev)){
+ 		pinfo->nbq = 0;
+ 	}
+ 	else{		
+@@ -10793,8 +10791,8 @@ int arht_multicast_hwnat_state_handler_l
+ 
+ 	airoha_ppe_foe_commit_entry(ppe, hwe, foe_index);
+ 
+-	index = airoha_ppe_foe_get_entry_hash(hwe);
+-								
++	index = airoha_ppe_foe_get_entry_hash(ppe, hwe);
++
+ 	e = kzalloc(sizeof(*e), GFP_KERNEL);
+ 	if (!e)
+ 		return -ENOMEM;
+--- a/drivers/net/ethernet/airoha/airoha_eth.h
++++ b/drivers/net/ethernet/airoha/airoha_eth.h
+@@ -891,7 +891,12 @@ int airoha_get_lan_id(struct net_device
+ void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
+ void airoha_fe_core_reset(struct airoha_eth *eth);
+ int airoha_receive_hook(struct sk_buff *skb, struct airoha_qdma_desc *desc, int p, int len, u32 sptag);
+-
 +u32 airoha_ppe_foe_get_entry_hash(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe);
 +void airoha_ppe_clear_sram_table_flow(struct airoha_ppe *ppe,uint entry_idx);
 +void airoha_ppe_clear_sram_table_all(struct airoha_ppe *ppe);
 +void airoha_ppe_clean_sram_table(void);
 +void airoha_ppe_delete_entry(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, uint entry_idx);
 +bool airoha_ppe_foe_compare_entry(struct airoha_flow_table_entry *e, struct airoha_foe_entry *hwe);
-+#endif
-+
- extern int airoha_set_ppe_mac(struct airoha_foe_entry *foe_entry, struct net_device *dev, char* src_mac, char*dst_mac, u16 pppid);
- extern int (*ra_sw_nat_hook_clean_table) (void);
- extern void airoha_ppe_hook_init(void);
-@@ -649,7 +658,7 @@ static void airoha_ppe_foe_flow_stats_up
+ 
+ /*QDMA Multicast*/
+ #define MULTICAST_SPTAG_KEEP_HI_EN_SHIFT			(31)
+--- a/drivers/net/ethernet/airoha/airoha_ppe.c
++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
+@@ -649,7 +649,7 @@ static void airoha_ppe_foe_flow_stats_up
  		FIELD_PREP(AIROHA_FOE_IB2_NBQ, nbq);
  }
  
