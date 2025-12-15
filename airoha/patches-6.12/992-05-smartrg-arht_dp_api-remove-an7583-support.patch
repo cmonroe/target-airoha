@@ -1,0 +1,20 @@
+--- a/drivers/net/ethernet/airoha/arht_dp_api.c
++++ b/drivers/net/ethernet/airoha/arht_dp_api.c
+@@ -181,8 +181,6 @@ extern bool airoha_ppe_foe_compare_entry
+ 					 struct airoha_foe_entry *hwe);
+ extern void airoha_ppe_delete_entry(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, uint entry_idx);
+ 
+-extern void EphyMonitor(void);
+-
+ extern spinlock_t ppe_lock, flow_offload_lock;
+ /* airoha pon onu type
+  * 0 --> unknown
+@@ -12337,7 +12335,7 @@ void airoha_eth_monitor_gsw_process(stru
+ {
+ 	struct net_device *eth_dev = NULL;
+ 	int i = 0;
+-	EphyMonitor();
++
+ 	for(i=0; i<AIROHA_MAX_GSW_LAN_PORTS; i++)
+ 	{
+ 		char ifname[8] = {0};

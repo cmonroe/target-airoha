@@ -9,7 +9,7 @@
  extern bool airoha_ppe_foe_compare_entry(struct airoha_flow_table_entry *e,
  					 struct airoha_foe_entry *hwe);
  extern void airoha_ppe_delete_entry(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, uint entry_idx);
-@@ -9452,14 +9450,14 @@ void airoha_ppe_foe_flow_update_eth_offl
+@@ -9450,14 +9448,14 @@ void airoha_ppe_foe_flow_update_eth_offl
  		airoha_ppe_pon_sfu_bind(ppe, hwe, skb, pinfo, fport);
  		goto unlock;
  	}
@@ -27,7 +27,7 @@
  			dscp = get_dscp_from_skb(skb, type);
  			
  			switch (type) {
-@@ -9535,8 +9533,8 @@ void airoha_ppe_foe_flow_update_pon_offl
+@@ -9533,8 +9531,8 @@ void airoha_ppe_foe_flow_update_pon_offl
  		airoha_ppe_pon_sfu_bind(ppe, hwe, skb, pinfo, 2);
  		goto unlock;
  	}
@@ -38,7 +38,7 @@
  	hlist_for_each_entry_safe(e, n, &ppe->foe_flow[index], list) {
  		if (airoha_ppe_foe_compare_entry(e, hwe)) {
  			if(e->tx_modified){
-@@ -10149,9 +10147,9 @@ void airoha_ppe_foe_flow_update_wifi_npu
+@@ -10147,9 +10145,9 @@ void airoha_ppe_foe_flow_update_wifi_npu
  	
  	type = FIELD_GET(AIROHA_FOE_IB1_BIND_PACKET_TYPE, hwe->ib1);
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "Packet type:%d\n", type);
@@ -51,7 +51,7 @@
  		pinfo->nbq = 0;
  	}
  	else{		
-@@ -10793,8 +10791,8 @@ int arht_multicast_hwnat_state_handler_l
+@@ -10791,8 +10789,8 @@ int arht_multicast_hwnat_state_handler_l
  
  	airoha_ppe_foe_commit_entry(ppe, hwe, foe_index);
  
