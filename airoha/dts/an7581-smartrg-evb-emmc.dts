@@ -326,12 +326,13 @@
 };
 
 &eth {
+	nvmem-cells = <&macaddr 0x0>;
+	nvmem-cell-names = "mac";
+
 	status = "okay";
 };
 
 &gdm1 {
-	nvmem-cells = <&macaddr 0x0>;
-	nvmem-cell-names = "mac-address";
 	label = "dsa0";
 
 	status = "okay";
@@ -350,8 +351,6 @@
 };
 
 &gdm4 {
-	nvmem-cells = <&macaddr 0x1>;
-	nvmem-cell-names = "mac-address";
 	label = "lan1";
 	phy-handle = <&as21xx_1>;
 	phy-mode = "usxgmii";
