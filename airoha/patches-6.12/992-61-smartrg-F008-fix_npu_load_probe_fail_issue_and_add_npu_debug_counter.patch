@@ -1,0 +1,170 @@
+--- a/drivers/net/ethernet/airoha/airoha_npu.c
++++ b/drivers/net/ethernet/airoha/airoha_npu.c
+@@ -42,6 +42,8 @@
+ #define REG_CR_MBQ0_CTRL(_n)		(NPU_MBOX_BASE_ADDR + 0x030 + ((_n) << 2))
+ #define REG_CR_MBQ8_CTRL(_n)		(NPU_MBOX_BASE_ADDR + 0x0b0 + ((_n) << 2))
+ #define REG_CR_NPU_MIB(_n)		(NPU_MBOX_BASE_ADDR + 0x140 + ((_n) << 2))
++#define CR_NPU_MIB31			(NPU_MBOX_BASE_ADDR + 0x1BC)
++#define INIT_COMPELET 0xCCCCCCCC
+ 
+ #define NPU_WLAN_BASE_ADDR		0x30d000
+ 
+@@ -493,35 +495,108 @@ airoha_npu_wlan_set_reserved_memory(stru
+ 					sizeof(val), GFP_KERNEL);
+ }
+ 
++static int airoha_npu_wlan_dbg_counter_address_get(struct airoha_npu *npu,
++					    int ifindex, void *data, int data_len, gfp_t gfp)
++
++{
++	return airoha_npu_wlan_msg_get(npu, ifindex,
++				       WLAN_FUNC_GET_WAIT_DBG_COUNTER, data, data_len, gfp);
++}
++
+ static int airoha_npu_wlan_init_memory(struct airoha_npu *npu)
+ {
+ 	enum airoha_npu_wlan_set_cmd cmd = WLAN_FUNC_SET_WAIT_NPU_BAND0_ONCPU;
+ 	u32 val = 0;
+-	int err;
+-
+-	err = airoha_npu_wlan_msg_send(npu, 1, cmd, &val, sizeof(val),
+-				       GFP_KERNEL);
+-	if (err)
++	int err = 0;
++	int retry_cnt = 3;
++	int reg_val = 0;
++	regmap_read(npu->regmap, CR_NPU_MIB31, &reg_val);
++	while(reg_val != INIT_COMPELET){
++		printk("%s:%d npu not init complete !!!!!!\n",__func__,__LINE__);
++		msleep(100);
++		regmap_read(npu->regmap, CR_NPU_MIB31, &reg_val);
++	}
++	while(retry_cnt){
++		err = airoha_npu_wlan_msg_send(npu, 1, cmd, &val, sizeof(val),
++					       GFP_KERNEL);
++		if(!err)
++			break;
++		if(err){
++			printk("%s:%d set npu band0 oncpu fail !!!!\n",__func__,__LINE__);
++			mdelay(10);
++			retry_cnt--;
++		}
++	}
++	if(!retry_cnt){
++		printk("%s:%d set tx-bufid addr fail !!!!\n",__func__,__LINE__);
+ 		return err;
++	}
++	retry_cnt = 3;
++	mdelay(10);
+ 
+ 	cmd = WLAN_FUNC_SET_WAIT_TX_BUF_CHECK_ADDR;
+-	err = airoha_npu_wlan_set_reserved_memory(npu, 0, "tx-bufid", cmd);
+-	if (err)
++	while(retry_cnt){
++		err = airoha_npu_wlan_set_reserved_memory(npu, 0, "tx-bufid", cmd);
++		if(!err)
++			break;
++		if(err){
++			printk("%s:%d set tx-bufid addr fail !!!!\n",__func__,__LINE__);
++			mdelay(10);
++			retry_cnt--;
++		}
++	}
++	if(!retry_cnt){
++		printk("%s:%d set tx-bufid addr fail !!!!\n",__func__,__LINE__);
+ 		return err;
+-
++	}
++	retry_cnt = 3;
++	mdelay(10);
+ 	cmd = WLAN_FUNC_SET_WAIT_PKT_BUF_ADDR;
+-	err = airoha_npu_wlan_set_reserved_memory(npu, 0, "pkt", cmd);
+-	if (err)
+-		return err;
+-
++	while(retry_cnt){
++		err = airoha_npu_wlan_set_reserved_memory(npu, 0, "pkt", cmd);
++		if(!err)
++			break;
++		if(err){
++			printk("%s:%d set pkt addr fail !!!!\n",__func__,__LINE__);
++			mdelay(10);
++			retry_cnt--;			
++		}
++	}
++	if(!retry_cnt){
++		printk("%s:%d set pkt addr fail !!!!\n",__func__,__LINE__);
++		return err;		
++	}
++	retry_cnt = 3;
++	mdelay(10);
+ 	cmd = WLAN_FUNC_SET_WAIT_TX_PKT_BUF_ADDR;
+-	err = airoha_npu_wlan_set_reserved_memory(npu, 0, "tx-pkt", cmd);
+-	if (err)
+-		return err;
+-
++	while(retry_cnt){
++		err = airoha_npu_wlan_set_reserved_memory(npu, 0, "tx-pkt", cmd);
++		if(!err)
++			break;
++		if(err){
++			printk("%s:%d set tx pkt addr fail !!!!\n",__func__,__LINE__);
++			mdelay(10);
++			retry_cnt--;
++		}
++	}
++	if(!retry_cnt){
++		printk("%s:%d set pkt addr fail !!!!\n",__func__,__LINE__);
++		return err;		
++	}	
++	retry_cnt = 3;
++	mdelay(10);
+ 	cmd = WLAN_FUNC_SET_WAIT_IS_FORCE_TO_CPU;
+-	return airoha_npu_wlan_msg_send(npu, 0, cmd, &val, sizeof(val),
+-					GFP_KERNEL);
++	while(retry_cnt){
++		err = airoha_npu_wlan_msg_send(npu, 0, cmd, &val, sizeof(val), GFP_KERNEL);
++		if(!err)
++			break;
++		if(err){
++			printk("%s:%d set for to cpu fail !!!!\n",__func__,__LINE__);
++			mdelay(10);
++			retry_cnt--;			
++		}
++	}
++	return err;
+ }
+ 
+ static u32 airoha_npu_wlan_queue_addr_get(struct airoha_npu *npu, int qid,
+@@ -676,6 +751,7 @@ static int airoha_npu_probe(struct platf
+ 	npu->ops.wlan_init_reserved_memory = airoha_npu_wlan_init_memory;
+ 	npu->ops.wlan_send_msg = airoha_npu_wlan_msg_send;
+ 	npu->ops.wlan_get_msg = airoha_npu_wlan_msg_get;
++	npu->ops.wlan_get_dbg_counter_address = airoha_npu_wlan_dbg_counter_address_get;
+ 	npu->ops.wlan_get_queue_addr = airoha_npu_wlan_queue_addr_get;
+ 	npu->ops.wlan_set_irq_status = airoha_npu_wlan_irq_status_set;
+ 	npu->ops.wlan_get_irq_status = airoha_npu_wlan_irq_status_get;
+--- a/include/linux/soc/airoha/airoha_offload.h
++++ b/include/linux/soc/airoha/airoha_offload.h
+@@ -198,6 +198,8 @@ struct airoha_npu {
+ 		int (*wlan_get_msg)(struct airoha_npu *npu, int ifindex,
+ 				    enum airoha_npu_wlan_get_cmd func_id,
+ 				    void *data, int data_len, gfp_t gfp);
++		int (*wlan_get_dbg_counter_address)(struct airoha_npu *npu,
++					     int ifindex, void *data, int data_len, gfp_t gfp);
+ 		u32 (*wlan_get_queue_addr)(struct airoha_npu *npu, int qid,
+ 					   bool xmit);
+ 		void (*wlan_set_irq_status)(struct airoha_npu *npu, u32 val);
+@@ -232,6 +234,12 @@ static inline int airoha_npu_wlan_get_ms
+ 	return npu->ops.wlan_get_msg(npu, ifindex, cmd, data, data_len, gfp);
+ }
+ 
++static inline int airoha_npu_wlan_get_dbg_counter_address(struct airoha_npu *npu, int ifindex,
++						   void *data, int data_len, gfp_t gfp)
++{
++	return npu->ops.wlan_get_dbg_counter_address(npu, ifindex, data, data_len, gfp);
++}
++
+ static inline u32 airoha_npu_wlan_get_queue_addr(struct airoha_npu *npu,
+ 						 int qid, bool xmit)
+ {
