@@ -9,7 +9,7 @@
  }
  
  static void airoha_qdma_init_qos_stats(struct airoha_qdma *qdma)
-@@ -3014,6 +3014,8 @@ static int airoha_probe(struct platform_
+@@ -3015,6 +3015,8 @@ static int airoha_probe(struct platform_
  
  	eth->dev = &pdev->dev;
  

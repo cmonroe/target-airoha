@@ -1004,7 +1004,7 @@
  
  	switch (type) {
  	case TC_SETUP_QDISC_ETS:
-@@ -2854,7 +2772,11 @@ static struct phylink_pcs *airoha_phylin
+@@ -2855,7 +2773,11 @@ static struct phylink_pcs *airoha_phylin
  	struct airoha_gdm_port *port = container_of(config, struct airoha_gdm_port,
  						    phylink_config);
  
@@ -1017,7 +1017,7 @@
  }
  
  static void airoha_mac_config(struct phylink_config *config, unsigned int mode,
-@@ -2957,8 +2879,9 @@ static const struct phylink_mac_ops airo
+@@ -2958,8 +2880,9 @@ static const struct phylink_mac_ops airo
  
  static int airoha_setup_phylink(struct net_device *dev)
  {
@@ -1028,7 +1028,7 @@
  	phy_interface_t phy_mode;
  	struct phylink *phylink;
  	int err;
-@@ -2969,6 +2892,27 @@ static int airoha_setup_phylink(struct n
+@@ -2970,6 +2893,27 @@ static int airoha_setup_phylink(struct n
  		return err;
  	}
  
@@ -1056,7 +1056,7 @@
  	port->phylink_config.dev = &dev->dev;
  	port->phylink_config.type = PHYLINK_NETDEV;
  	port->phylink_config.mac_capabilities = MAC_ASYM_PAUSE | MAC_SYM_PAUSE |
-@@ -3060,17 +3004,18 @@ static int airoha_alloc_gdm_port(struct
+@@ -3061,17 +3005,18 @@ static int airoha_alloc_gdm_port(struct
  	err = netif_set_real_num_tx_queues(dev, AIROHA_NUM_TX_RING);
  	if (err)
  		return err;
@@ -1082,7 +1082,7 @@
  	port = netdev_priv(dev);
  	u64_stats_init(&port->stats.syncp);
  	spin_lock_init(&port->stats.lock);
-@@ -3102,6 +3047,22 @@ free_metadata_dst:
+@@ -3103,6 +3048,22 @@ free_metadata_dst:
  	return err;
  }
  
@@ -1105,7 +1105,7 @@
  static int airoha_probe(struct platform_device *pdev)
  {
  	struct reset_control_bulk_data *xsi_rsts;
-@@ -3189,7 +3150,12 @@ static int airoha_probe(struct platform_
+@@ -3190,7 +3151,12 @@ static int airoha_probe(struct platform_
  			goto error_napi_stop;
  		}
  	}
@@ -1118,7 +1118,7 @@
  	return 0;
  
  error_napi_stop:
-@@ -3230,6 +3196,8 @@ static void airoha_remove(struct platfor
+@@ -3231,6 +3197,8 @@ static void airoha_remove(struct platfor
  		airoha_hw_cleanup(&eth->qdma[i]);
  	}
  
