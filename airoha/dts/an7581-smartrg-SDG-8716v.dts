@@ -26,7 +26,7 @@
 	chosen {
 		bootargs = "console=ttyS0,115200 earlycon";
 		stdout-path = "serial0:115200n8";
-		linux,usable-memory-range = <0x0 0x80200000 0x0 0x7fe00000>;
+		linux,usable-memory-range = <0x0 0x80200000 0x0 0x3fc00000>;
 	};
 
 	memory@80000000 {
@@ -42,6 +42,52 @@
 			label = "reset";
 			linux,code = <KEY_RESTART>;
 			gpios = <&en7581_pinctrl 0 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	leds: gpio-leds {
+		compatible = "gpio-leds";
+
+		lan2_amber {
+			color = <LED_COLOR_ID_AMBER>;
+			function = "lan2";
+			gpios = <&en7581_pinctrl 33 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "mt7530-0:09:100Mbps";
+		};
+
+		lan2_green {
+			color = <LED_COLOR_ID_GREEN>;
+			function = "lan2";
+			gpios = <&en7581_pinctrl 43 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "mt7530-0:09:1Gbps";
+		};
+
+		lan3_amber {
+			color = <LED_COLOR_ID_AMBER>;
+			function = "lan3";
+			gpios = <&en7581_pinctrl 34 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "mt7530-0:0a:100Mbps";
+		};
+
+		lan3_green {
+			color = <LED_COLOR_ID_GREEN>;
+			function = "lan3";
+			gpios = <&en7581_pinctrl 44 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "mt7530-0:0a:1Gbps";
+		};
+
+		lan4_amber {
+			color = <LED_COLOR_ID_AMBER>;
+			function = "lan4";
+			gpios = <&en7581_pinctrl 35 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "mt7530-0:0b:100Mbps";
+		};
+
+		lan4_green {
+			color = <LED_COLOR_ID_GREEN>;
+			function = "lan4";
+			gpios = <&en7581_pinctrl 45 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "mt7530-0:0b:1Gbps";
 		};
 	};
 };
@@ -93,48 +139,6 @@
 		mux {
 			function = "emmc";
 			groups = "emmc";
-		};
-	};
-
-	gswp1_led0_pins: gswp1-led0-pins {
-		mux {
-			function = "phy1_led0";
-			pins = "gpio33";
-		};
-	};
-
-	gswp1_led1_pins: gswp1-led1-pins {
-		mux {
-			function = "phy1_led1";
-			pins = "gpio43";
-		};
-	};
-
-	gswp2_led0_pins: gswp2-led0-pins {
-		mux {
-			function = "phy2_led0";
-			pins = "gpio34";
-		};
-	};
-
-	gswp2_led1_pins: gswp2-led1-pins {
-		mux {
-			function = "phy2_led1";
-			pins = "gpio44";
-		};
-	};
-
-	gswp3_led0_pins: gswp3-led0-pins {
-		mux {
-			function = "phy3_led0";
-			pins = "gpio35";
-		};
-	};
-
-	gswp3_led1_pins: gswp3-led1-pins {
-		mux {
-			function = "phy3_led1";
-			pins = "gpio45";
 		};
 	};
 };
@@ -219,15 +223,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c1_pins>;
 	status = "okay";
-
-	/**
-	 * !!!! WARNING !!!!
-	 * i2c1 won't function unless you poke the iomux register
-	 *
-	 * devmem 0x1fa20214 32 0x00002000
-	 *
-	 * Airoha needs to fix this in their driver
-	 */
 
 	system-leds@30 {
 		compatible = "srg,sysled";
@@ -325,16 +320,42 @@
 	status = "okay";
 };
 
-&mdio{
-	phy0: ethernet-phy@0 {
-		/* Realtek RTL8261 - LAN1 */
+&mdio {
+	phy1: ethernet-phy@1 {
+		/* Realtek RTL8261C/D - LAN1 */
 		compatible = "ethernet-phy-ieee802.3-c45";
-		reg = <0x0>;
+		reg = <0x1>;
 		#thermal-sensor-cells = <0>;
 
 		reset-gpios = <&en7581_pinctrl 31 GPIO_ACTIVE_LOW>;
 		reset-assert-us = <40000>;
 		reset-deassert-us = <150000>;
+
+		leds {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			led@0 {
+				reg = <0>;
+				color = <LED_COLOR_ID_WHITE>;
+				function = LED_FUNCTION_LAN;
+				function-enumerator = <1>;
+			};
+
+			led@1 {
+				reg = <1>;
+				color = <LED_COLOR_ID_ORANGE>;
+				function = LED_FUNCTION_LAN;
+				function-enumerator = <1>;
+			};
+
+			led@2 {
+				reg = <4>;
+				color = <LED_COLOR_ID_GREEN>;
+				function = LED_FUNCTION_LAN;
+				function-enumerator = <1>;
+			};
+		};
 	};
 };
 
@@ -363,8 +384,12 @@
 
 &gdm4 {
 	label = "lan1";
-	phy-handle = <&phy0>;
+	phy-handle = <&phy1>;
 	phy-mode = "usxgmii";
+	managed = "in-band-status";
+
+	nvmem-cells = <&macaddr 0x1>;
+	nvmem-cell-names = "mac";
 
 	status = "okay";
 };
@@ -379,20 +404,6 @@
 };
 
 &gsw_phy1 {
-	pinctrl-names = "gbe-led";
-	pinctrl-0 = <&gswp1_led0_pins &gswp1_led1_pins>;
-	status = "okay";
-};
-
-&gsw_phy1_led0 {
-	color = <LED_COLOR_ID_AMBER>;
-	function = "lan2";
-	status = "okay";
-};
-
-&gsw_phy1_led1 {
-	color = <LED_COLOR_ID_GREEN>;
-	function = "lan2";
 	status = "okay";
 };
 
@@ -402,20 +413,6 @@
 };
 
 &gsw_phy2 {
-	pinctrl-names = "gbe-led";
-	pinctrl-0 = <&gswp2_led0_pins &gswp2_led1_pins>;
-	status = "okay";
-};
-
-&gsw_phy2_led0 {
-	color = <LED_COLOR_ID_AMBER>;
-	function = "lan3";
-	status = "okay";
-};
-
-&gsw_phy2_led1 {
-	color = <LED_COLOR_ID_GREEN>;
-	function = "lan3";
 	status = "okay";
 };
 
@@ -425,28 +422,5 @@
 };
 
 &gsw_phy3 {
-	pinctrl-names = "gbe-led";
-	pinctrl-0 = <&gswp3_led0_pins &gswp3_led1_pins>;
-	status = "okay";
-};
-
-&gsw_phy3_led0 {
-	color = <LED_COLOR_ID_AMBER>;
-	function = "lan4";
-	status = "okay";
-};
-
-&gsw_phy3_led1 {
-	color = <LED_COLOR_ID_GREEN>;
-	function = "lan4";
-	status = "okay";
-};
-
-&gsw_port4 {
-	status = "okay";
-	label = "wan";
-};
-
-&gsw_phy4 {
 	status = "okay";
 };
