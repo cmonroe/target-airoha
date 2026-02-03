@@ -21,7 +21,7 @@
  		goto errout;
 --- a/net/bridge/br_multicast.c
 +++ b/net/bridge/br_multicast.c
-@@ -5229,3 +5229,71 @@ void br_mdb_hash_fini(struct net_bridge
+@@ -5238,3 +5238,71 @@ void br_mdb_hash_fini(struct net_bridge
  	rhashtable_destroy(&br->sg_port_tbl);
  	rhashtable_destroy(&br->mdb_hash_tbl);
  }
