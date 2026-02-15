@@ -256,6 +256,8 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pcie0_rst_pins>;
 	status = "okay";
+
+	/delete-property/ airoha,x2-mode;
 };
 
 &pcie1 {
