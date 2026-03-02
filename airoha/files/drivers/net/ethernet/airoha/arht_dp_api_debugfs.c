@@ -414,7 +414,7 @@ static int airoha_ppe_debugfs_foe_flow_show(struct seq_file *m, void *private)
 		[FLOW_TYPE_L2_SUBFLOW] = "FLOW_TYPE_L2_SUBFLOW",
 	};
 
-	for (i = 0; i < PPE_NUM_ENTRIES; i++)
+	for (i = 0; i < PPE_NUM_ENTRIES; i++) 
 	{
 		hlist_for_each_entry_safe(e, n, &ppe->foe_flow[i], list) 
 		{

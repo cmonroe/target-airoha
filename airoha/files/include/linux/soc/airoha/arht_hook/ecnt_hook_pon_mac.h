@@ -60,6 +60,7 @@ typedef enum Pub_Sub_Type_e{
 	XPON_QOS_SET,
 	XPON_TCONT_INFO_GET,
 	XPON_GEMPORT_CREATE,
+	XPON_GEMPORT_ENCRYPT,
 	XPON_CHANNEL_QOS_SET,
 	XPON_WANLINK_CONFIG_GET,
 	XPON_MULITCAST_ANI_GET,
@@ -305,6 +306,21 @@ static inline int ECNT_API_XPON_TCONT_INFO_GET(void *tcontInfo)
     }
     return 0;
 }
+
+static inline int ECNT_API_XPON_GEMPORT_ENCRYPT(void *GemCreate)
+{
+    struct xpon_mac_hook_data_s data = {0} ;
+    data.src_module  = XPON_PUB_MODULE;
+    data.pub_info.type  =  XPON_GEMPORT_ENCRYPT;
+    data.pub_info.pGemCreate= GemCreate;
+
+    if(ECNT_HOOK_ERROR == __ECNT_HOOK(ECNT_XPON_MAC, ECNT_XPON_MAC_HOOK, (struct ecnt_data * )&data) ){
+        printk("ECNT_HOOK_ERROR occur. %s:%d\n", __FUNCTION__, __LINE__);
+        return -1;
+    }
+    return 0;
+}
+
 
 static inline int ECNT_API_XPON_GEMPORT_CREATE(void *GemCreate)
 {

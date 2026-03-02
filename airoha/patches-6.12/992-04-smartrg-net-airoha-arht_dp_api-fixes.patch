@@ -8,16 +8,16 @@
  #include <net/netfilter/nf_conntrack.h>
  #include <net/netfilter/nf_conntrack_core.h>
  #include <linux/rculist_nulls.h>
-@@ -37,11 +38,137 @@ int eth_proc_exit(void);
+@@ -37,13 +38,135 @@ int eth_proc_exit(void);
  int arht_multicast_hwnat_state_handler_lan_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
  int arht_multicast_hwnat_state_handler_wlan_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
  int arht_multicast_hwnat_state_handler_lan_wlan(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
-+//int arht_multicast_hwnat_state_handler_xsi_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
+-int arht_multicast_hwnat_state_handler_xsi_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
  int arht_multicast_hwnat_state_handler_lan_hsgmii_1toN(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
  int arht_multicast_hwnat_state_handler_unknown(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
  int find_and_update_shrink_table(int select, struct hwnat_shrink_field *shrinkFieldPtr);
  int arht_multicast_handler_for_sfu(struct sk_buff* skb);
-+int airoha_hwnat_clean_lan_entry_by_fport_and_channel(struct airoha_gdm_port *port, int channel);
+-int airoha_hwnat_clean_lan_entry_by_fport_and_channel(struct airoha_gdm_port *port, int channel);
  extern int (*arht_xpon_igmp_sfu_enable_hook)(struct net_device *port_dev);
 +int qdmaSetRxRateLimitConfig(unchar ringIdx, unchar type, ushort value);
 +int qdmaUpdateAllRxRateLimitValue(ushort curUnit, ushort newUnit, unchar ticker);
@@ -143,10 +143,10 @@
 +int airoha_dp_api_qdma_get_meter_value(struct airoha_qdma *qdma,uint meterIdx);
 +int airoha_dp_api_qdma_set_meter_value(struct airoha_qdma *qdma,uint meterIdx,uint value);
 +void airoha_dp_api_qdma_meter_default_config(struct airoha_qdma *qdma);
- 
  QDMA_Private_T *gpQdmaPriv = NULL ;
  
-@@ -2129,7 +2256,7 @@ int qdma_get_tx_qos_weight(struct ECNT_Q
+ extern struct airoha_eth *glb_eth;
+@@ -2128,7 +2251,7 @@ int qdma_get_tx_qos_weight(struct ECNT_Q
  
  /******************************************************************************
  ******************************************************************************/
@@ -155,8 +155,8 @@
  {
  	int RETRY = 3 ;
  	volatile uint regValue = 0 ;
-@@ -3602,7 +3729,7 @@ int qdma_general_check_index_valid(GENER
- }
+@@ -3602,7 +3725,7 @@ int qdma_general_check_index_valid(GENER
+ 
  
  
 -static int __inline__ generalChecConfigDone(struct airoha_qdma *base, uint reg, uint doneBit)
@@ -164,7 +164,7 @@
  {
  	int RETRY = 3 ;
  	volatile uint regValue = 0 ;
-@@ -9816,6 +9943,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
+@@ -9883,6 +10006,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
  	pinfo.txq = qid;
  	pinfo.nbq = channel;
  
@@ -172,7 +172,7 @@
  	if (!glb_eth || !glb_eth->chip)
          return;
  
-@@ -9826,6 +9954,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
+@@ -9893,6 +10017,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
              break;
          }
      }
@@ -180,7 +180,7 @@
  	
  	airoha_ppe_foe_flow_update_eth_offload(glb_eth->ppe, skb, &pinfo, fport);
  }
-@@ -10224,7 +10353,7 @@ static PPE_MULTICAST_FWD_STATE_HANDLER s
+@@ -10291,7 +10416,7 @@ static PPE_MULTICAST_FWD_STATE_HANDLER s
  	{PPE_MULTICAST_FORWARD_STATE_WLAN_ONLY,arht_multicast_hwnat_state_handler_wlan_only},
  	{PPE_MULTICAST_FORWARD_STATE_LAN_WLAN,arht_multicast_hwnat_state_handler_lan_wlan},
  	//{PPE_MULTICAST_FORWARD_STATE_LAN_XSI,ecnt_multicast_hwnat_state_handler_lan_xsi},
@@ -189,7 +189,7 @@
  	//{PPE_MULTICAST_FORWARD_STATE_XSI_WLAN,ecnt_multicast_hwnat_state_handler_xsi_wlan},	
  	{PPE_MULTICAST_FORWARD_STATE_LAN_HSGMII_1toN,arht_multicast_hwnat_state_handler_lan_hsgmii_1toN},
  	{PPE_MULTICAST_FORWARD_STATE_UNKNOWN,arht_multicast_hwnat_state_handler_unknown},
-@@ -10679,6 +10808,7 @@ int arht_multicast_hwnat_state_handler_l
+@@ -10746,6 +10871,7 @@ int arht_multicast_hwnat_state_handler_l
  }
  
  //not support, set invalid hwnat rule, make packet send to cpu
@@ -197,15 +197,15 @@
  int arht_multicast_hwnat_state_handler_xsi_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority)
  {
  	int channel = 1;
-@@ -10772,6 +10902,7 @@ int arht_multicast_hwnat_state_handler_x
+@@ -10839,6 +10965,7 @@ int arht_multicast_hwnat_state_handler_x
  	
  	return 0;
  }
 +#endif
  
+ 
  int arht_multicast_hwnat_state_handler_lan_hsgmii_1toN(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority)
- {
-@@ -12180,14 +12311,10 @@ static void airoha_eth_monitor_link_down
+@@ -12248,14 +12375,10 @@ static void airoha_eth_monitor_link_down
  			if (ra_sw_nat_hook_clean_table)
  				ra_sw_nat_hook_clean_table();
  
@@ -224,7 +224,7 @@
  			if(ret < 0 )
  				printk("\n [ARIOHA_ETH_MONITOR] Itf - %s Link Down GDM%d Rls Fail! \n",eth_dev->name,port->id);
  			else
-@@ -12290,7 +12417,7 @@ void airoha_eth_monitor(struct work_stru
+@@ -12358,7 +12481,7 @@ void airoha_eth_monitor(struct work_stru
  	//fe_oq_stat_monitor();
  	for(p = 0; p < ARRAY_SIZE(glb_eth->ports); p++)
  	{
@@ -233,7 +233,7 @@
  			continue;
  		
  		struct airoha_gdm_port *port = glb_eth->ports[p];
-@@ -12318,7 +12445,7 @@ void airoha_eth_monitor_workqueue_init(s
+@@ -12386,7 +12509,7 @@ void airoha_eth_monitor_workqueue_init(s
  	if (!eth)
  		return;
  
@@ -242,7 +242,7 @@
  		if(!eth->work_started)
  		{
  			eth->work_started = true;
-@@ -12326,7 +12453,7 @@ void airoha_eth_monitor_workqueue_init(s
+@@ -12394,7 +12517,7 @@ void airoha_eth_monitor_workqueue_init(s
  			INIT_DELAYED_WORK(&airoha_eth_monitor_workqueue, airoha_eth_monitor);
  			schedule_delayed_work(&airoha_eth_monitor_workqueue,msecs_to_jiffies(50000));
  		}
@@ -251,7 +251,7 @@
  }
  
  void airoha_eth_monitor_workqueue_exit(struct airoha_eth *eth)
-@@ -12334,15 +12461,16 @@ void airoha_eth_monitor_workqueue_exit(s
+@@ -12402,15 +12525,16 @@ void airoha_eth_monitor_workqueue_exit(s
  	if (!eth)
  		return;
  
@@ -270,7 +270,7 @@
  int airoha_hwnat_clean_lan_entry_by_fport_and_channel(struct airoha_gdm_port *port, int channel)
  {
  	
-@@ -12396,6 +12524,7 @@ int airoha_hwnat_clean_lan_entry_by_fpor
+@@ -12464,6 +12588,7 @@ int airoha_hwnat_clean_lan_entry_by_fpor
  	return 0;
  	
  }
@@ -289,15 +289,6 @@
  {
  	if(index >= buf_size -1)
  	{
-@@ -414,7 +414,7 @@ static int airoha_ppe_debugfs_foe_flow_s
- 		[FLOW_TYPE_L2_SUBFLOW] = "FLOW_TYPE_L2_SUBFLOW",
- 	};
- 
--	for (i = 0; i < PPE_NUM_ENTRIES; i++)
-+	for (i = 0; i < airoha_ppe_get_total_num_entries(ppe); i++)
- 	{
- 		hlist_for_each_entry_safe(e, n, &ppe->foe_flow[i], list) 
- 		{
 @@ -505,7 +505,7 @@ int airoha_dp_api_debugfs_init(struct ai
  {
  	struct dentry *root;

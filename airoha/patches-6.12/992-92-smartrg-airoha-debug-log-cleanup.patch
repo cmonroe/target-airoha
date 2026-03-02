@@ -1,7 +1,7 @@
 --- a/drivers/net/pcs/airoha/pcs-airoha-common.c
 +++ b/drivers/net/pcs/airoha/pcs-airoha-common.c
-@@ -1058,26 +1058,26 @@ static int airoha_pcs_probe(struct platf
- void __iomem* Get_Base(u32 base);
+@@ -1099,26 +1099,26 @@ static int airoha_pcs_probe(struct platf
+ }
  void __iomem* Get_Base(u32 base)
  {
 -	printk("\ncommon_phy Get_Base:0x%x\n",base);	

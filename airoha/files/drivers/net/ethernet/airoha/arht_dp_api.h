@@ -2048,7 +2048,7 @@ enum
 #define CDMA2_RXCPU2_DROP_CNT       (CDM_CNT_BASE(2) + 0xd8)
 #define CDMA2_RXCPU3_DROP_CNT       (CDM_CNT_BASE(2) + 0xdc)
 
-
-
+#define TO_MULTICAST_OFFLOAD 1
+#define TO_CPU 0
 
 #endif /* AIROHA_DP_API_H */

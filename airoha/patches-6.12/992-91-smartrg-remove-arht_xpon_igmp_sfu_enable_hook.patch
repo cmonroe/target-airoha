@@ -8,8 +8,8 @@
 +//extern int (*arht_xpon_igmp_sfu_enable_hook)(struct net_device *port_dev);
  extern int arht_ppe_multicast_set_valid(struct sk_buff* skb);
  extern int airoha_is_pon_sfu_mode(void);
- int is_ethmac_nvmem_cell_available(struct airoha_eth *eth);
-@@ -702,9 +702,9 @@ static void airoha_get_entry_bind(u32 ms
+ 
+@@ -686,9 +686,9 @@ static void airoha_get_entry_bind(u32 ms
  				flow_e->ingress_dev_idx = ETH2;
  		}
  		airoha_ppe_check_skb(&eth->ppe->dev, q->skb, hash, false);

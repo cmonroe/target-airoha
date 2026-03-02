@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/arht_dp_api.c
 +++ b/drivers/net/ethernet/airoha/arht_dp_api.c
-@@ -175,8 +175,6 @@ QDMA_Private_T *gpQdmaPriv = NULL ;
+@@ -172,8 +172,6 @@ QDMA_Private_T *gpQdmaPriv = NULL ;
  extern struct airoha_eth *glb_eth;
  extern int (*airoha_ppe_foe_commit_entry_ptr)(struct airoha_ppe *ppe,struct airoha_foe_entry *e,u32 hash,bool rx_wlan);
  
@@ -9,7 +9,28 @@
  extern bool airoha_ppe_foe_compare_entry(struct airoha_flow_table_entry *e,
  					 struct airoha_foe_entry *hwe);
  extern void airoha_ppe_delete_entry(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, uint entry_idx);
-@@ -9450,14 +9448,14 @@ void airoha_ppe_foe_flow_update_eth_offl
+@@ -1349,8 +1347,6 @@ before 7523 time to meter window size is
+     (airoha_qdma_rr(qdma, QDMA_CSR_EGRESS_RATELIMIT_CFG & EGRESS_RATELIMIT_BUCKETSCALE_MASK) >> EGRESS_RATELIMIT_BUCKETSCALE_SHIFT)
+ 	
+ 
+-#define MAX(a, b) ((a>b)?(a):(b))
+-
+ #define SWITCH_BUFFER_THRESHOLD 40 /* unit is 40kByte */
+ 
+ /*
+@@ -9146,7 +9142,11 @@ int airoha_check_flood_packet(struct sk_
+ 	if (netdev_uses_dsa(tmp_dev))
+ 	{
+ 		port_idx = ffs(tag)-1;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0)
++		tmp_dev = dsa_conduit_find_user(tmp_dev, 0, port_idx);
++#else
+ 		tmp_dev = dsa_master_find_slave(tmp_dev, 0, port_idx);
++#endif
+ 		if(!tmp_dev)
+ 			return 0;
+ 
+@@ -9513,14 +9513,14 @@ void airoha_ppe_foe_flow_update_eth_offl
  		airoha_ppe_pon_sfu_bind(ppe, hwe, skb, pinfo, fport);
  		goto unlock;
  	}
@@ -27,7 +48,7 @@
  			dscp = get_dscp_from_skb(skb, type);
  			
  			switch (type) {
-@@ -9533,8 +9531,8 @@ void airoha_ppe_foe_flow_update_pon_offl
+@@ -9596,8 +9596,8 @@ void airoha_ppe_foe_flow_update_pon_offl
  		airoha_ppe_pon_sfu_bind(ppe, hwe, skb, pinfo, 2);
  		goto unlock;
  	}
@@ -38,7 +59,7 @@
  	hlist_for_each_entry_safe(e, n, &ppe->foe_flow[index], list) {
  		if (airoha_ppe_foe_compare_entry(e, hwe)) {
  			if(e->tx_modified){
-@@ -10147,9 +10145,9 @@ void airoha_ppe_foe_flow_update_wifi_npu
+@@ -10210,9 +10210,9 @@ void airoha_ppe_foe_flow_update_wifi_npu
  	
  	type = FIELD_GET(AIROHA_FOE_IB1_BIND_PACKET_TYPE, hwe->ib1);
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "Packet type:%d\n", type);
@@ -51,7 +72,7 @@
  		pinfo->nbq = 0;
  	}
  	else{		
-@@ -10791,8 +10789,8 @@ int arht_multicast_hwnat_state_handler_l
+@@ -10854,8 +10854,8 @@ int arht_multicast_hwnat_state_handler_l
  
  	airoha_ppe_foe_commit_entry(ppe, hwe, foe_index);
  
@@ -64,7 +85,21 @@
  		return -ENOMEM;
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -891,7 +891,12 @@ int airoha_get_lan_id(struct net_device
+@@ -148,13 +148,6 @@ enum {
+ 	CRSN_25 = 0x19,
+ };
+ 
+-enum airoha_gdm_index {
+-	AIROHA_GDM1_IDX = 1,
+-	AIROHA_GDM2_IDX = 2,
+-	AIROHA_GDM3_IDX = 3,
+-	AIROHA_GDM4_IDX = 4,
+-};
+-
+ enum {
+ 	FE_PSE_PORT_CDM1,
+ 	FE_PSE_PORT_GDM1,
+@@ -896,7 +889,12 @@ int airoha_get_lan_id(struct net_device
  void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
  void airoha_fe_core_reset(struct airoha_eth *eth);
  int airoha_receive_hook(struct sk_buff *skb, struct airoha_qdma_desc *desc, int p, int len, u32 sptag);
@@ -78,14 +113,96 @@
  
  /*QDMA Multicast*/
  #define MULTICAST_SPTAG_KEEP_HI_EN_SHIFT			(31)
---- a/drivers/net/ethernet/airoha/airoha_ppe.c
-+++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -649,7 +649,7 @@ static void airoha_ppe_foe_flow_stats_up
- 		FIELD_PREP(AIROHA_FOE_IB2_NBQ, nbq);
+--- a/drivers/net/ethernet/airoha/arht_dp_api_debugfs.c
++++ b/drivers/net/ethernet/airoha/arht_dp_api_debugfs.c
+@@ -414,7 +414,7 @@ static int airoha_ppe_debugfs_foe_flow_s
+ 		[FLOW_TYPE_L2_SUBFLOW] = "FLOW_TYPE_L2_SUBFLOW",
+ 	};
+ 
+-	for (i = 0; i < PPE_NUM_ENTRIES; i++) 
++	for (i = 0; i < airoha_ppe_get_total_num_entries(ppe); i++) 
+ 	{
+ 		hlist_for_each_entry_safe(e, n, &ppe->foe_flow[i], list) 
+ 		{
+--- a/drivers/net/ethernet/airoha/Makefile
++++ b/drivers/net/ethernet/airoha/Makefile
+@@ -6,6 +6,6 @@
+ obj-$(CONFIG_NET_AIROHA) += airoha-eth.o
+ obj-$(CONFIG_NET_AIROHA) += arht_dp_api.o
+ obj-$(CONFIG_NET_AIROHA) += arht_dp_api_debugfs.o
+-airoha-eth-y := airoha_eth.o airoha_ppe.o
++airoha-eth-y := airoha_eth.o airoha_ppe.o eth_sal.o en7581/soc_en7581.o
+ airoha-eth-$(CONFIG_DEBUG_FS) += airoha_ppe_debugfs.o
+ obj-$(CONFIG_NET_AIROHA_NPU) += airoha_npu.o
+--- a/drivers/net/ethernet/airoha/en7581/soc_en7581.c
++++ b/drivers/net/ethernet/airoha/en7581/soc_en7581.c
+@@ -68,11 +68,11 @@ void en7581_set_sp_dft_cport(struct airo
+ 		/* FIXME: handle XSI_PCE1_PORT */
+ 		airoha_fe_rmw(eth, REG_FE_WAN_PORT,
+ 			      WAN1_EN_MASK | WAN1_MASK | WAN0_MASK,
+-			      FIELD_PREP(WAN0_MASK, HSGMII_LAN_PCIE0_SRCPORT));
++			      FIELD_PREP(WAN0_MASK, HSGMII_LAN_7581_PCIE0_SRCPORT));
+ 		airoha_fe_rmw(eth,
+-			      REG_SP_DFT_CPORT(HSGMII_LAN_PCIE0_SRCPORT >> 3),
+-			      SP_CPORT_PCIE0_MASK,
+-			      FIELD_PREP(SP_CPORT_PCIE0_MASK,
++			      REG_SP_DFT_CPORT(HSGMII_LAN_7581_PCIE0_SRCPORT >> 3),
++			      SP_CPORT_MASK(HSGMII_LAN_7581_PCIE0_SRCPORT & 0x7),
++			      FIELD_PREP(SP_CPORT_MASK(HSGMII_LAN_7581_PCIE0_SRCPORT & 0x7),
+ 					 FE_PSE_PORT_CDM2));
+ 		break;
+ 	case AIROHA_GDM4_IDX:
+@@ -81,10 +81,11 @@ void en7581_set_sp_dft_cport(struct airo
+ 			      FIELD_PREP(FC_ID_OF_SRC_PORT24_MASK, 2));
+ 		airoha_fe_rmw(eth, REG_FE_WAN_PORT,
+ 			      WAN1_EN_MASK | WAN1_MASK | WAN0_MASK,
+-			      FIELD_PREP(WAN0_MASK, HSGMII_LAN_ETH_SRCPORT));
+-		airoha_fe_rmw(eth, REG_SP_DFT_CPORT(HSGMII_LAN_ETH_SRCPORT >> 3),
+-			      SP_CPORT_ETH_MASK,
+-			      FIELD_PREP(SP_CPORT_ETH_MASK, FE_PSE_PORT_CDM2));
++			      FIELD_PREP(WAN0_MASK, HSGMII_LAN_7581_ETH_SRCPORT));
++		airoha_fe_rmw(eth, REG_SP_DFT_CPORT(HSGMII_LAN_7581_ETH_SRCPORT >> 3),
++			      SP_CPORT_MASK(HSGMII_LAN_7581_ETH_SRCPORT & 0x7),
++			      FIELD_PREP(SP_CPORT_MASK(HSGMII_LAN_7581_ETH_SRCPORT & 0x7),
++					 FE_PSE_PORT_CDM2));
+ 		break;
+ 	default:
+ 		break;
+@@ -159,4 +160,4 @@ const struct airoha_eth_chip chip_en7581
+ 	.set_qdma_regs = an7581_qdma_regs_setting,
+ 	.set_qbi_fttr_chn = en7581_set_qbi_fttr_chn_disable,
+ 	.set_fe_regs = an7581_fe_regs_setting,
+-};
+\ No newline at end of file
++};
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -3187,7 +3187,6 @@ static int airoha_an7583_get_src_port_id
  }
  
--static struct airoha_foe_entry *
-+struct airoha_foe_entry *
- airoha_ppe_foe_get_entry_locked(struct airoha_ppe *ppe, u32 hash)
- {
- 	u32 sram_num_entries = airoha_ppe_get_total_sram_num_entries(ppe);
+ extern const struct airoha_eth_chip chip_en7581_info;
+-extern const struct airoha_eth_chip chip_an7583_info;
+ static const struct airoha_eth_soc_data en7581_soc_data = {
+ 	.version = 0x7581,
+ 	.xsi_rsts_names = en7581_xsi_rsts_names,
+@@ -3199,20 +3198,8 @@ static const struct airoha_eth_soc_data
+ 	.chip = &chip_en7581_info,
+ };
+ 
+-static const struct airoha_eth_soc_data an7583_soc_data = {
+-	.version = 0x7583,
+-	.xsi_rsts_names = an7583_xsi_rsts_names,
+-	.num_xsi_rsts = ARRAY_SIZE(an7583_xsi_rsts_names),
+-	.num_ppe = 1,
+-	.ops = {
+-		.get_src_port_id = airoha_an7583_get_src_port_id,
+-	},
+-	.chip = &chip_an7583_info,
+-};
+-
+ static const struct of_device_id of_airoha_match[] = {
+ 	{ .compatible = "airoha,en7581-eth", .data = &en7581_soc_data },
+-	{ .compatible = "airoha,an7583-eth", .data = &an7583_soc_data },
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, of_airoha_match);

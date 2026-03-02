@@ -37,12 +37,13 @@ int eth_proc_exit(void);
 int arht_multicast_hwnat_state_handler_lan_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
 int arht_multicast_hwnat_state_handler_wlan_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
 int arht_multicast_hwnat_state_handler_lan_wlan(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
+int arht_multicast_hwnat_state_handler_xsi_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
 int arht_multicast_hwnat_state_handler_lan_hsgmii_1toN(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
 int arht_multicast_hwnat_state_handler_unknown(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority);
 int find_and_update_shrink_table(int select, struct hwnat_shrink_field *shrinkFieldPtr);
 int arht_multicast_handler_for_sfu(struct sk_buff* skb);
+int airoha_hwnat_clean_lan_entry_by_fport_and_channel(struct airoha_gdm_port *port, int channel);
 extern int (*arht_xpon_igmp_sfu_enable_hook)(struct net_device *port_dev);
-
 QDMA_Private_T *gpQdmaPriv = NULL ;
 
 extern struct airoha_eth *glb_eth;
@@ -1227,9 +1228,7 @@ before 7523 time to meter window size is fixed 4ms,now we can set other time
     (airoha_qdma_rr(qdma, QDMA_CSR_EGRESS_RATELIMIT_CFG & EGRESS_RATELIMIT_BUCKETSCALE_MASK) >> EGRESS_RATELIMIT_BUCKETSCALE_SHIFT)
 	
 
-#ifndef MAX
 #define MAX(a, b) ((a>b)?(a):(b))
-#endif
 
 #define SWITCH_BUFFER_THRESHOLD 40 /* unit is 40kByte */
 
@@ -3602,6 +3601,7 @@ int qdma_general_check_index_valid(GENERAL_TrtcmModuleType_T trtcmModule, GENERA
 }
 
 
+
 static int __inline__ generalChecConfigDone(struct airoha_qdma *base, uint reg, uint doneBit)
 {
 	int RETRY = 3 ;
@@ -5138,7 +5138,7 @@ void airoha_dp_api_qdma_meter_default_config(struct airoha_qdma *qdma){
     for(meterIdx = 32; meterIdx < 127; meterIdx++) {
         rxRateLimitCfg.Index = meterIdx;
         rxRateLimitCfg.TickSel = TRTCM_FAST_TICK; // default FAST
-        rxRateLimitSet.RateLimitValue = 1000000;  // default rate
+        rxRateLimitSet.RateLimitValue = 10000000;  // default rate
         rxRateLimitCfg.PktMode = TRTCM_BYTE_MODE; // kbps
 
         airoha_qdma_general_set_ratelimit_mode_cfg(qdma, rxRateLimitCfg);
@@ -9025,11 +9025,7 @@ int airoha_check_flood_packet(struct sk_buff *skb, u16 vid, u32 tag)
 	if (netdev_uses_dsa(tmp_dev))
 	{
 		port_idx = ffs(tag)-1;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 12, 0)
-		tmp_dev = dsa_conduit_find_user(tmp_dev, 0, port_idx);
-#else
 		tmp_dev = dsa_master_find_slave(tmp_dev, 0, port_idx);
-#endif
 		if(!tmp_dev)
 			return 0;
 
@@ -9072,9 +9068,45 @@ static inline int airoha_is_local_out(struct sk_buff *skb)
 	return skb->inner_protocol == PPE_MAGIC_LOCAL_OUT;
 }
 
+static inline bool is_multicast_packet(struct sk_buff *skb)
+{
+   
+  
+    const unsigned char *mac = eth_hdr(skb)->h_dest;
+
+    // Check Ethernet destination MAC address (multicast, but not broadcast)
+    if (is_multicast_ether_addr(mac) && !is_broadcast_ether_addr(mac)) {
+        return true;
+    }
+
+    // Check IP header for IPv4 multicast
+    if (skb->protocol == htons(ETH_P_IP)) {
+        struct iphdr *iph = ip_hdr(skb);
+        if (iph && (ntohl(iph->daddr) >= 0xE0000000 && ntohl(iph->daddr) <= 0xEFFFFFFF)) {
+            return true;
+        }
+    }
+    // Check IP header for IPv6 multicast
+    else if (skb->protocol == htons(ETH_P_IPV6)) {
+        struct ipv6hdr *ip6h = ipv6_hdr(skb);
+        if (ip6h && ip6h->daddr.s6_addr[0] == 0xFF) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+
+
 void airoha_ppe_general_bind(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, 
 	struct sk_buff *skb, struct port_info *pinfo, u8 fport)
 {
+	
+	
+	if(!skb)
+       return;
 	u16 vn = 0, vid1 = 0, vid2 = 0, vpm = 0;	
 	int dscp=0, type, fast = 0;
 	u32 data, ib1;
@@ -9084,7 +9116,7 @@ void airoha_ppe_general_bind(struct airoha_ppe *ppe, struct airoha_foe_entry *hw
 	struct airoha_foe_mac_info_common *l2;
 	u32 ts = airoha_ppe_get_timestamp(ppe);	
 	u32 hash = FOE_ENTRY_NUM(skb);
-
+	u32 upstream_mc_playload_meteridx = 0x7F;
 	if(FIELD_GET(AIROHA_FOE_IB1_BIND_STATE, hwe->ib1) == AIROHA_FOE_STATE_BIND)
 		return;
 
@@ -9117,10 +9149,28 @@ void airoha_ppe_general_bind(struct airoha_ppe *ppe, struct airoha_foe_entry *hw
 				meter_id_to_use = meter_idx_by_gemport + AIROHA_NUM_RX_RING;
 	}
 					
+	if (is_multicast_packet(skb)) {
+		
+    // Handle multicast packet
+		if (fport == FE_PSE_PORT_GDM2 && eth->multicast_meteridx != 0)
+		{
+			upstream_mc_playload_meteridx = eth->multicast_meteridx;
+			
+			
+		}
+                else{
+                  upstream_mc_playload_meteridx =0x7F;
+                }
+		data = FIELD_PREP(AIROHA_FOE_CHANNEL, pinfo->channel) |
+   			FIELD_PREP(AIROHA_FOE_QID, 
+				((AIROHA_NUM_QOS_QUEUES - 1) - ((pinfo->txq) % AIROHA_NUM_QOS_QUEUES))) |
+   			FIELD_PREP(AIROHA_FOE_SHAPER_ID, upstream_mc_playload_meteridx);
+	}else{						
 	data = FIELD_PREP(AIROHA_FOE_CHANNEL, pinfo->channel) |
    			FIELD_PREP(AIROHA_FOE_QID, 
 				((AIROHA_NUM_QOS_QUEUES - 1) - ((pinfo->txq) % AIROHA_NUM_QOS_QUEUES))) |
    			FIELD_PREP(AIROHA_FOE_SHAPER_ID, meter_id_to_use);
+	}
 
 	ib1 = hwe->ib1;
 	ib1 &= ~(AIROHA_FOE_IB1_BIND_VLAN_LAYER | AIROHA_FOE_IB1_BIND_VPM |
@@ -9237,12 +9287,29 @@ void FoeGetEntryDstMac(u8 * Dst, u32 Dst_hi, u16 Dst_lo)
 
 static inline int is_ipv4_multicast(u32 ip)
 {
-    return (ip >= 0xE0000000 && ip <= 0xEFFFFFFF);
+    // 224.0.0.0 ~ 224.0.0.255 control packet
+    // 224.0.1.0 ~ 239.255.255.255 data packet
+    if (ip >= 0xE0000000 && ip <= 0xE00000FF) {
+        return TO_CPU; 
+    } else if (ip >= 0xE0000100 && ip <= 0xEFFFFFFF) {
+        return TO_MULTICAST_OFFLOAD; 
+    }
+    return TO_CPU; 
 }
 
 static inline int is_ipv6_multicast(u32 addr)
 {
-    return ((addr >> 24) & 0xFF) == 0xFF;
+    // ff02::/16 control packet
+    // ff3x::/16 data packet
+    if (((addr >> 24) & 0xFF) == 0xFF) {
+        u8 scope = (addr >> 16) & 0xFF;
+        if (scope == 0x02) {
+            return TO_CPU; 
+        } else {
+            return TO_MULTICAST_OFFLOAD; 
+        }
+    }
+    return TO_CPU; 
 }
 
 /*Using return value to judge
@@ -9269,7 +9336,7 @@ int ppe_is_multicast_entry(struct airoha_foe_entry *hwe)
 	else if (FIELD_GET(AIROHA_FOE_IB1_BIND_PACKET_TYPE, hwe->ib1) == PPE_PKT_TYPE_BRIDGE)
 	{
 		FoeGetEntryDstMac(dst_mac, hwe->bridge.dest_mac_hi, hwe->bridge.dest_mac_lo);
-		if(is_multicast_ether_addr(dst_mac)) {
+		if(is_multicast_ether_addr(dst_mac) && !is_broadcast_ether_addr(dst_mac)) {
 			return 1;
 		} else {
 			return 0;
@@ -10772,6 +10839,7 @@ int arht_multicast_hwnat_state_handler_xsi_only(struct airoha_ppe *ppe, struct a
 	
 	return 0;
 }
+
 
 int arht_multicast_hwnat_state_handler_lan_hsgmii_1toN(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority)
 {

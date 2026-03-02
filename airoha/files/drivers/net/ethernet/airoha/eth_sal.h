@@ -5,11 +5,15 @@
 #include <linux/netdevice.h>
 #include "arht_dp_api.h"
 
-enum airoha_gdm_index_t {
+enum airoha_gdm_index {
 	AIROHA_PORTS_GDM1_ID = 0,
 	AIROHA_PORTS_GDM2_ID = 1,
 	AIROHA_PORTS_GDM3_ID = 2,
 	AIROHA_PORTS_GDM4_ID = 3,
+	AIROHA_GDM1_IDX = AIROHA_PORTS_GDM1_ID + 1,
+	AIROHA_GDM2_IDX = AIROHA_PORTS_GDM2_ID + 1,
+	AIROHA_GDM3_IDX = AIROHA_PORTS_GDM3_ID + 1,
+	AIROHA_GDM4_IDX = AIROHA_PORTS_GDM4_ID + 1,
 };
 
 enum airoha_serdes_idx{

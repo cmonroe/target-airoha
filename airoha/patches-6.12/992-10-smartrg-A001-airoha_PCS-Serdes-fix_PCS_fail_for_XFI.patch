@@ -1,0 +1,360 @@
+--- a/drivers/net/pcs/airoha/pcs-airoha-common.c
++++ b/drivers/net/pcs/airoha/pcs-airoha-common.c
+@@ -323,8 +323,8 @@ static void airoha_pcs_get_state_usxgmii
+ 	/* Trigger HW workaround if needed. If an error is reported,
+ 	 * consider link down and test again later.
+ 	 */
+-	if (data->rxlock_workaround && data->rxlock_workaround(priv)) {
+-		state->link = false;
++	if (data->get_usxgmii_state) {
++        data->get_usxgmii_state(priv, state);
+ 		return;
+ 	}
+ 
+@@ -895,9 +895,26 @@ struct phylink_pcs *airoha_pcs_create(st
+ }
+ EXPORT_SYMBOL(airoha_pcs_create);
+ 
++static struct class *pcs_class;
++
++static ssize_t version_show(const struct class *class, const struct class_attribute *attr,
++			    char *buf)
++{
++	return sprintf(buf, "%s\n", DRIVER_VERSION);
++}
++static CLASS_ATTR_RO(version);
++
++
+ void airoha_pcs_destroy(struct phylink_pcs *pcs)
+ {
++	
+ 	struct airoha_pcs_port *port = to_airoha_pcs_port(pcs);
++	
++	if(!pcs_class){
++		class_remove_file(pcs_class, &class_attr_version);
++
++		class_destroy(pcs_class);
++	}
+ 
+ 	kfree(port);
+ }
+@@ -909,6 +926,7 @@ static const struct regmap_config airoha
+ 	.reg_stride = 4,
+ };
+ 
++
+ static int airoha_pcs_probe(struct platform_device *pdev)
+ {
+ 	struct regmap_config syscon_config = airoha_pcs_regmap_config;
+@@ -917,15 +935,37 @@ static int airoha_pcs_probe(struct platf
+ 	struct airoha_pcs_priv *priv;
+ 	void *base;
+ 	int ret;
+-
++	
+ 	data = of_device_get_match_data(dev);
+ 
+ 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+ 	if (!priv)
+ 		return -ENOMEM;
++	if (!pcs_class) {
++		pcs_class = kzalloc(sizeof(*pcs_class), GFP_KERNEL);
++		if (!pcs_class) {
++			ret = -ENOMEM;
++		}
++
++		pcs_class->name = "pcs";
++		
++		ret = class_register(pcs_class);
++		if (ret) {
++			kfree(pcs_class);
++			pcs_class = NULL;
++		}
++
++		ret = class_create_file(pcs_class, &class_attr_version);
++		if (ret) {
++			class_destroy(pcs_class);
++			return ret;
++		}
++	}
++
+ 
+ 	priv->dev = dev;
+ 	priv->data = data;
++	
+ 
+ 	base = devm_platform_ioremap_resource_byname(pdev, "xfi_mac");
+ 	if (IS_ERR(base))
+@@ -1042,7 +1082,7 @@ static const struct airoha_pcs_match_dat
+ 	.usxgmii_ber_time_fixup = true,
+ 	.bringup = an7581_pcs_bringup,
+ 	.link_up = an7581_pcs_phya_link_up,
+-	.rxlock_workaround = an7581_pcs_rxlock_workaround,
++	.get_usxgmii_state = an7581_pcs_get_usxgmii_state,
+ };
+ 
+ static const struct airoha_pcs_match_data an7581_pcs_pon = {
+@@ -1059,6 +1099,7 @@ static const struct airoha_pcs_match_dat
+ 	.usxgmii_xfi_mode_sel = true,
+ 	.bringup = an7583_pcs_common_phya_bringup,
+ 	.link_up = an7583_pcs_common_phya_link_up,
++	.get_usxgmii_state = an7583_pcs_get_usxgmii_state,
+ };
+ 
+ static const struct airoha_pcs_match_data an7583_pcs_pon = {
+--- a/drivers/net/pcs/airoha/pcs-airoha.h
++++ b/drivers/net/pcs/airoha/pcs-airoha.h
+@@ -11,6 +11,7 @@
+ #include <linux/reset.h>
+ 
+ /* SCU*/
++#define DRIVER_VERSION "V1.0.0"
+ #define AIROHA_SCU_PDIDR			0x5c
+ #define   AIROHA_SCU_PRODUCT_ID			GENMASK(15, 0)
+ #define AIROHA_SCU_WAN_CONF			0x70
+@@ -1207,7 +1208,7 @@ struct airoha_pcs_match_data {
+ 	int (*bringup)(struct airoha_pcs_priv *priv,
+ 			phy_interface_t interface);
+ 	void (*link_up)(struct airoha_pcs_priv *priv);
+-	int (*rxlock_workaround)(struct airoha_pcs_priv *priv);
++	int (*get_usxgmii_state)(struct airoha_pcs_priv *priv, struct phylink_link_state *state);
+ };
+ 
+ #define to_airoha_pcs_port(n) container_of(n, struct airoha_pcs_port, pcs);
+@@ -1217,7 +1218,7 @@ int an7581_pcs_bringup(struct airoha_pcs
+ 		       phy_interface_t interface);
+ 
+ void an7581_pcs_phya_link_up(struct airoha_pcs_priv *priv);
+-int an7581_pcs_rxlock_workaround(struct airoha_pcs_priv *priv);
++int an7581_pcs_get_usxgmii_state(struct airoha_pcs_priv *priv, struct phylink_link_state *state);
+ #else
+ static inline int an7581_pcs_bringup(struct airoha_pcs_priv *priv,
+ 				     phy_interface_t interface)
+@@ -1229,7 +1230,7 @@ static inline void an7581_pcs_phya_link_
+ {
+ }
+ 
+-static inline int an7581_pcs_rxlock_workaround(struct airoha_pcs_priv *priv)
++static inline int an7581_pcs_get_usxgmii_state(struct airoha_pcs_priv *priv, struct phylink_link_state *state)
+ {
+ 	return 0;
+ }
+@@ -1240,6 +1241,7 @@ int an7583_pcs_common_phya_bringup(struc
+ 				   phy_interface_t interface);
+ 
+ void an7583_pcs_common_phya_link_up(struct airoha_pcs_priv *priv);
++int an7583_pcs_get_usxgmii_state(struct airoha_pcs_priv *priv, struct phylink_link_state *state);
+ #else
+ static inline int an7583_pcs_common_phya_bringup(struct airoha_pcs_priv *priv,
+ 						 phy_interface_t interface)
+@@ -1250,4 +1252,8 @@ static inline int an7583_pcs_common_phya
+ static inline void an7583_pcs_common_phya_link_up(struct airoha_pcs_priv *priv)
+ {
+ }
++static inline int an7583_pcs_get_usxgmii_state(struct airoha_pcs_priv *priv, struct phylink_link_state *state)
++{
++	return 0;
++}
+ #endif
+--- a/drivers/net/pcs/airoha/pcs-an7581.c
++++ b/drivers/net/pcs/airoha/pcs-an7581.c
+@@ -1394,26 +1394,61 @@ static bool an7581_pcs_have_rx_signal(st
+ 	return count >= 4;
+ }
+ 
+-int an7581_pcs_rxlock_workaround(struct airoha_pcs_priv *priv)
++int an7581_pcs_get_usxgmii_state(struct airoha_pcs_priv *priv, struct phylink_link_state *state)
+ {
+-	u32 val;
++    bool pcs_cur_link_state = false;
++	u32 lpa, sync, an_done;
++    u8 signal = an7581_pcs_have_rx_signal(priv);
++    
++    /* sync */
++	regmap_read(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_BASE_R_10GB_T_PCS_STUS_1, &sync);
++        
++    if ((0x100d == sync) && signal)
++        pcs_cur_link_state = true;
+ 
+-	/* Check if PCS is UP or Down */
+-	regmap_read(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_STUS_1, &val);
+-	if (val & AIROHA_PCS_USXGMII_PCS_RX_LINK_STATUS_UP)
+-		return 0;
++    if (pcs_cur_link_state) {
++	    /* Toggle AN Status */
++        regmap_set_bits(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_AN_CONTROL_6,
++	    		AIROHA_PCS_USXGMII_TOG_PCS_AUTONEG_STS);
++	    regmap_clear_bits(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_AN_CONTROL_6,
++	    		  AIROHA_PCS_USXGMII_TOG_PCS_AUTONEG_STS);
++	    regmap_read(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_AN_STATS_0, &lpa);
++	    regmap_read(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_AN_STATS_2, &an_done);
++	    
++        state->link = true;
++        state->an_complete = ((an_done & AIROHA_PCS_USXGMII_PCS_AN_COMPLETE) == AIROHA_PCS_USXGMII_PCS_AN_COMPLETE) ? true : false;
++       
++        if (state->an_complete) {
++            //update link speed
++            lpa = ((lpa & AIROHA_PCS_USXGMII_CUR_USXGMII_MODE) >> 28);
++       
++            if (0 == lpa)
++                lpa = MDIO_USXGMII_10G;
++            else if (1 == lpa)
++                lpa = MDIO_USXGMII_5000;
++            else if (2 == lpa)
++                lpa = MDIO_USXGMII_2500;
++            else if (3 == lpa)
++                lpa = MDIO_USXGMII_1000;
++            else if (4 == lpa)
++                lpa = MDIO_USXGMII_100;
++            else
++                lpa = MDIO_USXGMII_10G;
++	
++            lpa |= MDIO_USXGMII_FULL_DUPLEX; 
++	        phylink_decode_usxgmii_word(state, lpa);
++        } else {
++	        /* Consider the case that autoneg was started and "aneg complete"
++	        * bit has been reset, but "link up" bit not yet.
++	        */
++            state->link = false;
++        }
++    } else {
++        if ((0x100d != sync) && signal) {
++	        an7581_pcs_cdr_reset(priv, PHY_INTERFACE_MODE_NA, false);
++        }
++        state->link = false;
++    }
+ 
+-	/* Validate if this is consistent with RX SigDet module */
+-	if (!an7581_pcs_have_rx_signal(priv))
+-		return 0;
+-
+-	/* If PCS is down but RX SigDet module detected signal,
+-	 * trigger CDR reset.
+-	 */
+-	an7581_pcs_cdr_reset(priv, PHY_INTERFACE_MODE_NA, false);
+-
+-	/* Report there is an error with Link Detection and we
+-	 * should test again later.
+-	 */
+-	return -EINVAL;
++    return 0;
+ }
+--- a/drivers/net/pcs/airoha/pcs-an7583.c
++++ b/drivers/net/pcs/airoha/pcs-an7583.c
+@@ -152,9 +152,9 @@ static void an7583_pcs_common_phya_tx(st
+ 	case PHY_INTERFACE_MODE_10GBASER:
+ 		ckin_divisor = BIT(2) | BIT(0);
+ 		tx_rate_ctrl = BIT(1);
+-		fir_cn1 = 0;
+-		fir_c0b = 14;
+-		fir_c1 = 4;
++		fir_cn1 = 1;
++		fir_c0b = 1;
++		fir_c1 = 11;
+ 		fir_c2 = 0;
+ 
+ 		if (data->port_type == AIROHA_PCS_PON) {
+@@ -2151,7 +2151,7 @@ int an7583_pcs_common_phya_bringup(struc
+ 	return 0;
+ }
+ 
+-void an7583_pcs_common_phya_link_up(struct airoha_pcs_priv *priv)
++static void an7583_pcs_common_phya_cdr_reset(struct airoha_pcs_priv *priv)
+ {
+ 	/* First CDR reset */
+ 	regmap_update_bits(priv->xfi_pma, AIROHA_PCS_PMA_PXP_CDR_LPF_LCK_2DATA,
+@@ -2189,11 +2189,93 @@ void an7583_pcs_common_phya_link_up(stru
+ 			   AIROHA_PCS_PMA_FORCE_SEL_DA_CDR_LPF_LCK2DATA |
+ 			   AIROHA_PCS_PMA_FORCE_DA_CDR_LPF_LCK2DATA,
+ 			   AIROHA_PCS_PMA_FORCE_DA_CDR_LPF_LCK2DATA);
++}
+ 
+-	/* Then RX Rdy reset */
++void an7583_pcs_common_phya_link_up(struct airoha_pcs_priv *priv)
++{
++    an7583_pcs_common_phya_cdr_reset(priv);
++	
++    /* Then RX Rdy reset */
+ 	regmap_set_bits(priv->xfi_pma, AIROHA_PCS_PMA_RX_CTRL_SEQUENCE_DISB_CTRL_1,
+ 			AIROHA_PCS_PMA_DISB_RX_RDY);
+ 
+ 	regmap_clear_bits(priv->xfi_pma, AIROHA_PCS_PMA_RX_CTRL_SEQUENCE_FORCE_CTRL_1,
+ 			AIROHA_PCS_PMA_DISB_RX_RDY);
+ }
++
++static bool an7583_pcs_have_rx_signal(struct airoha_pcs_priv *priv)
++{
++	unsigned int count = 0;
++	u32 val;
++	int i;
++
++	/* Scan 100 times for RX sigdet module to detect RX signal */
++	for (i = 0; i <= 100; i++) {
++		regmap_read(priv->xfi_pma, AIROHA_PCS_PMA_RX_TORGS_DEBUG_11, &val);
++        if (val & BIT(24))
++			count++;
++	}
++
++	/* Consider signal presence if we detect signal at least 95 times */
++	return count >= 95;
++}
++
++int an7583_pcs_get_usxgmii_state(struct airoha_pcs_priv *priv, struct phylink_link_state *state)
++{
++    bool pcs_cur_link_state = false;
++	u32 lpa, sync, an_done;
++    u8 signal = an7583_pcs_have_rx_signal(priv);
++    
++    /* sync */
++	regmap_read(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_BASE_R_10GB_T_PCS_STUS_1, &sync);
++    
++    if ((0x100d == sync) && signal) {
++        pcs_cur_link_state = true;
++    }
++
++    if (pcs_cur_link_state) {
++	    /* Toggle AN Status */
++        regmap_set_bits(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_AN_CONTROL_6,
++	    		AIROHA_PCS_USXGMII_TOG_PCS_AUTONEG_STS);
++	    regmap_clear_bits(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_AN_CONTROL_6,
++	    		  AIROHA_PCS_USXGMII_TOG_PCS_AUTONEG_STS);
++	    regmap_read(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_AN_STATS_0, &lpa);
++	    regmap_read(priv->usxgmii_pcs, AIROHA_PCS_USXGMII_PCS_AN_STATS_2, &an_done);
++	    
++        state->link = true;
++        state->an_complete = ((an_done & AIROHA_PCS_USXGMII_PCS_AN_COMPLETE) == AIROHA_PCS_USXGMII_PCS_AN_COMPLETE) ? true : false;
++       
++        if (state->an_complete) {
++            //update link speed
++            lpa = ((lpa & AIROHA_PCS_USXGMII_CUR_USXGMII_MODE) >> 28);
++       
++            if (0 == lpa)
++                lpa = MDIO_USXGMII_10G;
++            else if (1 == lpa)
++                lpa = MDIO_USXGMII_5000;
++            else if (2 == lpa)
++                lpa = MDIO_USXGMII_2500;
++            else if (3 == lpa)
++                lpa = MDIO_USXGMII_1000;
++            else if (4 == lpa)
++                lpa = MDIO_USXGMII_100;
++            else
++                lpa = MDIO_USXGMII_10G;
++	
++            lpa |= MDIO_USXGMII_FULL_DUPLEX; 
++	        phylink_decode_usxgmii_word(state, lpa);
++        } else {
++	        /* Consider the case that autoneg was started and "aneg complete"
++	        * bit has been reset, but "link up" bit not yet.
++	        */
++            state->link = false;
++        }
++    } else {
++        if ((0x100d != sync) && signal) {
++            an7583_pcs_common_phya_cdr_reset(priv);
++        }
++        state->link = false;
++    }
++
++    return 0;
++}
