@@ -23,9 +23,6 @@ interfaces, ensuring proper CDR calibration and PCS reset on every link-up.
  1 file changed, 44 insertions(+)
  create mode 100644 target/linux/airoha/patches-6.12/611-net-pcs-airoha-fix-usxgmii-speed-change-issue.patch
 
-diff --git a/target/linux/airoha/patches-6.12/611-net-pcs-airoha-fix-usxgmii-speed-change-issue.patch b/target/linux/airoha/patches-6.12/611-net-pcs-airoha-fix-usxgmii-speed-change-issue.patch
-new file mode 100644
-index 00000000000000..58a6e10dd2e43b
 --- /dev/null
 +++ b/target/linux/airoha/patches-6.12/611-net-pcs-airoha-fix-usxgmii-speed-change-issue.patch
 @@ -0,0 +1,44 @@
