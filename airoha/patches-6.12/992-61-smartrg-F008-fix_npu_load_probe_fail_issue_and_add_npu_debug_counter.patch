@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_npu.c
 +++ b/drivers/net/ethernet/airoha/airoha_npu.c
-@@ -42,6 +42,8 @@
+@@ -44,6 +44,8 @@
  #define REG_CR_MBQ0_CTRL(_n)		(NPU_MBOX_BASE_ADDR + 0x030 + ((_n) << 2))
  #define REG_CR_MBQ8_CTRL(_n)		(NPU_MBOX_BASE_ADDR + 0x0b0 + ((_n) << 2))
  #define REG_CR_NPU_MIB(_n)		(NPU_MBOX_BASE_ADDR + 0x140 + ((_n) << 2))
@@ -9,7 +9,7 @@
  
  #define NPU_WLAN_BASE_ADDR		0x30d000
  
-@@ -493,35 +495,108 @@ airoha_npu_wlan_set_reserved_memory(stru
+@@ -525,43 +527,130 @@ airoha_npu_wlan_set_reserved_memory(stru
  					sizeof(val), GFP_KERNEL);
  }
  
@@ -80,8 +80,6 @@
  	cmd = WLAN_FUNC_SET_WAIT_PKT_BUF_ADDR;
 -	err = airoha_npu_wlan_set_reserved_memory(npu, 0, "pkt", cmd);
 -	if (err)
--		return err;
--
 +	while(retry_cnt){
 +		err = airoha_npu_wlan_set_reserved_memory(npu, 0, "pkt", cmd);
 +		if(!err)
@@ -89,20 +87,19 @@
 +		if(err){
 +			printk("%s:%d set pkt addr fail !!!!\n",__func__,__LINE__);
 +			mdelay(10);
-+			retry_cnt--;			
++			retry_cnt--;
 +		}
 +	}
 +	if(!retry_cnt){
 +		printk("%s:%d set pkt addr fail !!!!\n",__func__,__LINE__);
-+		return err;		
+ 		return err;
+-
 +	}
 +	retry_cnt = 3;
 +	mdelay(10);
  	cmd = WLAN_FUNC_SET_WAIT_TX_PKT_BUF_ADDR;
 -	err = airoha_npu_wlan_set_reserved_memory(npu, 0, "tx-pkt", cmd);
 -	if (err)
--		return err;
--
 +	while(retry_cnt){
 +		err = airoha_npu_wlan_set_reserved_memory(npu, 0, "tx-pkt", cmd);
 +		if(!err)
@@ -115,10 +112,34 @@
 +	}
 +	if(!retry_cnt){
 +		printk("%s:%d set pkt addr fail !!!!\n",__func__,__LINE__);
-+		return err;		
-+	}	
+ 		return err;
++	}
 +	retry_cnt = 3;
 +	mdelay(10);
+ 
+ 	if (of_property_match_string(npu->dev->of_node, "memory-region-names",
+ 				     "ba") >= 0) {
+ 		cmd = WLAN_FUNC_SET_WAIT_DRAM_BA_NODE_ADDR;
+-		err = airoha_npu_wlan_set_reserved_memory(npu, 0, "ba", cmd);
+-		if (err)
++		while(retry_cnt){
++			err = airoha_npu_wlan_set_reserved_memory(npu, 0, "ba", cmd);
++			if(!err)
++				break;
++			if(err){
++				printk("%s:%d set ba addr fail !!!!\n",__func__,__LINE__);
++				mdelay(10);
++				retry_cnt--;
++			}
++		}
++		if(!retry_cnt){
++			printk("%s:%d set ba addr fail !!!!\n",__func__,__LINE__);
+ 			return err;
++		}
++		retry_cnt = 3;
++		mdelay(10);
+ 	}
+ 
  	cmd = WLAN_FUNC_SET_WAIT_IS_FORCE_TO_CPU;
 -	return airoha_npu_wlan_msg_send(npu, 0, cmd, &val, sizeof(val),
 -					GFP_KERNEL);
@@ -129,14 +150,14 @@
 +		if(err){
 +			printk("%s:%d set for to cpu fail !!!!\n",__func__,__LINE__);
 +			mdelay(10);
-+			retry_cnt--;			
++			retry_cnt--;
 +		}
 +	}
 +	return err;
  }
  
  static u32 airoha_npu_wlan_queue_addr_get(struct airoha_npu *npu, int qid,
-@@ -676,6 +751,7 @@ static int airoha_npu_probe(struct platf
+@@ -716,6 +805,7 @@ static int airoha_npu_probe(struct platf
  	npu->ops.wlan_init_reserved_memory = airoha_npu_wlan_init_memory;
  	npu->ops.wlan_send_msg = airoha_npu_wlan_msg_send;
  	npu->ops.wlan_get_msg = airoha_npu_wlan_msg_get;
