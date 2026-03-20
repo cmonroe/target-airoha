@@ -157,7 +157,7 @@
  }
  
  static u32 airoha_npu_wlan_queue_addr_get(struct airoha_npu *npu, int qid,
-@@ -716,6 +805,7 @@ static int airoha_npu_probe(struct platf
+@@ -717,6 +806,7 @@ static int airoha_npu_probe(struct platf
  	npu->ops.wlan_init_reserved_memory = airoha_npu_wlan_init_memory;
  	npu->ops.wlan_send_msg = airoha_npu_wlan_msg_send;
  	npu->ops.wlan_get_msg = airoha_npu_wlan_msg_get;

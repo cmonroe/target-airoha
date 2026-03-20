@@ -1,19 +1,20 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -3006,6 +3006,7 @@ static int airoha_setup_phylink(struct n
+@@ -3022,6 +3022,7 @@ static int airoha_setup_phylink(struct n
  static int airoha_alloc_gdm_port(struct airoha_eth *eth,
- 				 struct device_node *np, int index)
+ 				 struct device_node *np)
  {
 +	const char *name = of_get_property(np, "label", NULL);
  	const __be32 *id_ptr = of_get_property(np, "reg", NULL);
  	struct airoha_gdm_port *port;
- 	struct airoha_qdma *qdma;
-@@ -3039,6 +3040,8 @@ static int airoha_alloc_gdm_port(struct
+ 	struct net_device *dev;
+@@ -3054,6 +3055,9 @@ static int airoha_alloc_gdm_port(struct
  		return -ENOMEM;
  	}
  
 +	if (name)
 +		strncpy(dev->name, name, IFNAMSIZ);
- 	qdma = &eth->qdma[index % AIROHA_MAX_NUM_QDMA];
++
  	dev->netdev_ops = &airoha_netdev_ops;
  	dev->ethtool_ops = &airoha_ethtool_ops;
+ 	dev->max_mtu = AIROHA_MAX_MTU;

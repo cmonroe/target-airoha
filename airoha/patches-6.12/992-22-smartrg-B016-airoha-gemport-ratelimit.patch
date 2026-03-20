@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -1264,7 +1264,7 @@ static void airoha_qdma_init_qos(struct
+@@ -1255,7 +1255,7 @@ static void airoha_qdma_init_qos(struct
  			FIELD_PREP(SLA_FAST_TICK_MASK, 25));
  	airoha_qdma_rmw(qdma, REG_SLA_TRTCM_CFG, SLA_SLOW_TICK_RATIO_MASK,
  			FIELD_PREP(SLA_SLOW_TICK_RATIO_MASK, 40));
@@ -9,7 +9,7 @@
  }
  
  static void airoha_qdma_init_qos_stats(struct airoha_qdma *qdma)
-@@ -2983,6 +2983,8 @@ static int airoha_probe(struct platform_
+@@ -2993,6 +2993,8 @@ static int airoha_probe(struct platform_
  	}
  	printk("\n [AIROHA_ETH]Successfully Identify CHIP ID:%d \n",eth->airoha_chip_id);
  
@@ -47,7 +47,7 @@
  struct airoha_foe_bridge {
  	u32 dest_mac_hi;
  
-@@ -744,6 +750,7 @@ struct airoha_eth {
+@@ -745,6 +751,7 @@ struct airoha_eth {
  	const struct airoha_eth_chip *chip;
  	struct qdma_init qdma_init;
  	bool work_started;
@@ -55,7 +55,7 @@
  };
  
  u32 airoha_rr(void __iomem *base, u32 offset);
-@@ -880,7 +887,7 @@ extern int airoha_debug_level;
+@@ -881,7 +888,7 @@ extern int airoha_debug_level;
  
  extern int airoha_upstream_fast_path_enable;
  extern int airoha_downstream_fast_path_enable;

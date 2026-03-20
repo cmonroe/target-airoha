@@ -245,7 +245,7 @@
  #define PPE_SRAM_WR_DUAL_DIRECTION_MASK		BIT(2)
  #define PPE_SRAM_CTRL_WR_MASK			BIT(1)
  #define PPE_SRAM_CTRL_REQ_MASK			BIT(0)
-@@ -442,6 +455,9 @@
+@@ -439,6 +452,9 @@
  	 ((_n) == 1) ? 0x002c + ((_b) << 3) :	\
  		       0x0028 + ((_b) << 3))
  
@@ -255,7 +255,7 @@
  /* QDMA_CSR_INT_ENABLE1 */
  #define RX15_COHERENT_INT_MASK		BIT(31)
  #define RX14_COHERENT_INT_MASK		BIT(30)
-@@ -616,9 +632,8 @@
+@@ -613,9 +629,8 @@
  	 RX19_DONE_INT_MASK | RX18_DONE_INT_MASK |	\
  	 RX17_DONE_INT_MASK | RX16_DONE_INT_MASK)
  
@@ -266,7 +266,7 @@
  
  #define INT_RX2_MASK(_n)				\
  	((RX_NO_CPU_DSCP_HIGH_INT_MASK & (_n)) |	\
-@@ -817,11 +832,6 @@
+@@ -814,11 +829,6 @@
  #define REG_TRTCM_DATA_LOW(_n)		((_n) + 0x8)
  #define REG_TRTCM_DATA_HIGH(_n)		((_n) + 0xc)
  
@@ -278,7 +278,7 @@
  
  #define REG_TXWRR_MODE_CFG		0x1020
  #define TWRR_WEIGHT_SCALE_MASK		BIT(31)
-@@ -886,9 +896,16 @@
+@@ -883,9 +893,16 @@
  #define QDMA_ETH_TXMSG_PTP_MASK		BIT(12)
  #define QDMA_ETH_TXMSG_ACNT_G1_MASK	GENMASK(10, 6)	/* 0x1f do not count */
  #define QDMA_ETH_TXMSG_ACNT_G0_MASK	GENMASK(5, 0)	/* 0x3f do not count */
@@ -295,7 +295,7 @@
  /* RX MSG1 */
  #define QDMA_ETH_RXMSG_DEI_MASK		BIT(31)
  #define QDMA_ETH_RXMSG_IP6_MASK		BIT(30)
-@@ -932,4 +949,19 @@ struct airoha_qdma_fwd_desc {
+@@ -929,4 +946,19 @@ struct airoha_qdma_fwd_desc {
  	__le32 rsv1;
  };
  
