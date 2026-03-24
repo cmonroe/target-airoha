@@ -31,7 +31,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "CPU_REASON: %u\n", reason);
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -804,6 +804,7 @@ int airoha_ppe_init(struct airoha_eth *e
+@@ -806,6 +806,7 @@ int airoha_ppe_init(struct airoha_eth *e
  void airoha_ppe_deinit(struct airoha_eth *eth);
  void airoha_ppe_init_upd_mem(struct airoha_gdm_port *port);
  struct airoha_foe_entry *airoha_ppe_foe_get_entry_locked(struct airoha_ppe *ppe, u32 hash);

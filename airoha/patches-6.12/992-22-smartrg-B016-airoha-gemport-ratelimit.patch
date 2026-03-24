@@ -9,7 +9,7 @@
  }
  
  static void airoha_qdma_init_qos_stats(struct airoha_qdma *qdma)
-@@ -2993,6 +2993,8 @@ static int airoha_probe(struct platform_
+@@ -2977,6 +2977,8 @@ static int airoha_probe(struct platform_
  	}
  	printk("\n [AIROHA_ETH]Successfully Identify CHIP ID:%d \n",eth->airoha_chip_id);
  
@@ -55,7 +55,7 @@
  };
  
  u32 airoha_rr(void __iomem *base, u32 offset);
-@@ -881,7 +888,7 @@ extern int airoha_debug_level;
+@@ -883,7 +890,7 @@ extern int airoha_debug_level;
  
  extern int airoha_upstream_fast_path_enable;
  extern int airoha_downstream_fast_path_enable;

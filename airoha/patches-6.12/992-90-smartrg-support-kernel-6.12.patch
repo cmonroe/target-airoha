@@ -442,7 +442,7 @@
  enum {
  	FE_PSE_PORT_CDM1,
  	FE_PSE_PORT_GDM1,
-@@ -897,7 +890,12 @@ int airoha_get_lan_id(struct net_device
+@@ -899,7 +892,12 @@ int airoha_get_lan_id(struct net_device
  void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
  void airoha_fe_core_reset(struct airoha_eth *eth);
  int airoha_receive_hook(struct sk_buff *skb, struct airoha_qdma_desc *desc, int p, int len, u32 sptag);
@@ -523,7 +523,7 @@
 +};
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -3201,7 +3201,6 @@ static int airoha_an7583_get_src_port_id
+@@ -3185,7 +3185,6 @@ static int airoha_an7583_get_src_port_id
  }
  
  extern const struct airoha_eth_chip chip_en7581_info;
@@ -531,7 +531,7 @@
  static const struct airoha_eth_soc_data en7581_soc_data = {
  	.version = 0x7581,
  	.xsi_rsts_names = en7581_xsi_rsts_names,
-@@ -3213,20 +3212,8 @@ static const struct airoha_eth_soc_data
+@@ -3197,20 +3196,8 @@ static const struct airoha_eth_soc_data
  	.chip = &chip_en7581_info,
  };
  
