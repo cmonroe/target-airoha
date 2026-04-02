@@ -16,6 +16,7 @@ define Device/dragontail
   DEVICE_MODEL := SmartRG Target
   DEVICE_DTS := an7581-smartrg-evb-emmc
   DEVICE_DTS += an7581-smartrg-SDG-8716v
+  DEVICE_DTS += an7581-smartrg-SDG-8736v
   DEVICE_DTS_DIR := ../dts
   DEVICE_PACKAGES := kmod-i2c-an7581
   ARTIFACT/preloader.bin := an7581-preloader smartrg_dragontail
@@ -92,8 +93,10 @@ define Build/SrgFit
 		-i "rdisk" -r $(STAGING_DIR_IMAGE)/$(IMG_PREFIX)-initramfs.cpio.gz -h "crc32" -h "sha1" \
 		-i "SDG-an7581-rfb" -d $(KDIR)/image-an7581-smartrg-evb-emmc.dtb -h "crc32" -h "sha1" \
 		-i "SDG-8716v" -d $(KDIR)/image-an7581-smartrg-SDG-8716v.dtb -h "crc32" -h "sha1" \
+		-i "SDG-8736v" -d $(KDIR)/image-an7581-smartrg-SDG-8736v.dtb -h "crc32" -h "sha1" \
 		-c "303" -K k1 -R rdisk -D "SDG-an7581-rfb" \
-		-c "600" -K k1 -R rdisk -D "SDG-8716v"
+		-c "600" -K k1 -R rdisk -D "SDG-8716v" \
+		-c "601" -K k1 -R rdisk -D "SDG-8736v"
 
 	PATH=$(LINUX_DIR)/scripts/dtc:$(PATH) mkimage -f $@.its $@.new
 	@mv -f $@.new $@
