@@ -40,7 +40,7 @@
 +	u32 msg3 ;
 +};
 +
-+int is_ethmac_nvmem_cell_available(struct airoha_eth *eth)
++static int is_ethmac_nvmem_cell_available(struct airoha_eth *eth)
 +{
 +	struct device * dev = eth->dev;
 +	struct nvmem_cell *ethmac_cell = NULL;
@@ -54,7 +54,7 @@
 +	return 0;
 +}
 +
-+int get_ethmac_from_dts(struct airoha_eth *eth){
++static int get_ethmac_from_dts(struct airoha_eth *eth){
 +	struct nvmem_cell *ethmac_cell = NULL;
 +	void *ethmac_data = NULL;
 +	uint8_t *ethmac_byte_ptr = NULL;

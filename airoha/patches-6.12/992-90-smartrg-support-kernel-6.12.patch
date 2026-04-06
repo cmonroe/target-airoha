@@ -479,6 +479,15 @@
  obj-$(CONFIG_NET_AIROHA_NPU) += airoha_npu.o
 --- a/drivers/net/ethernet/airoha/en7581/soc_en7581.c
 +++ b/drivers/net/ethernet/airoha/en7581/soc_en7581.c
+@@ -59,7 +59,7 @@ static void en7581_get_gdm_loopback_info
+ 	*pse_port = (portid == AIROHA_GDM4_IDX) ? FE_PSE_PORT_GDM3 : FE_PSE_PORT_GDM4;
+ }
+ 
+-void en7581_set_sp_dft_cport(struct airoha_eth *eth, int portid)
++static void en7581_set_sp_dft_cport(struct airoha_eth *eth, int portid)
+ {
+     //unsigned char srcport_idx = eth->chip->dma_srcport[portid];
+ 	
 @@ -68,23 +68,24 @@ void en7581_set_sp_dft_cport(struct airo
  		/* FIXME: handle XSI_PCE1_PORT */
  		airoha_fe_rmw(eth, REG_FE_WAN_PORT,
@@ -514,6 +523,27 @@
  		break;
  	default:
  		break;
+@@ -99,17 +100,17 @@ static int en7581_support_eth_monitor(in
+ 	return 1;
+ }
+ 
+-void an7581_qdma_regs_setting(struct airoha_qdma *qdma, struct airoha_eth *eth)
++static void an7581_qdma_regs_setting(struct airoha_qdma *qdma, struct airoha_eth *eth)
+ {
+ 	return ;
+ }
+ 
+-void en7581_set_qbi_fttr_chn_disable(struct airoha_eth *eth)
++static void en7581_set_qbi_fttr_chn_disable(struct airoha_eth *eth)
+ {
+ 	return;
+ }
+ 
+-void an7581_fe_regs_setting(struct airoha_eth *eth)
++static void an7581_fe_regs_setting(struct airoha_eth *eth)
+ {
+ 	return;
+ }
 @@ -159,4 +160,4 @@ const struct airoha_eth_chip chip_en7581
  	.set_qdma_regs = an7581_qdma_regs_setting,
  	.set_qbi_fttr_chn = en7581_set_qbi_fttr_chn_disable,
@@ -523,15 +553,38 @@
 +};
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -3185,7 +3185,6 @@ static int airoha_an7583_get_src_port_id
- }
+@@ -3162,30 +3162,7 @@ static const char * const an7583_xsi_rst
+ 	"xfp-mac",
+ };
  
+-static int airoha_an7583_get_src_port_id(struct airoha_gdm_port *port, int nbq)
+-{
+-	switch (port->id) {
+-	case AIROHA_GDM3_IDX:
+-		/* 7583 SoC supports eth serdes on GDM3 port */
+-		if (!nbq)
+-			return HSGMII_LAN_7583_ETH_SRCPORT;
+-		break;
+-	case AIROHA_GDM4_IDX:
+-		/* 7583 SoC supports PCIe and USB serdes on GDM4 port */
+-		if (!nbq)
+-			return HSGMII_LAN_7583_PCIE_SRCPORT;
+-		if (nbq == 1)
+-			return HSGMII_LAN_7583_USB_SRCPORT;
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	return -EINVAL;
+-}
+-
  extern const struct airoha_eth_chip chip_en7581_info;
 -extern const struct airoha_eth_chip chip_an7583_info;
  static const struct airoha_eth_soc_data en7581_soc_data = {
  	.version = 0x7581,
  	.xsi_rsts_names = en7581_xsi_rsts_names,
-@@ -3197,20 +3196,8 @@ static const struct airoha_eth_soc_data
+@@ -3197,20 +3174,8 @@ static const struct airoha_eth_soc_data
  	.chip = &chip_en7581_info,
  };
  
