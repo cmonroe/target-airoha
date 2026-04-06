@@ -11,26 +11,11 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  drivers/net/ethernet/airoha/arht_dp_api.c |   16 ++++++++++++++++
  2 files changed, 17 insertions(+), 1 deletion(-)
 
-Index: drivers/net/ethernet/airoha/airoha_ppe.c
-===================================================================
---- a/drivers/net/ethernet/airoha/airoha_ppe.c	2026-03-30 02:41:06.684843342 -0500
-+++ b/drivers/net/ethernet/airoha/airoha_ppe.c	2026-03-30 02:35:43.326297988 -0500
-@@ -1479,7 +1479,7 @@
- 	return npu;
- }
- 
--static int airoha_ppe_offload_setup(struct airoha_eth *eth)
-+int airoha_ppe_offload_setup(struct airoha_eth *eth)
- {
- 	struct airoha_npu *npu = airoha_ppe_npu_get(eth);
- 	struct airoha_ppe *ppe = eth->ppe;
-Index: drivers/net/ethernet/airoha/arht_dp_api.c 
-===================================================================
---- a/drivers/net/ethernet/airoha/arht_dp_api.c	2026-03-30 02:38:31.198891021 -0500
-+++ b/drivers/net/ethernet/airoha/arht_dp_api.c	2026-03-30 02:35:43.355389728 -0500
-@@ -1832,6 +1832,10 @@
+--- a/drivers/net/ethernet/airoha/arht_dp_api.c
++++ b/drivers/net/ethernet/airoha/arht_dp_api.c
+@@ -1829,6 +1829,10 @@ EXPORT_SYMBOL(ra_sw_nat_hook_xfer);
+ int (*ra_sw_nat_hook_drop_packet) (struct sk_buff * skb) = NULL;
  EXPORT_SYMBOL(ra_sw_nat_hook_drop_packet);
- 
  
 +
 +int (*airoha_set_ppe_init_hook)(void) = NULL;
@@ -39,13 +24,11 @@ Index: drivers/net/ethernet/airoha/arht_dp_api.c
  int (*ra_sw_nat_hook_clean_table) (void) = NULL;
  EXPORT_SYMBOL(ra_sw_nat_hook_clean_table);
  
-@@ -11834,16 +11838,28 @@
+@@ -11848,16 +11852,26 @@ unlock:
  	return ret;
  
  }
-+extern DEFINE_MUTEX(flow_offload_mutex);
-+extern int airoha_ppe_offload_setup(struct airoha_eth *eth);
-+int airoha_set_ppe_init(void)
++static int airoha_set_ppe_init(void)
 +{
 +	int ret;
 +	mutex_lock(&flow_offload_mutex);
@@ -67,3 +50,34 @@ Index: drivers/net/ethernet/airoha/arht_dp_api.c
 +	rcu_assign_pointer(airoha_set_ppe_init_hook, NULL);
  	return ;
  }
+ 
+--- a/drivers/net/ethernet/airoha/airoha_ppe.c
++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
+@@ -24,7 +24,7 @@ extern void airoha_ppe_hook_exit(void);
+ extern struct airoha_eth *glb_eth;
+ extern int airoha_is_pon_sfu_mode(void);
+ 
+-static DEFINE_MUTEX(flow_offload_mutex);
++DEFINE_MUTEX(flow_offload_mutex);
+ DEFINE_SPINLOCK(ppe_lock);
+ static DEFINE_SPINLOCK(ppe_sram_access_lock);
+ 
+@@ -1499,7 +1499,7 @@ static struct airoha_npu *airoha_ppe_npu
+ 	return npu;
+ }
+ 
+-static int airoha_ppe_offload_setup(struct airoha_eth *eth)
++int airoha_ppe_offload_setup(struct airoha_eth *eth)
+ {
+ 	struct airoha_npu *npu = airoha_ppe_npu_get(eth);
+ 	struct airoha_ppe *ppe = eth->ppe;
+--- a/drivers/net/ethernet/airoha/airoha_eth.h
++++ b/drivers/net/ethernet/airoha/airoha_eth.h
+@@ -923,4 +923,7 @@ bool airoha_ppe_foe_compare_entry(struct
+ 
+ 
+ 
++extern struct mutex flow_offload_mutex;
++int airoha_ppe_offload_setup(struct airoha_eth *eth);
++
+ #endif /* AIROHA_ETH_H */
