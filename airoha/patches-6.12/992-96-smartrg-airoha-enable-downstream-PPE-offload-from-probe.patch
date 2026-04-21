@@ -1,0 +1,59 @@
+From: Chad Monroe <chad@monroe.io>
+Date: Sun, 19 Apr 2026 14:25:30 -0700
+Subject: [PATCH] airoha: enable downstream PPE offload from probe
+
+Downstream (PON->LAN) hardware offload on AN7581 requires GDM2's
+FWD_CFG to route PON ingress through PPE2, which airoha_dev_open()
+configures. Two things break that from happening on cold boot:
+
+1. airoha_dev_open() picks GDM2's PSE port via airoha_ppe_is_enabled(
+   eth, 1), which reads the live PPE2 enable bit. Upstream commit
+   cedc1bf327de ("net: airoha: Delay offloading until all net_devices
+   are fully registered") defers NPU firmware load (which flips that
+   bit) until userspace installs flowtable rules, so when
+   airoha_dev_open() runs first it latches FWD_CFG to PPE1.
+
+2. On OpenWrt builds, userspace only configures the logical `pon`
+   netdev; eth0 (the GDM2 data-plane netdev) stays administratively
+   DOWN so airoha_dev_open() never runs at all and GDM2 FWD_CFG
+   retains its hardware default.
+
+Signed-off-by: Chad Monroe <chad@monroe.io>
+---
+ drivers/net/ethernet/airoha/airoha_eth.c |   18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -1867,7 +1867,7 @@ static int airoha_dev_open(struct net_de
+ 	atomic_inc(&qdma->users);
+ 
+ 	if (port->id == AIROHA_GDM2_IDX &&
+-	    airoha_ppe_is_enabled(qdma->eth, 1)) {
++	    qdma->eth->soc->num_ppe >= 2) {
+ 		/* For PPE2 always use secondary cpu port. */
+ 		pse_port = FE_PSE_PORT_PPE2;
+ 	}
+@@ -2971,6 +2971,22 @@ static int airoha_register_gdm_devices(s
+ 
+ 	set_bit(DEV_STATE_REGISTERED, &eth->state);
+ 
++	/* Auto bring-up the GDM2 netdev (PON MAC, exposed as eth0). Userspace
++	 * typically configures only the logical pon interface; eth0 stays
++	 * DOWN and airoha_dev_open() never runs, leaving GDM2 FWD_CFG at its
++	 * hardware default and breaking downstream PPE offload.
++	 */
++	for (i = 0; i < ARRAY_SIZE(eth->ports); i++) {
++		struct airoha_gdm_port *port = eth->ports[i];
++
++		if (!port || port->id != AIROHA_GDM2_IDX)
++			continue;
++
++		rtnl_lock();
++		dev_change_flags(port->dev, port->dev->flags | IFF_UP, NULL);
++		rtnl_unlock();
++	}
++
+ 	return 0;
+ }
+ 

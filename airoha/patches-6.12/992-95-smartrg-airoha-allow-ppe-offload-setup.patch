@@ -62,7 +62,7 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  DEFINE_SPINLOCK(ppe_lock);
  static DEFINE_SPINLOCK(ppe_sram_access_lock);
  
-@@ -1499,7 +1499,7 @@ static struct airoha_npu *airoha_ppe_npu
+@@ -1501,7 +1501,7 @@ static struct airoha_npu *airoha_ppe_npu
  	return npu;
  }
  
@@ -73,7 +73,7 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  	struct airoha_ppe *ppe = eth->ppe;
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -923,4 +923,7 @@ bool airoha_ppe_foe_compare_entry(struct
+@@ -926,4 +926,7 @@ bool airoha_ppe_foe_compare_entry(struct
  
  
  

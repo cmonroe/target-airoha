@@ -1,82 +1,20 @@
 // SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 /dts-v1/;
 
-/* Bootloader installs ATF here */
-/memreserve/ 0x80000000 0x200000;
-
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/gpio/gpio.h>
-#include <dt-bindings/input/input.h>
 #include "an7581.dtsi"
 
-/ {
-	model = "Airoha AN7581 Evaluation Board";
-	compatible = "airoha,an7581-evb", "airoha,an7581", "airoha,en7581";
+&sound {
+	audio-routing = "Headphone", "HP_L",
+			"Headphone", "HP_R",
+			"LINPUT1", "AMIC",
+			"RINPUT1", "AMIC";
 
-	aliases {
-		serial0 = &uart1;
-	};
+	status = "okay";
 
-	chosen {
-		bootargs = "console=ttyS0,115200 earlycon";
-		stdout-path = "serial0:115200n8";
-		linux,usable-memory-range = <0x0 0x80200000 0x0 0x1fe00000>;
-	};
-
-	memory@80000000 {
-		device_type = "memory";
-		reg = <0x0 0x80000000 0x2 0x00000000>;
-	};
-
-	gpio-keys-polled {
-		compatible = "gpio-keys-polled";
-		poll-interval = <100>;
-		btn0 {
-			label = "reset";
-			linux,code = <KEY_RESTART>;
-			gpios = <&en7581_pinctrl 0 GPIO_ACTIVE_LOW>;
-		};
-	};
-
-	pwmleds {
-		compatible = "pwm-leds";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pwm_gpio18_idx10_pins>;
-		lan4_green {
-			label = "pon:green";
-			pwms = <&en7581_pwm 10 4000000 0>;
-			max-brightness = <255>;
-			active-low;
-		};
-	};
-
-
-	leds {
-		compatible = "gpio-leds";
-
-		pwr_led: led-0 {
-			label = "pwr";
-			color = <LED_COLOR_ID_RED>;
-			function = LED_FUNCTION_POWER;
-			gpios = <&en7581_pinctrl 17 GPIO_ACTIVE_LOW>;
-			default-state = "on";
-		};
-
-		los_led: led-2 {
-			label = "los";
-			color = <LED_COLOR_ID_GREEN>;
-			function = LED_FUNCTION_STATUS;
-			gpios = <&en7581_pinctrl 19 GPIO_ACTIVE_LOW>;
-			default-state = "on";
-		};
-
-		internet_led: led-3 {
-			label = "internet";
-			color = <LED_COLOR_ID_GREEN>;
-			function = LED_FUNCTION_STATUS;
-			gpios = <&en7581_pinctrl 20 GPIO_ACTIVE_LOW>;
-			default-state = "on";
-		};
+	codec {
+		sound-dai = <&wm8960>;
 	};
 };
 
@@ -142,32 +80,74 @@
 		pins = "gpio18";
 		output-enable;
 	};
+
+	mmc_pins: mmc-pins {
+		mux {
+			function = "emmc";
+			groups = "emmc";
+		};
+	};
 };
 
-&snfi {
+&usb0 {
 	status = "okay";
 };
 
-&spi_nand {
-	partitions {
-		compatible = "fixed-partitions";
-		#address-cells = <1>;
-		#size-cells = <1>;
+&usb1 {
+	status = "okay";
 
-		bl2@0 {
-			label = "bl2";
-			reg = <0x0 0x20000>;
-		};
+	mediatek,u3p-dis-msk = <0x1>;
+	phys = <&usb1_phy PHY_TYPE_USB2>;
+};
 
-		ubi@20000 {
-			label = "ubi";
-			reg = <0x20000 0x0>;
+&mmc0 {
+	pinctrl-names = "default", "state_uhs";
+	pinctrl-0 = <&mmc_pins>;
+	pinctrl-1 = <&mmc_pins>;
+	status = "okay";
+
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	card@0 {
+		compatible = "mmc-card";
+		reg = <0>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			bootloader@0 {
+				label = "bootloader";
+				reg = <0x00000000 0x00080000>;
+			};
+
+			tclinux@80000 {
+				label = "tclinux";
+				reg = <0x00080000 0x02800000>;
+			};
+
+			tclinux_slave@2880000 {
+				label = "tclinux_slave";
+				reg = <0x02880000 0x02800000>;
+			};
+
+			rootfs_data@5080000 {
+				label = "rootfs_data";
+				reg = <0x5080000 0x00800000>;
+			};
 		};
 	};
 };
 
 &i2c0 {
 	status = "okay";
+
+	wm8960: codec@1a {
+		compatible = "wlf,wm8960";
+		reg = <0x1a>;
+	};
 };
 
 &pcie0 {
@@ -202,6 +182,40 @@
 	};
 };
 
+&mdio {
+	as21xx_1: ethernet-phy@1d {
+		compatible = "ethernet-phy-ieee802.3-c45";
+		reg = <0x1d>;
+
+		firmware-name = "as21x1x_fw.bin";
+
+		reset-deassert-us = <1000000>;
+		reset-assert-us = <1000000>;
+		reset-gpios = <&en7581_pinctrl 31 GPIO_ACTIVE_LOW>;
+
+		leds {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			led@0 {
+				reg = <0>;
+				color = <LED_COLOR_ID_GREEN>;
+				function = LED_FUNCTION_LAN;
+				function-enumerator = <0>;
+				default-state = "keep";
+			};
+
+			led@1 {
+				reg = <1>;
+				color = <LED_COLOR_ID_GREEN>;
+				function = LED_FUNCTION_LAN;
+				function-enumerator = <1>;
+				default-state = "keep";
+			};
+		};
+	};
+};
+
 &npu {
 	status = "okay";
 };
@@ -212,6 +226,13 @@
 
 &gdm1 {
 	status = "okay";
+};
+
+&gdm4 {
+	status = "okay";
+
+	phy-handle = <&as21xx_1>;
+	phy-mode = "usxgmii";
 };
 
 &switch {

@@ -428,7 +428,7 @@
  	spin_unlock_irq(&q->lock);
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -148,13 +148,6 @@ enum {
+@@ -149,13 +149,6 @@ enum {
  	CRSN_25 = 0x19,
  };
  
@@ -442,7 +442,7 @@
  enum {
  	FE_PSE_PORT_CDM1,
  	FE_PSE_PORT_GDM1,
-@@ -899,7 +892,12 @@ int airoha_get_lan_id(struct net_device
+@@ -902,7 +895,12 @@ int airoha_get_lan_id(struct net_device
  void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
  void airoha_fe_core_reset(struct airoha_eth *eth);
  int airoha_receive_hook(struct sk_buff *skb, struct airoha_qdma_desc *desc, int p, int len, u32 sptag);
@@ -553,10 +553,16 @@
 +};
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -3162,30 +3162,7 @@ static const char * const an7583_xsi_rst
- 	"xfp-mac",
- };
+@@ -3221,56 +3221,7 @@ static u32 airoha_en7581_get_vip_port(st
+ 	return 0;
+ }
  
+-static const char * const an7583_xsi_rsts_names[] = {
+-	"hsi0-mac",
+-	"hsi1-mac",
+-	"xfp-mac",
+-};
+-
 -static int airoha_an7583_get_src_port_id(struct airoha_gdm_port *port, int nbq)
 -{
 -	switch (port->id) {
@@ -579,12 +585,32 @@
 -	return -EINVAL;
 -}
 -
+-static u32 airoha_an7583_get_vip_port(struct airoha_gdm_port *port, int nbq)
+-{
+-	switch (port->id) {
+-	case AIROHA_GDM3_IDX:
+-		if (!nbq)
+-			return XSI_ETH_VIP_PORT_MASK;
+-		break;
+-	case AIROHA_GDM4_IDX:
+-		if (!nbq)
+-			return XSI_PCIE0_VIP_PORT_MASK;
+-		if (nbq == 1)
+-			return XSI_USB_VIP_PORT_MASK;
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	return 0;
+-}
+-
  extern const struct airoha_eth_chip chip_en7581_info;
 -extern const struct airoha_eth_chip chip_an7583_info;
  static const struct airoha_eth_soc_data en7581_soc_data = {
  	.version = 0x7581,
  	.xsi_rsts_names = en7581_xsi_rsts_names,
-@@ -3197,20 +3174,8 @@ static const struct airoha_eth_soc_data
+@@ -3283,21 +3234,8 @@ static const struct airoha_eth_soc_data
  	.chip = &chip_en7581_info,
  };
  
@@ -595,6 +621,7 @@
 -	.num_ppe = 1,
 -	.ops = {
 -		.get_src_port_id = airoha_an7583_get_src_port_id,
+-		.get_vip_port = airoha_an7583_get_vip_port,
 -	},
 -	.chip = &chip_an7583_info,
 -};
