@@ -581,6 +581,12 @@
 			interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_HIGH>;
 		};
 
+		voip_pcm: pcm@1fbd0000 {
+			compatible = "airoha,airoha-pcm";
+			reg = <0x0 0x1fbd0000 0x0 0x4fff>;
+			interrupts = <GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>;
+		};
+
 		thermal: thermal-sensor@1efbd800 {
 			compatible = "airoha,en7581-thermal";
 			reg = <0x0 0x1efbd000 0x0 0xd5c>;
