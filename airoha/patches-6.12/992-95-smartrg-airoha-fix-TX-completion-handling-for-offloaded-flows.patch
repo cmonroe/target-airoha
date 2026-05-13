@@ -12,30 +12,19 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -1019,16 +1019,19 @@ static int airoha_qdma_tx_napi_poll(stru
- 		WRITE_ONCE(desc->msg1, 0);
+@@ -1046,10 +1046,12 @@ static int airoha_qdma_tx_napi_poll(stru
  		q->queued--;
  
-+		while (q->tail != q->head && !q->entry[q->tail].dma_addr)
-+			q->tail = (q->tail + 1) % q->ndesc;
  		if (skb) {
--			u16 queue = skb_get_queue_mapping(skb);
-+			u16 queue = skb_get_queue_mapping(skb) % ARRAY_SIZE(qdma->q_tx);
- 			struct netdev_queue *txq;
- 
--			txq = netdev_get_tx_queue(skb->dev, queue);
--
--			netdev_tx_completed_queue(txq, 1, skb->len);
--			if (netif_tx_queue_stopped(txq) &&
--			    q->ndesc - q->queued >= q->free_thr)
--				netif_tx_wake_queue(txq);
+-			struct netdev_queue *txq;
 +			if (skb->dev) {
-+				txq = netdev_get_tx_queue(skb->dev, queue);
-+				netdev_tx_completed_queue(txq, 1, skb->len);
-+				if (netif_tx_queue_stopped(txq) &&
-+						q->ndesc - q->queued >= q->free_thr)
-+					netif_tx_wake_queue(txq);
-+			}
++				struct netdev_queue *txq;
  
+-			txq = skb_get_tx_queue(skb->dev, skb);
+-			netdev_tx_completed_queue(txq, 1, skb->len);
++				txq = skb_get_tx_queue(skb->dev, skb);
++				netdev_tx_completed_queue(txq, 1, skb->len);
++			}
  			dev_kfree_skb_any(skb);
  		}
+ 

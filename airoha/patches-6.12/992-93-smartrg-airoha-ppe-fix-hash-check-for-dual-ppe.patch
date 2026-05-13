@@ -31,7 +31,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "CPU_REASON: %u\n", reason);
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -809,6 +809,7 @@ int airoha_ppe_init(struct airoha_eth *e
+@@ -815,6 +815,7 @@ int airoha_ppe_init(struct airoha_eth *e
  void airoha_ppe_deinit(struct airoha_eth *eth);
  void airoha_ppe_init_upd_mem(struct airoha_gdm_port *port);
  struct airoha_foe_entry *airoha_ppe_foe_get_entry_locked(struct airoha_ppe *ppe, u32 hash);
@@ -41,7 +41,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  						  u32 hash);
 --- a/drivers/net/ethernet/airoha/arht_dp_api.c
 +++ b/drivers/net/ethernet/airoha/arht_dp_api.c
-@@ -9375,8 +9375,8 @@ void airoha_ppe_general_bind(struct airo
+@@ -9384,8 +9384,8 @@ void airoha_ppe_general_bind(struct airo
  
  	hwe->ib1 = ib1;
  
@@ -52,7 +52,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	}
  	
  	return;
-@@ -9485,10 +9485,10 @@ void airoha_ppe_foe_flow_update_eth_offl
+@@ -9494,10 +9494,10 @@ void airoha_ppe_foe_flow_update_eth_offl
  	int dscp=0;
  	
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "hash at qdma_lan_tx: %u\n", hash);
@@ -66,7 +66,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  
  	if(arht_multicast_handler_for_sfu(skb))
  	{
-@@ -9573,11 +9573,11 @@ void airoha_ppe_foe_flow_update_pon_offl
+@@ -9582,11 +9582,11 @@ void airoha_ppe_foe_flow_update_pon_offl
  	int dscp=0;
  	
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "hash at qdma_wan_tx: %u\n", hash);
@@ -82,7 +82,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	spin_lock_bh(&ppe_lock);
  	hwe = airoha_ppe_foe_get_entry_locked(ppe, hash);
  	if (!hwe)
-@@ -10174,9 +10174,8 @@ EXPORT_SYMBOL(qdma_wan_tx);
+@@ -10183,9 +10183,8 @@ EXPORT_SYMBOL(qdma_wan_tx);
  void npu_get_entry_bind(struct sk_buff *skb, u32 hash, u32 reason)
  {
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "Hash: %u\n", hash);
@@ -94,7 +94,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "CPU_REASON: %u\n", reason);
  	if (reason == PPE_CPU_REASON_HIT_UNBIND_RATE_REACHED){
-@@ -10205,11 +10204,11 @@ void airoha_ppe_foe_flow_update_wifi_npu
+@@ -10214,11 +10213,11 @@ void airoha_ppe_foe_flow_update_wifi_npu
  	unsigned int dscp_tmp = 0;
  	u32 index, data;
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "hash at wifi_tx: %u\n", hash);
@@ -110,7 +110,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	spin_lock_bh(&ppe_lock);
  	hwe = airoha_ppe_foe_get_entry_locked(ppe, hash);
  	if (!hwe)
-@@ -10433,10 +10432,10 @@ int arht_ppe_multicast_handler(struct ai
+@@ -10442,10 +10441,10 @@ int arht_ppe_multicast_handler(struct ai
  {
  	unsigned int foe_index = FOE_ENTRY_NUM(skb);
  
@@ -124,7 +124,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	{
  		struct airoha_foe_entry *hwe = NULL;
  		spin_lock_bh(&ppe_lock);
-@@ -10476,12 +10475,9 @@ int arht_ppe_multicast_set_valid(struct
+@@ -10485,12 +10484,9 @@ int arht_ppe_multicast_set_valid(struct
  {
  	unsigned int foe_index = FOE_ENTRY_NUM(skb);
  
@@ -139,7 +139,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	}
  	return 0;
  }
-@@ -11771,12 +11767,9 @@ int arht_ppe_soe_offload_get_valid(struc
+@@ -11780,12 +11776,9 @@ int arht_ppe_soe_offload_get_valid(struc
  {
  	unsigned int foe_index = FOE_ENTRY_NUM(skb);
  
@@ -154,7 +154,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	}
  	return 0;
  }
-@@ -11793,13 +11786,11 @@ int airoha_ppe_drop_packet_handler(struc
+@@ -11802,13 +11795,11 @@ int airoha_ppe_drop_packet_handler(struc
  		return 0;
  	ppe = glb_eth->ppe;
  
@@ -171,7 +171,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  
  	spin_lock_bh(&ppe_lock);
  	hwe = airoha_ppe_foe_get_entry_locked(ppe, hash);
-@@ -12779,9 +12770,9 @@ int arht_general_offload_bind(struct sk_
+@@ -12788,9 +12779,9 @@ int arht_general_offload_bind(struct sk_
  	int ring;
  
  	foe_entry_idx = skb->hash;

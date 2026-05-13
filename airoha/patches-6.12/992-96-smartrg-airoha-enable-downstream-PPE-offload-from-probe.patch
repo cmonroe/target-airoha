@@ -25,7 +25,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -1867,7 +1867,7 @@ static int airoha_dev_open(struct net_de
+@@ -1932,7 +1932,7 @@ static int airoha_dev_open(struct net_de
  	atomic_inc(&qdma->users);
  
  	if (port->id == AIROHA_GDM2_IDX &&
@@ -34,7 +34,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  		/* For PPE2 always use secondary cpu port. */
  		pse_port = FE_PSE_PORT_PPE2;
  	}
-@@ -2971,6 +2971,22 @@ static int airoha_register_gdm_devices(s
+@@ -3056,6 +3056,22 @@ static int airoha_register_gdm_devices(s
  
  	set_bit(DEV_STATE_REGISTERED, &eth->state);
  

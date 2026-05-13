@@ -25,7 +25,7 @@
  
  static const struct rhashtable_params airoha_flow_table_params = {
  	.head_offset = offsetof(struct airoha_flow_table_entry, node),
-@@ -110,6 +120,9 @@ static void airoha_ppe_hw_init(struct ai
+@@ -109,6 +119,9 @@ static void airoha_ppe_hw_init(struct ai
  	sram_tb_size = sram_num_entries * sizeof(struct airoha_foe_entry);
  	dram_num_entries = PPE_RAM_NUM_ENTRIES_SHIFT(PPE_DRAM_NUM_ENTRIES);
  
@@ -35,7 +35,7 @@
  	sram_num_stats_entries = airoha_ppe_get_num_stats_entries(ppe);
  	if (sram_num_stats_entries > 0)
  		sram_ppe_num_data_entries -= sram_num_stats_entries;
-@@ -153,6 +166,7 @@ static void airoha_ppe_hw_init(struct ai
+@@ -152,6 +165,7 @@ static void airoha_ppe_hw_init(struct ai
  			      PPE_TB_CFG_KEEPALIVE_MASK |
  			      PPE_TB_ENTRY_SIZE_MASK,
  			      FIELD_PREP(PPE_TB_CFG_SEARCH_MISS_MASK, 3) |
@@ -43,7 +43,7 @@
  			      FIELD_PREP(PPE_TB_ENTRY_SIZE_MASK, 0) |
  			      FIELD_PREP(PPE_SRAM_TB_NUM_ENTRY_MASK,
  					 sram_ppe_num_data_entries) |
-@@ -179,6 +193,9 @@ static void airoha_ppe_hw_init(struct ai
+@@ -178,6 +192,9 @@ static void airoha_ppe_hw_init(struct ai
  						 AIROHA_MAX_MTU) |
  				      FIELD_PREP(FP1_EGRESS_MTU_MASK,
  						 AIROHA_MAX_MTU));
@@ -371,7 +371,7 @@
  	err = airoha_ppe_foe_flow_commit_entry(eth->ppe, e);
  	if (err)
  		goto free_entry;
-@@ -1452,6 +1599,66 @@ void airoha_ppe_init_upd_mem(struct airo
+@@ -1480,6 +1627,66 @@ void airoha_ppe_init_upd_mem(struct airo
  		     FIELD_PREP(PPE_UPDMEM_ADDR_MASK, port->id) |
  		     FIELD_PREP(PPE_UPDMEM_OFFSET_MASK, 1) |
  		     PPE_UPDMEM_WR_MASK | PPE_UPDMEM_REQ_MASK);
@@ -438,7 +438,7 @@
  }
  
  struct airoha_ppe_dev *airoha_ppe_get_dev(struct device *dev)
-@@ -1557,6 +1764,9 @@ int airoha_ppe_init(struct airoha_eth *e
+@@ -1585,6 +1792,9 @@ int airoha_ppe_init(struct airoha_eth *e
  	if (err)
  		return err;
  
@@ -448,7 +448,7 @@
  	err = rhashtable_init(&eth->flow_table, &airoha_flow_table_params);
  	if (err)
  		return err;
-@@ -1564,7 +1774,10 @@ int airoha_ppe_init(struct airoha_eth *e
+@@ -1592,7 +1802,10 @@ int airoha_ppe_init(struct airoha_eth *e
  	err = rhashtable_init(&ppe->l2_flows, &airoha_l2_flow_table_params);
  	if (err)
  		goto error_flow_table_destroy;
@@ -460,7 +460,7 @@
  	err = airoha_ppe_debugfs_init(ppe);
  	if (err)
  		goto error_l2_flow_table_destroy;
-@@ -1575,10 +1788,10 @@ error_l2_flow_table_destroy:
+@@ -1603,10 +1816,10 @@ error_l2_flow_table_destroy:
  	rhashtable_destroy(&ppe->l2_flows);
  error_flow_table_destroy:
  	rhashtable_destroy(&eth->flow_table);
@@ -472,7 +472,7 @@
  void airoha_ppe_deinit(struct airoha_eth *eth)
  {
  	struct airoha_npu *npu;
-@@ -1596,5 +1809,7 @@ void airoha_ppe_deinit(struct airoha_eth
+@@ -1624,5 +1837,7 @@ void airoha_ppe_deinit(struct airoha_eth
  
  	rhashtable_destroy(&eth->ppe->l2_flows);
  	rhashtable_destroy(&eth->flow_table);

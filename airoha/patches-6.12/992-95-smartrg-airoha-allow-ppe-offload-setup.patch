@@ -24,13 +24,22 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  int (*ra_sw_nat_hook_clean_table) (void) = NULL;
  EXPORT_SYMBOL(ra_sw_nat_hook_clean_table);
  
-@@ -11848,16 +11852,26 @@ unlock:
+@@ -11857,16 +11861,35 @@ unlock:
  	return ret;
  
  }
 +static int airoha_set_ppe_init(void)
 +{
 +	int ret;
++
++	/* glb_eth is assigned at the end of airoha_probe, after airoha_ppe_init
++	 * has already registered this hook. Caller (arht_general_offload's
++	 * delayed worker) treats non-zero as "retry later", so bail until probe
++	 * finishes wiring the global.
++	 */
++	if (!glb_eth)
++		return -EAGAIN;
++
 +	mutex_lock(&flow_offload_mutex);
 +	ret = airoha_ppe_offload_setup(glb_eth);
 +	mutex_unlock(&flow_offload_mutex);
@@ -62,8 +71,8 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  DEFINE_SPINLOCK(ppe_lock);
  static DEFINE_SPINLOCK(ppe_sram_access_lock);
  
-@@ -1501,7 +1501,7 @@ static struct airoha_npu *airoha_ppe_npu
- 	return npu;
+@@ -1524,7 +1524,7 @@ static int airoha_ppe_wait_for_npu_init(
+ 	return err;
  }
  
 -static int airoha_ppe_offload_setup(struct airoha_eth *eth)
@@ -73,7 +82,7 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  	struct airoha_ppe *ppe = eth->ppe;
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -926,4 +926,7 @@ bool airoha_ppe_foe_compare_entry(struct
+@@ -932,4 +932,7 @@ bool airoha_ppe_foe_compare_entry(struct
  
  
  

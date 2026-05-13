@@ -116,7 +116,7 @@
  		q->skb = NULL;
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -597,6 +597,12 @@ struct airoha_wdma_info {
+@@ -598,6 +598,12 @@ struct airoha_wdma_info {
  	u8 bss;
  };
  
@@ -129,7 +129,7 @@
  /* RX queue to IRQ mapping: BIT(q) in IRQ(n) */
  #define RX_IRQ0_BANK_PIN_MASK			0xbb9f
  #define RX_IRQ1_BANK_PIN_MASK			0x7fe00000
-@@ -887,7 +893,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
+@@ -893,7 +899,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
  int airoha_get_lan_id(struct net_device *dev);
  void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
  void airoha_fe_core_reset(struct airoha_eth *eth);

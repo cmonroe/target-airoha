@@ -164,7 +164,23 @@
  {
  	int RETRY = 3 ;
  	volatile uint regValue = 0 ;
-@@ -9883,6 +10006,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
+@@ -8257,6 +8380,15 @@ void airoha_pon_set_macaddr(const u8 *ad
+ 	u32 val, reg;
+ 	struct airoha_eth *eth = glb_eth;
+ 
++	/* Out-of-tree xpon_10g calls this from its init path, which can
++	 * run before airoha_eth's probe assigns glb_eth.
++	 */
++	if (!eth) {
++		pr_warn_once("%s: glb_eth not ready, skipping PON MAC program\n",
++			     __func__);
++		return;
++	}
++
+ 	reg = REG_FE_WAN_MAC_H;
+ 	val = (addr[0] << 16) | (addr[1] << 8) | addr[2];
+ 	airoha_fe_wr(eth, reg, val);
+@@ -9883,6 +10015,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
  	pinfo.txq = qid;
  	pinfo.nbq = channel;
  
@@ -172,7 +188,7 @@
  	if (!glb_eth || !glb_eth->chip)
          return;
  
-@@ -9893,6 +10017,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
+@@ -9893,6 +10026,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
              break;
          }
      }
@@ -180,7 +196,7 @@
  	
  	airoha_ppe_foe_flow_update_eth_offload(glb_eth->ppe, skb, &pinfo, fport);
  }
-@@ -10291,7 +10416,7 @@ static PPE_MULTICAST_FWD_STATE_HANDLER s
+@@ -10291,7 +10425,7 @@ static PPE_MULTICAST_FWD_STATE_HANDLER s
  	{PPE_MULTICAST_FORWARD_STATE_WLAN_ONLY,arht_multicast_hwnat_state_handler_wlan_only},
  	{PPE_MULTICAST_FORWARD_STATE_LAN_WLAN,arht_multicast_hwnat_state_handler_lan_wlan},
  	//{PPE_MULTICAST_FORWARD_STATE_LAN_XSI,ecnt_multicast_hwnat_state_handler_lan_xsi},
@@ -189,7 +205,7 @@
  	//{PPE_MULTICAST_FORWARD_STATE_XSI_WLAN,ecnt_multicast_hwnat_state_handler_xsi_wlan},	
  	{PPE_MULTICAST_FORWARD_STATE_LAN_HSGMII_1toN,arht_multicast_hwnat_state_handler_lan_hsgmii_1toN},
  	{PPE_MULTICAST_FORWARD_STATE_UNKNOWN,arht_multicast_hwnat_state_handler_unknown},
-@@ -10746,6 +10871,7 @@ int arht_multicast_hwnat_state_handler_l
+@@ -10746,6 +10880,7 @@ int arht_multicast_hwnat_state_handler_l
  }
  
  //not support, set invalid hwnat rule, make packet send to cpu
@@ -197,7 +213,7 @@
  int arht_multicast_hwnat_state_handler_xsi_only(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority)
  {
  	int channel = 1;
-@@ -10839,6 +10965,7 @@ int arht_multicast_hwnat_state_handler_x
+@@ -10839,6 +10974,7 @@ int arht_multicast_hwnat_state_handler_x
  	
  	return 0;
  }
@@ -205,7 +221,7 @@
  
  
  int arht_multicast_hwnat_state_handler_lan_hsgmii_1toN(struct airoha_ppe *ppe, struct airoha_foe_entry *hwe, unsigned int foe_index, unsigned int  port_mask, int priority)
-@@ -12248,14 +12375,10 @@ static void airoha_eth_monitor_link_down
+@@ -12248,14 +12384,10 @@ static void airoha_eth_monitor_link_down
  			if (ra_sw_nat_hook_clean_table)
  				ra_sw_nat_hook_clean_table();
  
@@ -224,7 +240,7 @@
  			if(ret < 0 )
  				printk("\n [ARIOHA_ETH_MONITOR] Itf - %s Link Down GDM%d Rls Fail! \n",eth_dev->name,port->id);
  			else
-@@ -12358,7 +12481,7 @@ void airoha_eth_monitor(struct work_stru
+@@ -12358,7 +12490,7 @@ void airoha_eth_monitor(struct work_stru
  	//fe_oq_stat_monitor();
  	for(p = 0; p < ARRAY_SIZE(glb_eth->ports); p++)
  	{
@@ -233,7 +249,7 @@
  			continue;
  		
  		struct airoha_gdm_port *port = glb_eth->ports[p];
-@@ -12386,7 +12509,7 @@ void airoha_eth_monitor_workqueue_init(s
+@@ -12386,7 +12518,7 @@ void airoha_eth_monitor_workqueue_init(s
  	if (!eth)
  		return;
  
@@ -242,7 +258,7 @@
  		if(!eth->work_started)
  		{
  			eth->work_started = true;
-@@ -12394,7 +12517,7 @@ void airoha_eth_monitor_workqueue_init(s
+@@ -12394,7 +12526,7 @@ void airoha_eth_monitor_workqueue_init(s
  			INIT_DELAYED_WORK(&airoha_eth_monitor_workqueue, airoha_eth_monitor);
  			schedule_delayed_work(&airoha_eth_monitor_workqueue,msecs_to_jiffies(50000));
  		}
@@ -251,7 +267,7 @@
  }
  
  void airoha_eth_monitor_workqueue_exit(struct airoha_eth *eth)
-@@ -12402,15 +12525,16 @@ void airoha_eth_monitor_workqueue_exit(s
+@@ -12402,15 +12534,16 @@ void airoha_eth_monitor_workqueue_exit(s
  	if (!eth)
  		return;
  
@@ -270,7 +286,7 @@
  int airoha_hwnat_clean_lan_entry_by_fport_and_channel(struct airoha_gdm_port *port, int channel)
  {
  	
-@@ -12464,6 +12588,7 @@ int airoha_hwnat_clean_lan_entry_by_fpor
+@@ -12464,6 +12597,7 @@ int airoha_hwnat_clean_lan_entry_by_fpor
  	return 0;
  	
  }

@@ -9,7 +9,7 @@
  extern spinlock_t ppe_lock, flow_offload_lock;
  /* airoha pon onu type
   * 0 --> unknown
-@@ -12401,7 +12399,7 @@ void airoha_eth_monitor_gsw_process(stru
+@@ -12410,7 +12408,7 @@ void airoha_eth_monitor_gsw_process(stru
  {
  	struct net_device *eth_dev = NULL;
  	int i = 0;
