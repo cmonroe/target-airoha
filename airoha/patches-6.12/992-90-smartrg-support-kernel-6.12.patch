@@ -428,7 +428,7 @@
  	spin_unlock_irq(&q->lock);
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -149,13 +149,6 @@ enum {
+@@ -151,13 +151,6 @@ enum {
  	CRSN_25 = 0x19,
  };
  
@@ -442,7 +442,7 @@
  enum {
  	FE_PSE_PORT_CDM1,
  	FE_PSE_PORT_GDM1,
-@@ -908,7 +901,12 @@ int airoha_get_lan_id(struct net_device
+@@ -914,7 +907,12 @@ int airoha_get_lan_id(struct net_device
  void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
  void airoha_fe_core_reset(struct airoha_eth *eth);
  int airoha_receive_hook(struct sk_buff *skb, struct airoha_qdma_desc *desc, int p, int len, u32 sptag);
@@ -553,7 +553,7 @@
 +};
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -3304,56 +3304,7 @@ static u32 airoha_en7581_get_vip_port(st
+@@ -3296,56 +3296,7 @@ static u32 airoha_en7581_get_vip_port(st
  	return 0;
  }
  
@@ -563,7 +563,7 @@
 -	"xfp-mac",
 -};
 -
--static int airoha_an7583_get_src_port_id(struct airoha_gdm_port *port, int nbq)
+-static int airoha_an7583_get_sport(struct airoha_gdm_port *port, int nbq)
 -{
 -	switch (port->id) {
 -	case AIROHA_GDM3_IDX:
@@ -610,7 +610,7 @@
  static const struct airoha_eth_soc_data en7581_soc_data = {
  	.version = 0x7581,
  	.xsi_rsts_names = en7581_xsi_rsts_names,
-@@ -3366,21 +3317,8 @@ static const struct airoha_eth_soc_data
+@@ -3358,21 +3309,8 @@ static const struct airoha_eth_soc_data
  	.chip = &chip_en7581_info,
  };
  
@@ -620,7 +620,7 @@
 -	.num_xsi_rsts = ARRAY_SIZE(an7583_xsi_rsts_names),
 -	.num_ppe = 1,
 -	.ops = {
--		.get_src_port_id = airoha_an7583_get_src_port_id,
+-		.get_sport = airoha_an7583_get_sport,
 -		.get_vip_port = airoha_an7583_get_vip_port,
 -	},
 -	.chip = &chip_an7583_info,

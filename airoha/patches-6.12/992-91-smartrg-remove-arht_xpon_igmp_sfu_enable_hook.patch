@@ -9,7 +9,7 @@
  extern int arht_ppe_multicast_set_valid(struct sk_buff* skb);
  extern int airoha_is_pon_sfu_mode(void);
  
-@@ -689,9 +689,9 @@ static void airoha_get_entry_bind(u32 ms
+@@ -685,9 +685,9 @@ static void airoha_get_entry_bind(u32 ms
  				flow_e->ingress_dev_idx = ETH2;
  		}
  		airoha_ppe_check_skb(&eth->ppe->dev, q->skb, hash, false);
