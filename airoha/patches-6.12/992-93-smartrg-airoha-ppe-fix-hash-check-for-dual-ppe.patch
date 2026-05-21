@@ -17,7 +17,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -671,9 +671,8 @@ static void airoha_get_entry_bind(u32 ms
+@@ -707,9 +707,8 @@ static void airoha_get_entry_bind(u32 ms
  	u32 reason;
  	u32 hash = FIELD_GET(AIROHA_RXD4_FOE_ENTRY, msg1);
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "Hash: %u\n", hash);
@@ -31,7 +31,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "CPU_REASON: %u\n", reason);
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -821,6 +821,7 @@ int airoha_ppe_init(struct airoha_eth *e
+@@ -844,6 +844,7 @@ int airoha_ppe_init(struct airoha_eth *e
  void airoha_ppe_deinit(struct airoha_eth *eth);
  void airoha_ppe_init_upd_mem(struct airoha_gdm_port *port);
  struct airoha_foe_entry *airoha_ppe_foe_get_entry_locked(struct airoha_ppe *ppe, u32 hash);
@@ -185,7 +185,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	if (!hwe)
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -66,7 +66,7 @@ static int airoha_ppe_get_total_num_stat
+@@ -67,7 +67,7 @@ static int airoha_ppe_get_total_num_stat
  	return num_stats;
  }
  

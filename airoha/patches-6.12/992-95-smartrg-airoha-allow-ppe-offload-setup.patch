@@ -62,7 +62,7 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -24,7 +24,7 @@ extern void airoha_ppe_hook_exit(void);
+@@ -25,7 +25,7 @@ extern void airoha_ppe_hook_exit(void);
  extern struct airoha_eth *glb_eth;
  extern int airoha_is_pon_sfu_mode(void);
  
@@ -71,7 +71,7 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  DEFINE_SPINLOCK(ppe_lock);
  static DEFINE_SPINLOCK(ppe_sram_access_lock);
  
-@@ -1531,7 +1531,7 @@ static int airoha_ppe_wait_for_npu_init(
+@@ -1543,7 +1543,7 @@ static int airoha_ppe_wait_for_npu_init(
  	return err;
  }
  
@@ -82,7 +82,7 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  	struct airoha_ppe *ppe = eth->ppe;
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -938,4 +938,7 @@ bool airoha_ppe_foe_compare_entry(struct
+@@ -961,4 +961,7 @@ bool airoha_ppe_foe_compare_entry(struct
  
  
  

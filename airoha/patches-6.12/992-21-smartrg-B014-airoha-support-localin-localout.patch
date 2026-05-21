@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -35,14 +35,6 @@ extern int arht_ppe_multicast_handler(st
+@@ -36,14 +36,6 @@ extern int arht_ppe_multicast_handler(st
  extern int (*arht_xpon_igmp_sfu_enable_hook)(struct net_device *port_dev);
  extern int arht_ppe_multicast_set_valid(struct sk_buff* skb);
  extern int airoha_is_pon_sfu_mode(void);
@@ -15,7 +15,7 @@
  
  static int is_ethmac_nvmem_cell_available(struct airoha_eth *eth)
  {
-@@ -674,22 +666,6 @@ static int airoha_qdma_fill_rx_queue(str
+@@ -710,22 +702,6 @@ static int airoha_qdma_fill_rx_queue(str
  	return nframes;
  }
  
@@ -38,7 +38,7 @@
  static void airoha_get_entry_bind(u32 msg1, struct airoha_queue *q, struct airoha_eth *eth, u32 sptag)
  {
  	u32 reason;
-@@ -727,7 +703,6 @@ static int airoha_qdma_rx_process(struct
+@@ -832,7 +808,6 @@ static int airoha_qdma_rx_process(struct
  	struct airoha_eth *eth = qdma->eth;
  	int qid = q - &qdma->q_rx[0];
  	int done = 0;
@@ -46,7 +46,7 @@
  
  	while (done < budget) {
  		struct airoha_queue_entry *e = &q->entry[q->tail];
-@@ -736,7 +711,6 @@ static int airoha_qdma_rx_process(struct
+@@ -841,7 +816,6 @@ static int airoha_qdma_rx_process(struct
  		struct airoha_gdm_port *port;
  		int data_len, len, p;
  		struct page *page;
@@ -54,7 +54,7 @@
  
  		desc_ctrl = le32_to_cpu(READ_ONCE(desc->ctrl));
  		if (!(desc_ctrl & QDMA_DESC_DONE_MASK))
-@@ -762,10 +736,6 @@ static int airoha_qdma_rx_process(struct
+@@ -867,10 +841,6 @@ static int airoha_qdma_rx_process(struct
  			goto free_frag;
  
  		port = eth->ports[p];
@@ -65,7 +65,7 @@
  		
  		if (!q->skb) { /* first buffer */
  			q->skb = napi_build_skb(e->buf - AIROHA_RX_HEADROOM,
-@@ -813,45 +783,10 @@ static int airoha_qdma_rx_process(struct
+@@ -923,45 +893,10 @@ static int airoha_qdma_rx_process(struct
  		msg1 = le32_to_cpu(READ_ONCE(desc->msg1));
  		airoha_get_entry_bind(msg1, q, eth , sptag);
  		done++;
@@ -81,8 +81,8 @@
 -				continue;
 -			}
 -		}
--
  
+-
 -		if(p==1
 -			&& (airoha_check_pon_rx_hook((void *)&pMsg,q->skb,len)==PON_RX_SUCCESS)){
 -			/*
@@ -116,7 +116,7 @@
  		q->skb = NULL;
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -600,6 +600,12 @@ struct airoha_wdma_info {
+@@ -611,6 +611,12 @@ struct airoha_wdma_info {
  	u8 bss;
  };
  
@@ -129,7 +129,7 @@
  /* RX queue to IRQ mapping: BIT(q) in IRQ(n) */
  #define RX_IRQ0_BANK_PIN_MASK			0xbb9f
  #define RX_IRQ1_BANK_PIN_MASK			0x7fe00000
-@@ -899,7 +905,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
+@@ -922,7 +928,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
  int airoha_get_lan_id(struct net_device *dev);
  void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
  void airoha_fe_core_reset(struct airoha_eth *eth);
