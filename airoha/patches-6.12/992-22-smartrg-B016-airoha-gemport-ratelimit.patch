@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -1455,7 +1455,7 @@ static void airoha_qdma_init_qos(struct
+@@ -1461,7 +1461,7 @@ static void airoha_qdma_init_qos(struct
  			FIELD_PREP(SLA_FAST_TICK_MASK, 25));
  	airoha_qdma_rmw(qdma, REG_SLA_TRTCM_CFG, SLA_SLOW_TICK_RATIO_MASK,
  			FIELD_PREP(SLA_SLOW_TICK_RATIO_MASK, 40));
@@ -9,7 +9,7 @@
  }
  
  static void airoha_qdma_init_qos_stats(struct airoha_qdma *qdma)
-@@ -3248,6 +3248,8 @@ static int airoha_probe(struct platform_
+@@ -3275,6 +3275,8 @@ static int airoha_probe(struct platform_
  	}
  	printk("\n [AIROHA_ETH]Successfully Identify CHIP ID:%d \n",eth->airoha_chip_id);
  

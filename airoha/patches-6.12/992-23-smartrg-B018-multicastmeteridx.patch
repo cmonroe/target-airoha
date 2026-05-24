@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -3249,6 +3249,7 @@ static int airoha_probe(struct platform_
+@@ -3276,6 +3276,7 @@ static int airoha_probe(struct platform_
  	printk("\n [AIROHA_ETH]Successfully Identify CHIP ID:%d \n",eth->airoha_chip_id);
  
  	eth->meter_enable = of_property_read_bool(eth->dev->of_node, "meter-enable");

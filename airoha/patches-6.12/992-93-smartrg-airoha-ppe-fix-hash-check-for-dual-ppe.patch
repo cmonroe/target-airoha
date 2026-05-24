@@ -17,7 +17,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -707,9 +707,8 @@ static void airoha_get_entry_bind(u32 ms
+@@ -713,9 +713,8 @@ static void airoha_get_entry_bind(u32 ms
  	u32 reason;
  	u32 hash = FIELD_GET(AIROHA_RXD4_FOE_ENTRY, msg1);
  	AIROHA_LOG(AIROHA_DEBUG_LEVEL_INFO, "Hash: %u\n", hash);

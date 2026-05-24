@@ -15,7 +15,7 @@
  
  static int is_ethmac_nvmem_cell_available(struct airoha_eth *eth)
  {
-@@ -710,22 +702,6 @@ static int airoha_qdma_fill_rx_queue(str
+@@ -716,22 +708,6 @@ static int airoha_qdma_fill_rx_queue(str
  	return nframes;
  }
  
@@ -38,7 +38,7 @@
  static void airoha_get_entry_bind(u32 msg1, struct airoha_queue *q, struct airoha_eth *eth, u32 sptag)
  {
  	u32 reason;
-@@ -832,7 +808,6 @@ static int airoha_qdma_rx_process(struct
+@@ -838,7 +814,6 @@ static int airoha_qdma_rx_process(struct
  	struct airoha_eth *eth = qdma->eth;
  	int qid = q - &qdma->q_rx[0];
  	int done = 0;
@@ -46,7 +46,7 @@
  
  	while (done < budget) {
  		struct airoha_queue_entry *e = &q->entry[q->tail];
-@@ -841,7 +816,6 @@ static int airoha_qdma_rx_process(struct
+@@ -847,7 +822,6 @@ static int airoha_qdma_rx_process(struct
  		struct airoha_gdm_port *port;
  		int data_len, len, p;
  		struct page *page;
@@ -54,7 +54,7 @@
  
  		desc_ctrl = le32_to_cpu(READ_ONCE(desc->ctrl));
  		if (!(desc_ctrl & QDMA_DESC_DONE_MASK))
-@@ -867,10 +841,6 @@ static int airoha_qdma_rx_process(struct
+@@ -873,10 +847,6 @@ static int airoha_qdma_rx_process(struct
  			goto free_frag;
  
  		port = eth->ports[p];
@@ -65,7 +65,7 @@
  		
  		if (!q->skb) { /* first buffer */
  			q->skb = napi_build_skb(e->buf - AIROHA_RX_HEADROOM,
-@@ -923,45 +893,10 @@ static int airoha_qdma_rx_process(struct
+@@ -929,45 +899,10 @@ static int airoha_qdma_rx_process(struct
  		msg1 = le32_to_cpu(READ_ONCE(desc->msg1));
  		airoha_get_entry_bind(msg1, q, eth , sptag);
  		done++;
