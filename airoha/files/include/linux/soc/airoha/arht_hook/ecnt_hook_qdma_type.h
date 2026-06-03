@@ -155,32 +155,6 @@ ECONET SOFTWARE.
 
 #define QDMA_MAGIC					(0xAB)
 #define IO_QDMA_CMD_OPT				_IOW(QDMA_MAGIC, 0, struct ECNT_QDMA_Data *)
-#if 0
-/* Interface IO Command */
-#define IO_QDMA_SET_QOS_CONFIG				_IOW(QDMA_MAGIC, 0x01, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_QOS_VALUE				_IOW(QDMA_MAGIC, 0x02, struct ECNT_QDMA_Data *)
-#define IO_QDMA_GET_QOS						_IOR(QDMA_MAGIC, 0x02, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_TX_RATELIMIT_VALUE		_IOW(QDMA_MAGIC, 0x10, struct ECNT_QDMA_Data *)
-#define IO_QDMA_GET_TX_RATELIMIT_VALUE		_IOR(QDMA_MAGIC, 0x10, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_RX_RATELIMIT_VALUE		_IOW(QDMA_MAGIC, 0x18, struct ECNT_QDMA_Data *)
-#define IO_QDMA_GET_RX_RATELIMIT_VALUE		_IOR(QDMA_MAGIC, 0x18, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_RX_RATELIMIT_EN			_IOW(QDMA_MAGIC, 0x19, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_RX_RATELIMIT_PKT_MODE	_IOW(QDMA_MAGIC, 0x1A, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_VIRTUAL_CHANNEL_CONFIG	_IOW(QDMA_MAGIC, 0x20, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_VIRTUAL_CHANNEL_VALUE	_IOW(QDMA_MAGIC, 0x21, struct ECNT_QDMA_Data *)
-#define IO_QDMA_GET_VIRTUAL_CHANNEL			_IOR(QDMA_MAGIC, 0x21, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_RX_LOW_THRESHOLD		_IOW(QDMA_MAGIC, 0x24, struct ECNT_QDMA_Data *)
-#define IO_QDMA_GET_RX_LOW_THRESHOLD		_IOR(QDMA_MAGIC, 0x24, struct ECNT_QDMA_Data *)
-#define IO_QDMA_SET_DEI_DROP_EN				_IOW(QDMA_MAGIC, 0x25, struct ECNT_QDMA_Data *)
-#define IO_QDMA_GET_DEI_DROP_EN				_IOR(QDMA_MAGIC, 0x25, struct ECNT_QDMA_Data *)
-
-#define IO_QDMA_CLEAR_CPU_COUNTER			_IOW(QDMA_MAGIC, 0xC1, struct ECNT_QDMA_Data *)
-#define IO_QDMA_DUMP_CPU_COUNTER			_IOW(QDMA_MAGIC, 0xC2, struct ECNT_QDMA_Data *)
-#define IO_QDMA_DUMP_REGISTER				_IOW(QDMA_MAGIC, 0xC3, struct ECNT_QDMA_Data *)
-#define IO_QDMA_DUMP_DESCRIPTOR				_IOW(QDMA_MAGIC, 0xC4, struct ECNT_QDMA_Data *)
-#define IO_QDMA_DUMP_IRQ					_IOW(QDMA_MAGIC, 0xC5, struct ECNT_QDMA_Data *)
-#define IO_QDMA_DUMP_HWFWD					_IOW(QDMA_MAGIC, 0xC6, struct ECNT_QDMA_Data *)
-#endif
 
 
 /************************************************************************
@@ -261,19 +235,11 @@ typedef enum {
 	QDMA_TXQOS_WEIGHT_MAX,
 } QDMA_TxQosWeightType_t ;
 
-#if defined(TCSUPPORT_CPU_EN7580) || defined(TCSUPPORT_CPU_EN7528)
 typedef enum {
 	QDMA_TXQOS_WEIGHT_SCALE_1B = 0,
 	QDMA_TXQOS_WEIGHT_SCALE_16B,
 	QDMA_TXQOS_WEIGHT_SCALE_MAX,
 } QDMA_TxQosWeightScale_t ;
-#else
-typedef enum {
-	QDMA_TXQOS_WEIGHT_SCALE_64B = 0,
-	QDMA_TXQOS_WEIGHT_SCALE_16B,
-	QDMA_TXQOS_WEIGHT_SCALE_MAX,
-} QDMA_TxQosWeightScale_t ;
-#endif
 
 typedef enum {
 	QDMA_TXQOS_TYPE_WRR = 0,
@@ -356,19 +322,10 @@ typedef enum {
 	QDMA_RX_RATE_LIMIT_BY_PACKET,
 } QDMA_RxPktMode_t ;
 
-#ifndef TCSUPPORT_CPU_EN7580
-#if defined(TCSUPPORT_CPU_EN7527) || defined(TCSUPPORT_CPU_EN7516)
 typedef enum {
 	QDMA_Rx_Rate_Limit_PIR = 2,
 	QDMA_Rx_Rate_Limit_PBS
 } QDMA_RxRateLimitType_t ;
-#else
-typedef enum {
-	QDMA_Rx_Rate_Limit_PIR = 0,
-	QDMA_Rx_Rate_Limit_PBS
-} QDMA_RxRateLimitType_t ;
-#endif
-#endif
 
 typedef enum {
 	QDMA_Tx_Rate_Limit_CIR = 0,
@@ -393,24 +350,12 @@ typedef enum {
 } QDMA_IrqNo_t ;
 
 typedef enum {
-#if defined(TCSUPPORT_CPU_EN7527) || defined(TCSUPPORT_CPU_EN7516)
-	QDMA_INT_ENABLE0 = 0 ,
-#endif
 	QDMA_INT_ENABLE1 = 1 ,
 	QDMA_INT_ENABLE2 = 2 ,
-#if defined(TCSUPPORT_CPU_EN7581)
 	QDMA_INT_ENABLE3 = 3 ,
 	QDMA_INT_ENABLE4 = 4 ,
 	QDMA_INT_ENABLE5 = 5 ,
-#endif
-
-#if defined(TCSUPPORT_CPU_EN7581)
 	QDMA_INT_ENABLE_NUM = 5 ,
-#elif defined(TCSUPPORT_CPU_EN7580)
-	QDMA_INT_ENABLE_NUM = 2 ,
-#else
-	QDMA_INT_ENABLE_NUM = 3 ,
-#endif
 } QDMA_IntEnable_t ;
 
 
@@ -586,9 +531,6 @@ typedef enum {
 	QDMA_DBG_CNTR_CHNL_TXFWD1,
 	QDMA_DBG_CNTR_CHNL_TXFWD2,
 	QDMA_DBG_CNTR_QUEUE,
-#if defined(TCSUPPORT_CPU_EN7527) || defined(TCSUPPORT_CPU_EN7516)
-	QDMA_DBG_CNTR_RING,
-#endif
 	QDMA_DBG_CNTR_MAX,
 } QDMA_DbgCntrChnlGroup_t ;
 
@@ -890,6 +832,7 @@ typedef enum {
 	/* 0xAB */
 	QDMA_FUNCTION_SET_HIERARCHICAL_RATELIMIT_EN,
 	QDMA_FUNCTION_GET_HIERARCHICAL_RATELIMIT_EN,
+	QDMA_FUNCTION_DEINIT_FOR_LRO,
 	QDMA_FUNCTION_MAX_NUM ,
 } QDMA_HookFunction_t ;
 
@@ -1125,17 +1068,10 @@ typedef struct {
 }QDMA_RxRedCfg_T ;
 /*-----TCSUPPORT_CPU_EN7580 end------*/
 
-#if defined(TCSUPPORT_CPU_EN7581) || defined(TCSUPPORT_CPU_EN7523)
 typedef struct {
 	ushort				txRateMeterWindowSize ;
 	ushort				txRateMeterTimeSlice ;
 } QDMA_TxRateMeter_T ;
-#else
-typedef struct {
-	ushort				txRateMeterTimeSlice ;
-	QDMA_TxRateMeterTimeDivisor_t	txRateMeterTimeDivisor ;
-} QDMA_TxRateMeter_T ;
-#endif
 
 typedef struct {
 	ushort				txRateLimitUnit[PER_CHNL_TICKSEL_NUM] ; //unit is kbps, scope is (1~65)
@@ -1178,26 +1114,15 @@ typedef struct {
 	uint				pbsParamValue ; // unit is Byte
 } QDMA_TxDbaReport_T ;
 
-#if defined(TCSUPPORT_CPU_EN7580) || defined(TCSUPPORT_CPU_EN7527) || defined(TCSUPPORT_CPU_EN7516)
 typedef struct {
 	uint				rxRingLowThrh[RX_RING_NUM] ;
-
 } QDMA_RxLowThreshold_T ;
-#else
 
-typedef struct {
-	uint				rxRing0LowThrh ;
-	uint				rxRing1LowThrh ;
-} QDMA_RxLowThreshold_T ;
-#endif
 typedef struct {
 	unchar				rxRateLimitEn ;
 	QDMA_RxPktMode_t	rxRateLimitPktMode ;
 	ushort				rxRateLimitUnit ; //unit is kbps, scope is (1~65), or pps, scope is (16~1000)
 	QDMA_TrtcmScale_t	rxRateLimitBucketScale ;
-#if defined(TCSUPPORT_CPU_EN7527) || defined(TCSUPPORT_CPU_EN7516)
-	ushort				rxRateLimitUnit0;
-#endif
 } QDMA_RxRateLimitCfg_T ;
 
 typedef struct {
@@ -1209,27 +1134,15 @@ typedef struct {
 	unchar				ringIdx ;
 	uint				rateLimitValue ; //unit is kbps or pps
 	uint				pbsParamValue ;	
-#if defined(TCSUPPORT_CPU_EN7527) || defined(TCSUPPORT_CPU_EN7516)
-	unchar				rxBindTicker;
-#endif
 } QDMA_RxRateLimitGet_T ;
 
 typedef struct {
 	unchar				cngstDropEn ;
 	unchar				cngstDeiDropEn ;
 	unchar				dynCngstEn ;
-#if defined(TCSUPPORT_CPU_EN7580) || defined(TCSUPPORT_CPU_EN7527) || defined(TCSUPPORT_CPU_EN7516)
-#if defined(TCSUPPORT_CPU_EN7580)
 	unchar				cngstWredEn ;
-#endif
 	unchar				dynCngstMaxThrhTxEn[TX_RING_NUM] ;
 	unchar				dynCngstMinThrhTxEn[TX_RING_NUM];
-#else
-	unchar				dynCngstMaxThrhTx1En ;
-	unchar				dynCngstMinThrhTx1En ;
-	unchar				dynCngstMaxThrhTx0En ;
-	unchar				dynCngstMinThrhTx0En ;
-#endif
 	unchar				dynCngstModeConfigTrigEn ;
 	unchar				dynCngstModePacketTrigEn ;
 	unchar				dynCngstModeTimeTrigEn ;
@@ -1259,9 +1172,7 @@ typedef struct {
 	ushort				dynCngstChnlMinThrh ;
 	ushort				dynCngstQueueMaxThrh ;
 	ushort				dynCngstQueueMinThrh ;
-#if defined(TCSUPPORT_CPU_EN7580)
 	ushort				dynCngstMinDscpThrh ;
-#endif
 } QDMA_TxQDynCngstThrh_T ;
 
 typedef struct {
@@ -1291,13 +1202,8 @@ typedef struct {
 
 typedef struct {	
 	QDMA_TxQDynCngstTotalThrh_T *totalThrhPtr;
-#if defined(TCSUPPORT_CPU_EN7581) || defined(TCSUPPORT_CPU_EN7523)
 	QDMA_TxQStaticCfg_T *staticThrhCfgPtr;
 	QDMA_TxQStaticThrRatio_T *staticThrhRatioPtr;
-#else
-	QDMA_TxQStaticNormalCfg_T *normThrhPtr;
-	QDMA_TxQStaticDeiCfg_T *deiThrhPtr;
-#endif
 } QDMA_TxQStaticCngstInfo_T ;
 
 typedef struct {	
@@ -1608,7 +1514,6 @@ typedef union
 #ifdef __BIG_ENDIAN
 		uint no_drop	: 1;
 		uint mtr_g		: 7;	/*0x7f means not use meter*/
-#if defined(TCSUPPORT_CPU_EN7581) || defined(TCSUPPORT_CPU_EN7523)
 		uint fport		: 4;
 		uint nboq 		: 5;
 		uint hwf		:1;
@@ -1616,27 +1521,12 @@ typedef union
 		uint acnt_g1	: 5;    /*0x1F means no count*/
 		uint acnt_g0	: 6;    /*0x3F means no count*/
 #else
-		uint fport		: 3;
-		uint nboq 		: 5;
-		uint 			: 6;
-		uint acnt_g1	: 5;    /*bit4=1 means no count*/
-		uint acnt_g0	: 5;    /*0x1F means no count*/
-#endif
-#else
-#if defined(TCSUPPORT_CPU_EN7581) || defined(TCSUPPORT_CPU_EN7523)
 		uint acnt_g0	: 6;    /*0x3F means no count*/
 		uint acnt_g1	: 5;    /*0x1F means no count*/
 		uint			: 3;		
 		uint hwf		:1;
 		uint nboq 		: 5;
 		uint fport		: 4;
-#else
-		uint acnt_g0	: 5;    /*0x1F means no count*/
-		uint acnt_g1	: 5;    /*bit4=1 means no count*/
-		uint 			: 6;
-		uint nboq 		: 5;
-		uint fport		: 3;
-#endif
 		uint mtr_g		: 7;	/*0x7f means not use meter*/
 		uint no_drop	: 1;
 #endif /* __BIG_ENDIAN */
@@ -1678,7 +1568,6 @@ typedef union
 {
     struct
     {
-#if defined(TCSUPPORT_CPU_EN7581)
 #ifdef __BIG_ENDIAN
 		uint sw_udf     : 8 ;
 		uint    		: 8 ;
@@ -1691,9 +1580,6 @@ typedef union
 		uint mtr_g2     : 4 ;
 		uint    		: 8 ;
 		uint sw_udf     : 8 ;
-#endif
-#else
-		uint    		: 32 ;
 #endif
     };
     uint word;

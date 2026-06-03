@@ -1,37 +1,37 @@
 /***************************************************************
 Copyright Statement:
 
-This software/firmware and related documentation (EcoNet Software) 
-are protected under relevant copyright laws. The information contained herein 
-is confidential and proprietary to EcoNet (HK) Limited (EcoNet) and/or 
-its licensors. Without the prior written permission of EcoNet and/or its licensors, 
-any reproduction, modification, use or disclosure of EcoNet Software, and 
+This software/firmware and related documentation (EcoNet Software)
+are protected under relevant copyright laws. The information contained herein
+is confidential and proprietary to EcoNet (HK) Limited (EcoNet) and/or
+its licensors. Without the prior written permission of EcoNet and/or its licensors,
+any reproduction, modification, use or disclosure of EcoNet Software, and
 information contained herein, in whole or in part, shall be strictly prohibited.
 
 EcoNet (HK) Limited  EcoNet. ALL RIGHTS RESERVED.
 
-BY OPENING OR USING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY 
-ACKNOWLEDGES AND AGREES THAT THE SOFTWARE/FIRMWARE AND ITS 
-DOCUMENTATIONS (ECONET SOFTWARE) RECEIVED FROM ECONET 
-AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER ON AN AS IS 
-BASIS ONLY. ECONET EXPRESSLY DISCLAIMS ANY AND ALL WARRANTIES, 
-WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED 
-WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, 
-OR NON-INFRINGEMENT. NOR DOES ECONET PROVIDE ANY WARRANTY 
-WHATSOEVER WITH RESPECT TO THE SOFTWARE OF ANY THIRD PARTIES WHICH 
-MAY BE USED BY, INCORPORATED IN, OR SUPPLIED WITH THE ECONET SOFTWARE. 
-RECEIVER AGREES TO LOOK ONLY TO SUCH THIRD PARTIES FOR ANY AND ALL 
-WARRANTY CLAIMS RELATING THERETO. RECEIVER EXPRESSLY ACKNOWLEDGES 
-THAT IT IS RECEIVERS SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD 
+BY OPENING OR USING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY
+ACKNOWLEDGES AND AGREES THAT THE SOFTWARE/FIRMWARE AND ITS
+DOCUMENTATIONS (ECONET SOFTWARE) RECEIVED FROM ECONET
+AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER ON AN AS IS
+BASIS ONLY. ECONET EXPRESSLY DISCLAIMS ANY AND ALL WARRANTIES,
+WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+OR NON-INFRINGEMENT. NOR DOES ECONET PROVIDE ANY WARRANTY
+WHATSOEVER WITH RESPECT TO THE SOFTWARE OF ANY THIRD PARTIES WHICH
+MAY BE USED BY, INCORPORATED IN, OR SUPPLIED WITH THE ECONET SOFTWARE.
+RECEIVER AGREES TO LOOK ONLY TO SUCH THIRD PARTIES FOR ANY AND ALL
+WARRANTY CLAIMS RELATING THERETO. RECEIVER EXPRESSLY ACKNOWLEDGES
+THAT IT IS RECEIVERS SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD
 PARTY ALL PROPER LICENSES CONTAINED IN ECONET SOFTWARE.
 
-ECONET SHALL NOT BE RESPONSIBLE FOR ANY ECONET SOFTWARE RELEASES 
-MADE TO RECEIVERS SPECIFICATION OR CONFORMING TO A PARTICULAR 
-STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND 
-ECONET'S ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE ECONET 
-SOFTWARE RELEASED HEREUNDER SHALL BE, AT ECONET'S SOLE OPTION, TO 
-REVISE OR REPLACE THE ECONET SOFTWARE AT ISSUE OR REFUND ANY SOFTWARE 
-LICENSE FEES OR SERVICE CHARGES PAID BY RECEIVER TO ECONET FOR SUCH 
+ECONET SHALL NOT BE RESPONSIBLE FOR ANY ECONET SOFTWARE RELEASES
+MADE TO RECEIVERS SPECIFICATION OR CONFORMING TO A PARTICULAR
+STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND
+ECONET'S ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE ECONET
+SOFTWARE RELEASED HEREUNDER SHALL BE, AT ECONET'S SOLE OPTION, TO
+REVISE OR REPLACE THE ECONET SOFTWARE AT ISSUE OR REFUND ANY SOFTWARE
+LICENSE FEES OR SERVICE CHARGES PAID BY RECEIVER TO ECONET FOR SUCH
 ECONET SOFTWARE.
 ***************************************************************/
 #ifndef _ECNT_HOOK_QDMA_H_
@@ -41,7 +41,7 @@ ECONET SOFTWARE.
 /************************************************************************
 *                  I N C L U D E S
 *************************************************************************
-*/	
+*/
 #include "ecnt_hook.h"
 #include "ecnt_hook_qdma_type.h"
 
@@ -64,7 +64,7 @@ ECONET SOFTWARE.
 */
 
 static inline int QDMA_API_INIT(unsigned int mainType, QDMA_InitCfg_t *pInitCfg) {
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_INIT;
@@ -77,7 +77,7 @@ static inline int QDMA_API_INIT(unsigned int mainType, QDMA_InitCfg_t *pInitCfg)
 }
 
 static inline int QDMA_API_DEINIT(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_DEINIT;
@@ -89,7 +89,7 @@ static inline int QDMA_API_DEINIT(unsigned int mainType){
 }
 
 static inline int QDMA_API_TX_DMA_MODE(unsigned int mainType, QDMA_Mode_t txMode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_TX_DMA_MODE;
@@ -102,7 +102,7 @@ static inline int QDMA_API_TX_DMA_MODE(unsigned int mainType, QDMA_Mode_t txMode
 }
 
 static inline int QDMA_API_RX_DMA_MODE(unsigned int mainType, QDMA_Mode_t rxMode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_RX_DMA_MODE;
@@ -115,7 +115,7 @@ static inline int QDMA_API_RX_DMA_MODE(unsigned int mainType, QDMA_Mode_t rxMode
 }
 
 static inline int QDMA_API_LOOPBACK_MODE(unsigned int mainType, QDMA_LoopbackMode_t lbMode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_LOOPBACK_MODE;
@@ -128,7 +128,7 @@ static inline int QDMA_API_LOOPBACK_MODE(unsigned int mainType, QDMA_LoopbackMod
 }
 
 static inline int QDMA_API_REGISTER_HOOKFUNC(unsigned int mainType, QDMA_CbType_t type, void *pCbFun){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_REGISTER;
@@ -142,7 +142,7 @@ static inline int QDMA_API_REGISTER_HOOKFUNC(unsigned int mainType, QDMA_CbType_
 }
 
 static inline int QDMA_API_UNREGISTER_HOOKFUNC(unsigned int mainType, QDMA_CbType_t type){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_UNREGISTER;
@@ -155,7 +155,7 @@ static inline int QDMA_API_UNREGISTER_HOOKFUNC(unsigned int mainType, QDMA_CbTyp
 }
 
 static inline int QDMA_API_ENABLE_RXPKT_INT(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_ENABLE_RXPKT_INT;
@@ -167,7 +167,7 @@ static inline int QDMA_API_ENABLE_RXPKT_INT(unsigned int mainType){
 }
 
 static inline int QDMA_API_DISABLE_RXPKT_INT(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_DISABLE_RXPKT_INT;
@@ -179,7 +179,7 @@ static inline int QDMA_API_DISABLE_RXPKT_INT(unsigned int mainType){
 }
 
 static inline int QDMA_API_RECEIVE_PACKETS(unsigned int mainType, int maxPkts){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_RECEIVE_PACKETS;
@@ -192,7 +192,7 @@ static inline int QDMA_API_RECEIVE_PACKETS(unsigned int mainType, int maxPkts){
 }
 
 static inline int QDMA_API_TRANSMIT_PACKETS(unsigned int mainType, struct sk_buff *skb, uint msg0, uint msg1, struct port_info *pMacInfo){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 	QDMA_TxMsg_Ex_T txMsg;
 
@@ -211,7 +211,7 @@ static inline int QDMA_API_TRANSMIT_PACKETS(unsigned int mainType, struct sk_buf
 }
 
 static inline int QDMA_API_SET_TX_QOS_WEIGHT(unsigned int mainType, QDMA_TxQosWeightType_t weightBase, QDMA_TxQosWeightScale_t weightScale){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TX_QOS_WEIGHT;
@@ -225,7 +225,8 @@ static inline int QDMA_API_SET_TX_QOS_WEIGHT(unsigned int mainType, QDMA_TxQosWe
 }
 
 static inline int QDMA_API_GET_TX_QOS_WEIGHT(unsigned int mainType, QDMA_TxQosWeightType_t *pWeightBase, QDMA_TxQosWeightScale_t *pWeightScale){
-	struct ECNT_QDMA_Data in_data;
+	/* CID:708864 */
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TX_QOS_WEIGHT;
@@ -239,7 +240,7 @@ static inline int QDMA_API_GET_TX_QOS_WEIGHT(unsigned int mainType, QDMA_TxQosWe
 }
 
 static inline int QDMA_API_SET_TX_QOS(unsigned int mainType, QDMA_TxQosScheduler_T *pTxQos){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TX_QOS;
@@ -252,7 +253,7 @@ static inline int QDMA_API_SET_TX_QOS(unsigned int mainType, QDMA_TxQosScheduler
 }
 
 static inline int QDMA_API_GET_TX_QOS(unsigned int mainType, QDMA_TxQosScheduler_T *pTxQos){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TX_QOS;
@@ -265,7 +266,7 @@ static inline int QDMA_API_GET_TX_QOS(unsigned int mainType, QDMA_TxQosScheduler
 }
 
 static inline int QDMA_API_SET_MAC_LIMIT_THRESHOLD(unsigned int mainType, uint chnlThrh, uint queueThrh){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	QDMA_MacLimitThrh_T mac_limit_thrh;
 	int ret=0;
 
@@ -281,7 +282,7 @@ static inline int QDMA_API_SET_MAC_LIMIT_THRESHOLD(unsigned int mainType, uint c
 }
 
 static inline int QDMA_API_TRANSMIT_PACKETS_WIFI_FAST(unsigned int mainType, struct sk_buff *skb, int ringIdx){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_TRANSMIT_PACKET_WIFI_FAST;
@@ -296,7 +297,7 @@ static inline int QDMA_API_TRANSMIT_PACKETS_WIFI_FAST(unsigned int mainType, str
 }
 
 static inline int QDMA_API_GET_DSCP_CHNL_INFO(unsigned int mainType, QDMA_DscpChnlInfo_T *pDscpChnlInfo){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_DSCP_CHNL_INFO;
@@ -309,7 +310,7 @@ static inline int QDMA_API_GET_DSCP_CHNL_INFO(unsigned int mainType, QDMA_DscpCh
 }
 
 static inline int QDMA_API_SET_TXBUF_THRESHOLD(unsigned int mainType, QDMA_TxBufCtrl_T *pTxBufCtrl){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXBUF_THRESHOLD;
@@ -322,7 +323,7 @@ static inline int QDMA_API_SET_TXBUF_THRESHOLD(unsigned int mainType, QDMA_TxBuf
 }
 
 static inline int QDMA_API_GET_TXBUF_THRESHOLD(unsigned int mainType, QDMA_TxBufCtrl_T *pTxBufCtrl){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXBUF_THRESHOLD;
@@ -335,14 +336,14 @@ static inline int QDMA_API_GET_TXBUF_THRESHOLD(unsigned int mainType, QDMA_TxBuf
 }
 
 static inline int QDMA_API_SET_PREFETCH_MODE(unsigned int mainType, QDMA_Mode_t prefecthMode, QDMA_Mode_t overDragMode, uint overDragCnt){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	QDMA_PrefetchMode_T qdma_prefetch;
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_PREFETCH_MODE;
 	qdma_prefetch.prefecthMode = prefecthMode ;
 	qdma_prefetch.overDragMode = overDragMode ;
-	qdma_prefetch.overDragCnt = overDragCnt ;	
+	qdma_prefetch.overDragCnt = overDragCnt ;
 	in_data.qdma_private.qdma_prefetch = &qdma_prefetch ;
 	ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
@@ -352,7 +353,7 @@ static inline int QDMA_API_SET_PREFETCH_MODE(unsigned int mainType, QDMA_Mode_t 
 }
 
 static inline int QDMA_API_SET_PKTSIZE_OVERHEAD_EN(unsigned int mainType, QDMA_Mode_t mode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_PKTSIZE_OVERHEAD_EN;
@@ -365,7 +366,7 @@ static inline int QDMA_API_SET_PKTSIZE_OVERHEAD_EN(unsigned int mainType, QDMA_M
 }
 
 static inline QDMA_Mode_t QDMA_API_GET_PKTSIZE_OVERHEAD_EN(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_PKTSIZE_OVERHEAD_EN;
@@ -377,7 +378,7 @@ static inline QDMA_Mode_t QDMA_API_GET_PKTSIZE_OVERHEAD_EN(unsigned int mainType
 }
 
 static inline int QDMA_API_SET_PKTSIZE_OVERHEAD_VALUE(unsigned int mainType, int cnt){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_PKTSIZE_OVERHEAD_VALUE;
@@ -390,7 +391,7 @@ static inline int QDMA_API_SET_PKTSIZE_OVERHEAD_VALUE(unsigned int mainType, int
 }
 
 static inline uint QDMA_API_GET_PKTSIZE_OVERHEAD_VALUE(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_PKTSIZE_OVERHEAD_VALUE;
@@ -402,7 +403,7 @@ static inline uint QDMA_API_GET_PKTSIZE_OVERHEAD_VALUE(unsigned int mainType){
 }
 
 static inline int QDMA_API_SET_LMGR_LOW_THRESHOLD(unsigned int mainType, uint lowThrh){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_LMGR_LOW_THRESHOLD;
@@ -415,7 +416,7 @@ static inline int QDMA_API_SET_LMGR_LOW_THRESHOLD(unsigned int mainType, uint lo
 }
 
 static inline uint QDMA_API_GET_LMGR_LOW_THRESHOLD(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_LMGR_LOW_THRESHOLD;
@@ -426,10 +427,8 @@ static inline uint QDMA_API_GET_LMGR_LOW_THRESHOLD(unsigned int mainType){
 		return (uint)ECNT_HOOK_ERROR;
 }
 
-
-#if defined(TCSUPPORT_CPU_EN7580)
 static inline int QDMA_API_ENABLE_RXPKT_INT2(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_ENABLE_RXPKT_INT2;
@@ -441,7 +440,7 @@ static inline int QDMA_API_ENABLE_RXPKT_INT2(unsigned int mainType){
 }
 
 static inline int QDMA_API_DISABLE_RXPKT_INT2(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_DISABLE_RXPKT_INT2;
@@ -453,7 +452,7 @@ static inline int QDMA_API_DISABLE_RXPKT_INT2(unsigned int mainType){
 }
 
 static inline int QDMA_API_RECEIVE_PACKETS_INT2(unsigned int mainType, int maxPkts){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_RECEIVE_PACKETS_INT2;
@@ -466,7 +465,7 @@ static inline int QDMA_API_RECEIVE_PACKETS_INT2(unsigned int mainType, int maxPk
 }
 
 static inline int QDMA_API_SET_GENERAL_TRTCM_INIT(unsigned int mainType, GENERAL_TrtcmCfg_T *generalTrtcmCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_SET_TRTCM_CFG;
@@ -479,7 +478,7 @@ static inline int QDMA_API_SET_GENERAL_TRTCM_INIT(unsigned int mainType, GENERAL
 }
 
 static inline int QDMA_API_GET_GENERAL_TRTCM_INIT(unsigned int mainType, GENERAL_TrtcmCfg_T *generalTrtcmCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_GET_TRTCM_CFG;
@@ -492,7 +491,7 @@ static inline int QDMA_API_GET_GENERAL_TRTCM_INIT(unsigned int mainType, GENERAL
 }
 
 static inline int QDMA_API_SET_GENERAL_RATELIMIT_CFG(unsigned int mainType, GENERAL_TrtcmRatelimitCfg_T *generalTrtcmRatelimitCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_SET_RATELIMIT_MODE_CFG;
@@ -505,7 +504,7 @@ static inline int QDMA_API_SET_GENERAL_RATELIMIT_CFG(unsigned int mainType, GENE
 }
 
 static inline int QDMA_API_GET_GENERAL_RATELIMIT_CFG(unsigned int mainType, GENERAL_TrtcmRatelimitCfg_T *generalTrtcmRatelimitCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_GET_RATELIMIT_MODE_CFG;
@@ -518,7 +517,7 @@ static inline int QDMA_API_GET_GENERAL_RATELIMIT_CFG(unsigned int mainType, GENE
 }
 
 static inline int QDMA_API_SET_GENERAL_RATELIMIT_VALUE(unsigned int mainType, GENERAL_TrtcmRatelimitSet_T *generalTrtcmRatelimitSetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_SET_RATELIMIT_MODE_VALUE;
@@ -531,7 +530,7 @@ static inline int QDMA_API_SET_GENERAL_RATELIMIT_VALUE(unsigned int mainType, GE
 }
 
 static inline int QDMA_API_GET_GENERAL_RATELIMIT_VALUE(unsigned int mainType, GENERAL_TrtcmRatelimitSet_T *generalTrtcmRatelimitSetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_GET_RATELIMIT_MODE_VALUE;
@@ -544,7 +543,7 @@ static inline int QDMA_API_GET_GENERAL_RATELIMIT_VALUE(unsigned int mainType, GE
 }
 
 static inline int QDMA_API_SET_GENERAL_RATELIMIT_BUCKET_SIZE(unsigned int mainType, GENERAL_TrtcmRatelimitSet_T *generalTrtcmRatelimitSetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_SET_RATELIMIT_BUCKET_SIZE;
@@ -557,7 +556,7 @@ static inline int QDMA_API_SET_GENERAL_RATELIMIT_BUCKET_SIZE(unsigned int mainTy
 }
 
 static inline int QDMA_API_SET_GENERAL_TRTCM_CFG(unsigned int mainType, GENERAL_TrtcmCbsPbsCfg_T *generalTrtcmCbsPbsCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_SET_TRTCM_MODE_CFG;
@@ -570,7 +569,7 @@ static inline int QDMA_API_SET_GENERAL_TRTCM_CFG(unsigned int mainType, GENERAL_
 }
 
 static inline int QDMA_API_GET_GENERAL_TRTCM_CFG(unsigned int mainType, GENERAL_TrtcmCbsPbsCfg_T *generalTrtcmCbsPbsCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_GET_TRTCM_MODE_CFG;
@@ -583,7 +582,7 @@ static inline int QDMA_API_GET_GENERAL_TRTCM_CFG(unsigned int mainType, GENERAL_
 }
 
 static inline int QDMA_API_SET_GENERAL_TRTCM_VALUE(unsigned int mainType, GENERAL_TrtcmCbsPbsSet_T *generalTrtcmCbsPbsSetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_SET_TRTCM_MODE_VALUE;
@@ -596,7 +595,7 @@ static inline int QDMA_API_SET_GENERAL_TRTCM_VALUE(unsigned int mainType, GENERA
 }
 
 static inline int QDMA_API_GET_GENERAL_TRTCM_VALUE(unsigned int mainType, GENERAL_TrtcmCbsPbsSet_T *generalTrtcmCbsPbsSetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_GET_TRTCM_MODE_VALUE;
@@ -609,7 +608,7 @@ static inline int QDMA_API_GET_GENERAL_TRTCM_VALUE(unsigned int mainType, GENERA
 }
 
 static inline int QDMA_API_SET_GENERAL_TRTCM_BUCKET_SIZE(unsigned int mainType, GENERAL_TrtcmCbsPbsSet_T *generalTrtcmCbsPbsSetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GENERAL_SET_TRTCM_BUCKET_SIZE;
@@ -622,7 +621,7 @@ static inline int QDMA_API_SET_GENERAL_TRTCM_BUCKET_SIZE(unsigned int mainType, 
 }
 
 static inline int QDMA_API_SET_FLOW_CNTR_CFG(unsigned int mainType, QDMA_FlowCntIncDropCfg_T *flowCntIncDropCfg){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_FLOW_CNTR_CFG;
@@ -635,7 +634,7 @@ static inline int QDMA_API_SET_FLOW_CNTR_CFG(unsigned int mainType, QDMA_FlowCnt
 }
 
 static inline int QDMA_API_GET_FLOW_CNTR_CFG(unsigned int mainType, QDMA_FlowCntIncDropCfg_T *flowCntIncDropCfg){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_FLOW_CNTR_CFG;
@@ -648,7 +647,7 @@ static inline int QDMA_API_GET_FLOW_CNTR_CFG(unsigned int mainType, QDMA_FlowCnt
 }
 
 static inline int QDMA_API_GET_FLOW_CNTR_VALUE(unsigned int mainType, QDMA_FlowCntValueGet_T *flowCntValueGet){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_FLOW_CNTR_VALUE;
@@ -661,7 +660,7 @@ static inline int QDMA_API_GET_FLOW_CNTR_VALUE(unsigned int mainType, QDMA_FlowC
 }
 
 static inline int QDMA_API_CLEAR_FLOW_CNTR_VALUE(unsigned int mainType, QDMA_FlowCntValueClear_T *flowCntValueClear){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_CLEAR_FLOW_CNTR_VALUE;
@@ -674,7 +673,7 @@ static inline int QDMA_API_CLEAR_FLOW_CNTR_VALUE(unsigned int mainType, QDMA_Flo
 }
 
 static inline int QDMA_API_SET_CHANNEL_CLOSE_STATUS(unsigned int mainType, QDMA_ChannelStatus_T *chnlCloseStatusSet){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_CHANNEL_CLOSE_STATUS;
@@ -687,7 +686,7 @@ static inline int QDMA_API_SET_CHANNEL_CLOSE_STATUS(unsigned int mainType, QDMA_
 }
 
 static inline int QDMA_API_GET_CHANNEL_CLOSE_STATUS(unsigned int mainType, QDMA_ChannelStatus_T *chnlCloseStatusGet){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_CHANNEL_CLOSE_STATUS;
@@ -700,7 +699,7 @@ static inline int QDMA_API_GET_CHANNEL_CLOSE_STATUS(unsigned int mainType, QDMA_
 }
 
 static inline int QDMA_API_GET_CHANNEL_EMPTY_STATUS(unsigned int mainType, QDMA_ChannelStatus_T *chnlEmptyStatusGet){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_CHANNEL_EMPTY_STATUS;
@@ -713,7 +712,7 @@ static inline int QDMA_API_GET_CHANNEL_EMPTY_STATUS(unsigned int mainType, QDMA_
 }
 
 static inline int QDMA_API_SET_OAM_MODIFY_FP_EN(unsigned int mainType, QDMA_Mode_t mode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_OAM_MODIFY_FP_EN;
@@ -726,7 +725,7 @@ static inline int QDMA_API_SET_OAM_MODIFY_FP_EN(unsigned int mainType, QDMA_Mode
 }
 
 static inline int QDMA_API_GET_OAM_MODIFY_FP_EN(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_OAM_MODIFY_FP_EN;
@@ -738,7 +737,7 @@ static inline int QDMA_API_GET_OAM_MODIFY_FP_EN(unsigned int mainType){
 }
 
 static inline int QDMA_API_SET_MULTICAST_EN(unsigned int mainType, QDMA_Mode_t mode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_MULTICAST_EN;
@@ -751,7 +750,7 @@ static inline int QDMA_API_SET_MULTICAST_EN(unsigned int mainType, QDMA_Mode_t m
 }
 
 static inline int QDMA_API_GET_MULTICAST_EN(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_MULTICAST_EN;
@@ -763,13 +762,13 @@ static inline int QDMA_API_GET_MULTICAST_EN(unsigned int mainType){
 }
 
 static inline int QDMA_API_ALLOCATE_METER(unsigned int mainType, QDMA_MeterManage_T *meterManage){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_ALLOCATE_METER;
-    in_data.qdma_private.meterManage = meterManage ;  
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    in_data.qdma_private.meterManage = meterManage ;
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -777,7 +776,7 @@ static inline int QDMA_API_ALLOCATE_METER(unsigned int mainType, QDMA_MeterManag
 }
 
 static inline int QDMA_API_FREE_METER(unsigned int mainType, int meter_idx){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     QDMA_MeterManage_T meterManage;
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
@@ -795,7 +794,7 @@ static inline int QDMA_API_FREE_METER(unsigned int mainType, int meter_idx){
 }
 
 static inline int QDMA_API_GET_QOS_FLAG(unsigned int mainType, int *qos_flag_num){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     QDMA_MeterManage_T meterManage;
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
@@ -812,13 +811,13 @@ static inline int QDMA_API_GET_QOS_FLAG(unsigned int mainType, int *qos_flag_num
 }
 
 static inline int QDMA_API_ALLOCATE_ACNT(unsigned int mainType, QDMA_AcntManage_T *acntManage){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_ALLOCATE_ACNT;
     in_data.qdma_private.acntManage = acntManage;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -826,28 +825,27 @@ static inline int QDMA_API_ALLOCATE_ACNT(unsigned int mainType, QDMA_AcntManage_
 }
 
 static inline int QDMA_API_FREE_ACNT(unsigned int mainType, QDMA_AcntManage_T *acntManage){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_FREE_ACNT;
     in_data.qdma_private.acntManage = acntManage;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
     	return (int)ECNT_HOOK_ERROR;
 }
 
-#if defined(TCSUPPORT_CPU_EN7581) || defined(TCSUPPORT_CPU_EN7523)
 static inline int QDMA_API_SET_SLA_CHANNEL_CFG(unsigned int mainType, QDMA_SlaChnlCfg_T *slaChnlCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_SET_SLA_CHANNEL_CFG;
     in_data.qdma_private.slaChnlCfgPtr = slaChnlCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -855,13 +853,13 @@ static inline int QDMA_API_SET_SLA_CHANNEL_CFG(unsigned int mainType, QDMA_SlaCh
 }
 
 static inline int QDMA_API_GET_SLA_CHANNEL_CFG(unsigned int mainType, QDMA_SlaChnlCfg_T *slaChnlCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_GET_SLA_CHANNEL_CFG;
     in_data.qdma_private.slaChnlCfgPtr = slaChnlCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -869,13 +867,13 @@ static inline int QDMA_API_GET_SLA_CHANNEL_CFG(unsigned int mainType, QDMA_SlaCh
 }
 
 static inline int QDMA_API_SET_QOS_AGING_CFG(unsigned int mainType, QDMA_QoSAgingCfg_T *qosAgingCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_SET_QOS_AGING_CFG;
     in_data.qdma_private.qosAgingCfgPtr = qosAgingCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -883,13 +881,13 @@ static inline int QDMA_API_SET_QOS_AGING_CFG(unsigned int mainType, QDMA_QoSAgin
 }
 
 static inline int QDMA_API_GET_QOS_AGING_CFG(unsigned int mainType, QDMA_QoSAgingCfg_T *qosAgingCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_GET_QOS_AGING_CFG;
     in_data.qdma_private.qosAgingCfgPtr = qosAgingCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -897,13 +895,13 @@ static inline int QDMA_API_GET_QOS_AGING_CFG(unsigned int mainType, QDMA_QoSAgin
 }
 
 static inline int QDMA_API_SET_PER_QUEUE_AGING_CFG(unsigned int mainType, QDMA_TxQAgingCfg_T *txqAgingCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_SET_PER_QUEUE_AGING_CFG;
     in_data.qdma_private.txqAgingCfgPtr = txqAgingCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -911,13 +909,13 @@ static inline int QDMA_API_SET_PER_QUEUE_AGING_CFG(unsigned int mainType, QDMA_T
 }
 
 static inline int QDMA_API_GET_PER_QUEUE_AGING_CFG(unsigned int mainType, QDMA_TxQAgingCfg_T *txqAgingCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_GET_PER_QUEUE_AGING_CFG;
     in_data.qdma_private.txqAgingCfgPtr = txqAgingCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -925,13 +923,13 @@ static inline int QDMA_API_GET_PER_QUEUE_AGING_CFG(unsigned int mainType, QDMA_T
 }
 
 static inline int QDMA_API_SET_MULTICAST_SPTAG_CFG(unsigned int mainType, QDMA_MulticastSptagCfg_T *multicastSptagCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_SET_MULTICAST_SPTAG_CFG;
     in_data.qdma_private.multicastSptagCfgPtr = multicastSptagCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -939,13 +937,13 @@ static inline int QDMA_API_SET_MULTICAST_SPTAG_CFG(unsigned int mainType, QDMA_M
 }
 
 static inline int QDMA_API_GET_MULTICAST_SPTAG_CFG(unsigned int mainType, QDMA_MulticastSptagCfg_T *multicastSptagCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_GET_MULTICAST_SPTAG_CFG;
     in_data.qdma_private.multicastSptagCfgPtr = multicastSptagCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -953,13 +951,13 @@ static inline int QDMA_API_GET_MULTICAST_SPTAG_CFG(unsigned int mainType, QDMA_M
 }
 
 static inline int QDMA_API_SET_MULTICAST_FPORT_CFG(unsigned int mainType, QDMA_MulticastFportCfg_T *multicastFportCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_SET_MULTICAST_FPORT_CFG;
     in_data.qdma_private.multicastFportCfgPtr = multicastFportCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -967,13 +965,13 @@ static inline int QDMA_API_SET_MULTICAST_FPORT_CFG(unsigned int mainType, QDMA_M
 }
 
 static inline int QDMA_API_GET_MULTICAST_FPORT_CFG(unsigned int mainType, QDMA_MulticastFportCfg_T *multicastFportCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_GET_MULTICAST_FPORT_CFG;
     in_data.qdma_private.multicastFportCfgPtr = multicastFportCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -981,13 +979,13 @@ static inline int QDMA_API_GET_MULTICAST_FPORT_CFG(unsigned int mainType, QDMA_M
 }
 
 static inline int QDMA_API_SET_TXQ_STATIC_CHANNEL_EN(unsigned int mainType, QDMA_TxQStaticCfg_T *staticThrhCfg){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_SET_TXQ_STATIC_CHANNEL_EN;
     in_data.qdma_private.staticThrhCfgPtr = staticThrhCfg;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -995,13 +993,13 @@ static inline int QDMA_API_SET_TXQ_STATIC_CHANNEL_EN(unsigned int mainType, QDMA
 }
 
 static inline int QDMA_API_SET_TXQ_STATIC_QUEUE_RATIO(unsigned int mainType, QDMA_TxQStaticThrRatio_T *staticThrhRatio){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_SET_TXQ_STATIC_QUEUE_RATIO;
     in_data.qdma_private.staticThrhRatioPtr = staticThrhRatio;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -1011,7 +1009,7 @@ static inline int QDMA_API_SET_TXQ_STATIC_QUEUE_RATIO(unsigned int mainType, QDM
 
 
 static inline int QDMA_API_GET_HQOS_EN(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_HQOS_EN;
@@ -1021,39 +1019,14 @@ static inline int QDMA_API_GET_HQOS_EN(unsigned int mainType){
 	else
 		return (int)ECNT_HOOK_ERROR;
 }
-#else
-static inline int QDMA_API_GET_HQOS_EN(unsigned int mainType){
-	return 0;
-}
-
-#endif
-
-#else
-static inline int QDMA_API_SET_GENERAL_RATELIMIT_CFG(unsigned int mainType, GENERAL_TrtcmRatelimitCfg_T *generalTrtcmRatelimitCfgPtr){
-    return ECNT_CONTINUE;
-}
-
-static inline int QDMA_API_GET_GENERAL_RATELIMIT_VALUE(unsigned int mainType, GENERAL_TrtcmRatelimitSet_T *generalTrtcmRatelimitSetPtr){
-	return ECNT_CONTINUE;
-}
-
-static inline int QDMA_API_SET_GENERAL_RATELIMIT_VALUE(unsigned int mainType, GENERAL_TrtcmRatelimitSet_T *generalTrtcmRatelimitSetPtr){
-	return ECNT_CONTINUE;
-}
-
-static inline int QDMA_API_GET_HQOS_EN(unsigned int mainType){
-	return 0;
-}
-
-#endif
 
 static inline int QDMA_API_SET_MULTICAST_1TON_CFG(unsigned int mainType){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_SET_MULTICAST_1TON_CFG;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -1061,13 +1034,13 @@ static inline int QDMA_API_SET_MULTICAST_1TON_CFG(unsigned int mainType){
 }
 
 static inline int QDMA_API_GET_CHANNEL_CFG(unsigned int mainType, unsigned int channel){
-    struct ECNT_QDMA_Data in_data;
+    struct ECNT_QDMA_Data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ECNT_QDMA_Data)) ;
 
     in_data.function_id = QDMA_FUNCTION_GET_CHANNEL_CFG;
 	in_data.qdma_private.channel= channel;
-    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);   
+    ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
     if(ret != ECNT_HOOK_ERROR)
     	return in_data.retValue;
     else
@@ -1075,7 +1048,7 @@ static inline int QDMA_API_GET_CHANNEL_CFG(unsigned int mainType, unsigned int c
 }
 
 static inline int QDMA_API_SET_TX_DROP_EN(unsigned int mainType, QDMA_Mode_t mode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TX_DROP_EN;
@@ -1088,7 +1061,7 @@ static inline int QDMA_API_SET_TX_DROP_EN(unsigned int mainType, QDMA_Mode_t mod
 }
 
 static inline int QDMA_API_GET_TX_DROP_EN(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TX_DROP_EN;
@@ -1100,7 +1073,7 @@ static inline int QDMA_API_GET_TX_DROP_EN(unsigned int mainType){
 }
 
 static inline int QDMA_API_SET_TX_RATEMETER(unsigned int mainType, QDMA_TxRateMeter_T *txRateMeterPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TX_RATEMETER;
@@ -1113,7 +1086,7 @@ static inline int QDMA_API_SET_TX_RATEMETER(unsigned int mainType, QDMA_TxRateMe
 }
 
 static inline int QDMA_API_GET_TX_RATEMETER(unsigned int mainType, QDMA_TxRateMeter_T *txRateMeterPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TX_RATEMETER;
@@ -1126,7 +1099,7 @@ static inline int QDMA_API_GET_TX_RATEMETER(unsigned int mainType, QDMA_TxRateMe
 }
 
 static inline int QDMA_API_ENABLE_TX_RATELIMIT(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_ENABLE_TX_RATELIMIT;
@@ -1137,36 +1110,8 @@ static inline int QDMA_API_ENABLE_TX_RATELIMIT(unsigned int mainType){
 		return (int)ECNT_HOOK_ERROR;
 }
 
-#if 0
-static inline int QDMA_API_SET_TX_RATELIMIT_CFG(unsigned int mainType, QDMA_TxRateLimitCfg_T *txRateLimitCfgPtr){
-	struct ECNT_QDMA_Data in_data;
-	int ret=0;
-
-	in_data.function_id = QDMA_FUNCTION_SET_TX_RATELIMIT_CFG;
-	in_data.qdma_private.txRateLimitCfgPtr = txRateLimitCfgPtr ;
-	ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
-	if(ret != ECNT_HOOK_ERROR)
-		return in_data.retValue;
-	else
-		return ECNT_HOOK_ERROR;
-}
-
-static inline int QDMA_API_GET_TX_RATELIMIT_CFG(unsigned int mainType, QDMA_TxRateLimitCfg_T *txRateLimitCfgPtr){
-	struct ECNT_QDMA_Data in_data;
-	int ret=0;
-
-	in_data.function_id = QDMA_FUNCTION_GET_TX_RATELIMIT_CFG;
-	in_data.qdma_private.txRateLimitCfgPtr = txRateLimitCfgPtr ;
-	ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
-	if(ret != ECNT_HOOK_ERROR)
-		return in_data.retValue;
-	else
-		return ECNT_HOOK_ERROR;
-}
-#endif
-
 static inline int QDMA_API_SET_TX_RATELIMIT(unsigned int mainType, QDMA_TxRateLimitSet_T *txRateLimitSetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TX_RATELIMIT;
@@ -1179,7 +1124,7 @@ static inline int QDMA_API_SET_TX_RATELIMIT(unsigned int mainType, QDMA_TxRateLi
 }
 
 static inline int QDMA_API_GET_TX_RATELIMIT(unsigned int mainType, QDMA_TxRateLimitGet_T *txRateLimitGetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TX_RATELIMIT;
@@ -1192,7 +1137,7 @@ static inline int QDMA_API_GET_TX_RATELIMIT(unsigned int mainType, QDMA_TxRateLi
 }
 
 static inline int QDMA_API_SET_TX_DBA_REPORT(unsigned int mainType, QDMA_TxDbaReport_T *txDbaReportPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TX_DBAREPORT;
@@ -1205,7 +1150,7 @@ static inline int QDMA_API_SET_TX_DBA_REPORT(unsigned int mainType, QDMA_TxDbaRe
 }
 
 static inline int QDMA_API_GET_TX_DBA_REPORT(unsigned int mainType, QDMA_TxDbaReport_T *txDbaReportPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TX_DBAREPORT;
@@ -1218,7 +1163,7 @@ static inline int QDMA_API_GET_TX_DBA_REPORT(unsigned int mainType, QDMA_TxDbaRe
 }
 
 static inline int QDMA_API_SET_RX_PROTECT_EN(unsigned int mainType, QDMA_Mode_t mode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_RX_PROTECT_EN;
@@ -1231,7 +1176,7 @@ static inline int QDMA_API_SET_RX_PROTECT_EN(unsigned int mainType, QDMA_Mode_t 
 }
 
 static inline int QDMA_API_GET_RX_PROTECT_EN(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_RX_PROTECT_EN;
@@ -1243,7 +1188,7 @@ static inline int QDMA_API_GET_RX_PROTECT_EN(unsigned int mainType){
 }
 
 static inline int QDMA_API_SET_RX_LOW_THRESHOLD(unsigned int mainType, QDMA_RxLowThreshold_T *rxLowThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_RX_LOW_THRESHOLD;
@@ -1256,7 +1201,7 @@ static inline int QDMA_API_SET_RX_LOW_THRESHOLD(unsigned int mainType, QDMA_RxLo
 }
 
 static inline int QDMA_API_GET_RX_LOW_THRESHOLD(unsigned int mainType, QDMA_RxLowThreshold_T *rxLowThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_RX_LOW_THRESHOLD;
@@ -1269,7 +1214,7 @@ static inline int QDMA_API_GET_RX_LOW_THRESHOLD(unsigned int mainType, QDMA_RxLo
 }
 
 static inline int QDMA_API_SET_RX_RATELIMIT_EN(unsigned int mainType, QDMA_Mode_t mode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_RX_RATELIMIT_EN;
@@ -1283,7 +1228,7 @@ static inline int QDMA_API_SET_RX_RATELIMIT_EN(unsigned int mainType, QDMA_Mode_
 
 static inline int QDMA_API_SET_RX_RATELIMIT_PKT_MODE(unsigned int mainType, QDMA_RxPktMode_t pktMode )
 {
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_RX_RATELIMIT_PKT_MODE;
@@ -1296,7 +1241,7 @@ static inline int QDMA_API_SET_RX_RATELIMIT_PKT_MODE(unsigned int mainType, QDMA
 }
 
 static inline int QDMA_API_GET_RX_RATELIMIT_CFG(unsigned int mainType, QDMA_RxRateLimitCfg_T *rxRateLimitCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_RX_RATELIMIT_CFG;
@@ -1309,7 +1254,7 @@ static inline int QDMA_API_GET_RX_RATELIMIT_CFG(unsigned int mainType, QDMA_RxRa
 }
 
 static inline int QDMA_API_SET_RX_RATELIMIT(unsigned int mainType, QDMA_RxRateLimitSet_T *rxRateLimitSetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_RX_RATELIMIT;
@@ -1322,7 +1267,7 @@ static inline int QDMA_API_SET_RX_RATELIMIT(unsigned int mainType, QDMA_RxRateLi
 }
 
 static inline int QDMA_API_GET_RX_RATELIMIT(unsigned int mainType, QDMA_RxRateLimitGet_T *rxRateLimitGetPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_RX_RATELIMIT;
@@ -1335,7 +1280,7 @@ static inline int QDMA_API_GET_RX_RATELIMIT(unsigned int mainType, QDMA_RxRateLi
 }
 
 static inline int QDMA_API_SET_TXQ_DEI_DROP_MODE(unsigned int mainType, QDMA_Mode_t deiDropMode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_DEI_DROP_MODE;
@@ -1348,7 +1293,7 @@ static inline int QDMA_API_SET_TXQ_DEI_DROP_MODE(unsigned int mainType, QDMA_Mod
 }
 
 static inline QDMA_Mode_t QDMA_API_GET_TXQ_DEI_DROP_MODE(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_DEI_DROP_MODE;
@@ -1360,7 +1305,7 @@ static inline QDMA_Mode_t QDMA_API_GET_TXQ_DEI_DROP_MODE(unsigned int mainType){
 }
 
 static inline int QDMA_API_SET_TXQ_CNGST_MODE(unsigned int mainType, QDMA_Mode_t dynCngstEn){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_CNGST_MODE;
@@ -1373,7 +1318,7 @@ static inline int QDMA_API_SET_TXQ_CNGST_MODE(unsigned int mainType, QDMA_Mode_t
 }
 
 static inline QDMA_Mode_t QDMA_API_GET_TXQ_CNGST_MODE(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_MODE;
@@ -1385,7 +1330,7 @@ static inline QDMA_Mode_t QDMA_API_GET_TXQ_CNGST_MODE(unsigned int mainType){
 }
 
 static inline int QDMA_API_SET_TXQ_DEI_THRESHOLD_SCALE(unsigned int mainType, QDMA_TxDynCngstDeiThrhScale_t deiThrhScale){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_DEI_THRH_SCALE;
@@ -1398,7 +1343,7 @@ static inline int QDMA_API_SET_TXQ_DEI_THRESHOLD_SCALE(unsigned int mainType, QD
 }
 
 static inline QDMA_TxDynCngstDeiThrhScale_t QDMA_API_GET_TXQ_DEI_THRESHOLD_SCALE(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_DEI_THRH_SCALE;
@@ -1410,7 +1355,7 @@ static inline QDMA_TxDynCngstDeiThrhScale_t QDMA_API_GET_TXQ_DEI_THRESHOLD_SCALE
 }
 
 static inline int QDMA_API_SET_TXQ_CNGST_AUTO_CONFIG(unsigned int mainType, QDMA_txCngstCfg_t *pTxCngstCfg){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_CNGST_AUTO_CONFIG;
@@ -1423,7 +1368,7 @@ static inline int QDMA_API_SET_TXQ_CNGST_AUTO_CONFIG(unsigned int mainType, QDMA
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_AUTO_CONFIG(unsigned int mainType, QDMA_txCngstCfg_t *pTxCngstCfg){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_AUTO_CONFIG;
@@ -1436,7 +1381,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_AUTO_CONFIG(unsigned int mainType, QDMA
 }
 
 static inline int QDMA_API_SET_TXQ_CNGST_DYNAMIC_THRESHOLD(unsigned int mainType, QDMA_TxQDynCngstThrh_T *txqCngstThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_CNGST_DYNAMIC_THRESHOLD;
@@ -1449,7 +1394,7 @@ static inline int QDMA_API_SET_TXQ_CNGST_DYNAMIC_THRESHOLD(unsigned int mainType
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_DYNAMIC_THRESHOLD(unsigned int mainType, QDMA_TxQDynCngstThrh_T *txqCngstThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_DYNAMIC_THRESHOLD;
@@ -1462,7 +1407,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_DYNAMIC_THRESHOLD(unsigned int mainType
 }
 
 static inline int QDMA_API_SET_TXQ_CNGST_TOTAL_THRESHOLD(unsigned int mainType, QDMA_TxQDynCngstTotalThrh_T *totalThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_CNGST_TOTAL_THRESHOLD;
@@ -1475,7 +1420,7 @@ static inline int QDMA_API_SET_TXQ_CNGST_TOTAL_THRESHOLD(unsigned int mainType, 
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_TOTAL_THRESHOLD(unsigned int mainType, QDMA_TxQDynCngstTotalThrh_T *totalThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_TOTAL_THRESHOLD;
@@ -1488,7 +1433,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_TOTAL_THRESHOLD(unsigned int mainType, 
 }
 
 static inline int QDMA_API_SET_TXQ_CNGST_CHANNEL_THRESHOLD(unsigned int mainType, QDMA_TxQDynCngstChnlThrh_T *chnlThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_CNGST_CHANNEL_THRESHOLD;
@@ -1501,7 +1446,7 @@ static inline int QDMA_API_SET_TXQ_CNGST_CHANNEL_THRESHOLD(unsigned int mainType
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_CHANNEL_THRESHOLD(unsigned int mainType, QDMA_TxQDynCngstChnlThrh_T *chnlThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_CHANNEL_THRESHOLD;
@@ -1514,7 +1459,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_CHANNEL_THRESHOLD(unsigned int mainType
 }
 
 static inline int QDMA_API_SET_TXQ_CNGST_QUEUE_THRESHOLD(unsigned int mainType, QDMA_TxQDynCngstQueueThrh_T *queueThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_CNGST_QUEUE_THRESHOLD;
@@ -1527,7 +1472,7 @@ static inline int QDMA_API_SET_TXQ_CNGST_QUEUE_THRESHOLD(unsigned int mainType, 
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_QUEUE_THRESHOLD(unsigned int mainType, QDMA_TxQDynCngstQueueThrh_T *queueThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_QUEUE_THRESHOLD;
@@ -1540,7 +1485,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_QUEUE_THRESHOLD(unsigned int mainType, 
 }
 
 static inline int QDMA_API_SET_TXQ_CNGST_QUEUE_NONBLOCKING(unsigned int mainType, QDMA_TxQCngstQueueCfg_T *txqCngstQueueCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_CNGST_QUEUE_NONBLOCKING;
@@ -1553,7 +1498,7 @@ static inline int QDMA_API_SET_TXQ_CNGST_QUEUE_NONBLOCKING(unsigned int mainType
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_QUEUE_NONBLOCKING(unsigned int mainType, QDMA_TxQCngstQueueCfg_T *txqCngstQueueCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_QUEUE_NONBLOCKING;
@@ -1566,7 +1511,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_QUEUE_NONBLOCKING(unsigned int mainType
 }
 
 static inline int QDMA_API_SET_TXQ_CNGST_CHANNEL_NONBLOCKING(unsigned int mainType, QDMA_TxQCngstChannelCfg_T *txqCngstChannelCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_CNGST_CHANNEL_NONBLOCKING;
@@ -1579,7 +1524,7 @@ static inline int QDMA_API_SET_TXQ_CNGST_CHANNEL_NONBLOCKING(unsigned int mainTy
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_CHANNEL_NONBLOCKING(unsigned int mainType, QDMA_TxQCngstChannelCfg_T *txqCngstChannelCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_CHANNEL_NONBLOCKING;
@@ -1593,7 +1538,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_CHANNEL_NONBLOCKING(unsigned int mainTy
 
 
 static inline int QDMA_API_SET_TXQ_PEEKRATE_PARAMS(unsigned int mainType, QDMA_PeekRateCfg_t *peekrateCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_PEEKRATE_PARAMS;
@@ -1606,7 +1551,7 @@ static inline int QDMA_API_SET_TXQ_PEEKRATE_PARAMS(unsigned int mainType, QDMA_P
 }
 
 static inline int QDMA_API_GET_TXQ_PEEKRATE_PARAMS(unsigned int mainType, QDMA_PeekRateCfg_t *peekrateCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_PEEKRATE_PARAMS;
@@ -1619,7 +1564,7 @@ static inline int QDMA_API_GET_TXQ_PEEKRATE_PARAMS(unsigned int mainType, QDMA_P
 }
 
 static inline int QDMA_API_SET_TXQ_STATIC_QUEUE_NORMAL_THRESHOLD(unsigned int mainType, QDMA_TxQStaticNormalCfg_T *normThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_STATIC_QUEUE_NORMAL_THRESHOLD;
@@ -1632,7 +1577,7 @@ static inline int QDMA_API_SET_TXQ_STATIC_QUEUE_NORMAL_THRESHOLD(unsigned int ma
 }
 
 static inline int QDMA_API_SET_TXQ_STATIC_QUEUE_DEI_THRESHOLD(unsigned int mainType, QDMA_TxQStaticDeiCfg_T *deiThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXQ_STATIC_QUEUE_DEI_THRESHOLD;
@@ -1645,7 +1590,7 @@ static inline int QDMA_API_SET_TXQ_STATIC_QUEUE_DEI_THRESHOLD(unsigned int mainT
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_DYNAMIC_INFO(unsigned int mainType, QDMA_TxQDynamicCngstInfo_T *allThrhPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_DYNAMIC_INFO;
@@ -1658,7 +1603,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_DYNAMIC_INFO(unsigned int mainType, QDM
 }
 
 static inline int QDMA_API_GET_TXQ_CNGST_STATIC_INFO(unsigned int mainType, QDMA_TxQStaticCngstInfo_T *staticInfoPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_TXQ_CNGST_STATIC_INFO;
@@ -1671,7 +1616,7 @@ static inline int QDMA_API_GET_TXQ_CNGST_STATIC_INFO(unsigned int mainType, QDMA
 }
 
 static inline int QDMA_API_SET_VIRTUAL_CHANNEL_MODE(unsigned int mainType, QDMA_VirtualChannelMode_T *virChnlModePtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_VIRTUAL_CHANNEL_MODE;
@@ -1684,7 +1629,7 @@ static inline int QDMA_API_SET_VIRTUAL_CHANNEL_MODE(unsigned int mainType, QDMA_
 }
 
 static inline int QDMA_API_GET_VIRTUAL_CHANNEL_MODE(unsigned int mainType, QDMA_VirtualChannelMode_T *virChnlModePtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_VIRTUAL_CHANNEL_MODE;
@@ -1697,7 +1642,7 @@ static inline int QDMA_API_GET_VIRTUAL_CHANNEL_MODE(unsigned int mainType, QDMA_
 }
 
 static inline int QDMA_API_SET_VIRTUAL_CHANNEL_QOS(unsigned int mainType, QDMA_VirtualChannelQoS_T *virChnlQoSPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_VIRTUAL_CHANNEL_QOS;
@@ -1710,7 +1655,7 @@ static inline int QDMA_API_SET_VIRTUAL_CHANNEL_QOS(unsigned int mainType, QDMA_V
 }
 
 static inline int QDMA_API_GET_VIRTUAL_CHANNEL_QOS(unsigned int mainType, QDMA_VirtualChannelQoS_T *virChnlQoSPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_VIRTUAL_CHANNEL_QOS;
@@ -1723,7 +1668,7 @@ static inline int QDMA_API_GET_VIRTUAL_CHANNEL_QOS(unsigned int mainType, QDMA_V
 }
 
 static inline int QDMA_API_READ_VIP_INFO(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 	in_data.function_id = QDMA_FUNCTION_READ_VIP_INFO;
 	ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
@@ -1734,7 +1679,7 @@ static inline int QDMA_API_READ_VIP_INFO(unsigned int mainType){
 }
 
 static inline int QDMA_API_SET_CNTR_CHANNEL(unsigned int mainType,unsigned channel_id){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 	in_data.function_id = QDMA_FUNCTION_SET_CHANNEL;
 	in_data.qdma_private.channel = channel_id;
@@ -1743,10 +1688,10 @@ static inline int QDMA_API_SET_CNTR_CHANNEL(unsigned int mainType,unsigned chann
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_DUMP_CNTR_CHANNEL(unsigned int mainType,unsigned channel_id){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 	in_data.function_id = QDMA_FUNCTION_DUMP_CHANNEL;
 	in_data.qdma_private.channel = channel_id;
@@ -1755,10 +1700,10 @@ static inline int QDMA_API_DUMP_CNTR_CHANNEL(unsigned int mainType,unsigned chan
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_SET_MAC_QOS_CONFIG(unsigned int mainType, QDMA_MacQoSCfg_T *macQosCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 	in_data.function_id = QDMA_FUNCTION_SET_MAC_QOS_CONFIG;
 	in_data.qdma_private.macQosCfg = macQosCfgPtr;
@@ -1767,10 +1712,10 @@ static inline int QDMA_API_SET_MAC_QOS_CONFIG(unsigned int mainType, QDMA_MacQoS
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_RESET(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 	in_data.function_id = QDMA_FUNCTION_RESET;
 	ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
@@ -1781,7 +1726,7 @@ static inline int QDMA_API_RESET(unsigned int mainType){
 }
 
 static inline int QDMA_API_GET_DBG_CNTR_ALL_QUEUE_COUNTER(unsigned int mainType, QDMA_TxQCngstAllQueueValue_T *txqCngstAllQueueValuePtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 	in_data.function_id = QDMA_FUNCTION_GET_ALL_QUEUE_DBGCNTR;
 	in_data.qdma_private.txqCngstAllQueueValuePtr = txqCngstAllQueueValuePtr ;
@@ -1793,7 +1738,7 @@ static inline int QDMA_API_GET_DBG_CNTR_ALL_QUEUE_COUNTER(unsigned int mainType,
 }
 
 static inline int QDMA_API_DRAM_TEST_DMA_CONFIG(unsigned int mainType, QDMA_DramTestCfg_T *dramTestCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_DRAM_TEST_DMA_CONFIG;
@@ -1804,10 +1749,10 @@ static inline int QDMA_API_DRAM_TEST_DMA_CONFIG(unsigned int mainType, QDMA_Dram
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_DRAM_TEST_DMA_ENABLE(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_DRAM_TEST_DMA_ENABLE;
@@ -1817,10 +1762,10 @@ static inline int QDMA_API_DRAM_TEST_DMA_ENABLE(unsigned int mainType){
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_DRAM_TEST_RX_DONE(unsigned int mainType, QDMA_DramTestCfg_T *dramTestCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_DRAM_TEST_RX_DONE;
@@ -1831,10 +1776,10 @@ static inline int QDMA_API_DRAM_TEST_RX_DONE(unsigned int mainType, QDMA_DramTes
 		return dramTestCfgPtr->rxDone;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_DRAM_TEST_DST_GET(unsigned int mainType, QDMA_DramTestCfg_T *dramTestCfgPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_DRAM_TEST_DST_GET;
@@ -1845,11 +1790,10 @@ static inline int QDMA_API_DRAM_TEST_DST_GET(unsigned int mainType, QDMA_DramTes
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
-
+}
 
 static inline int QDMA_API_GET_DBG_CNTR_RX_RING_COUNTER(unsigned int mainType, QDMA_RX_Ring_Cnt_T *rxRingPtr){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	if(QDMA_FUNCTION_DUMP_TX_QOS - QDMA_FUNCTION_GET_ALL_QUEUE_DBGCNTR < 2)
@@ -1867,10 +1811,10 @@ static inline int QDMA_API_GET_DBG_CNTR_RX_RING_COUNTER(unsigned int mainType, Q
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_SET_TXMSG(unsigned int mainType, QDMA_TxMsg_Ex_T* pTxMsg,QDMA_SET_TXMSG_FIELD_t field,unsigned int value){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_TXMSG;
@@ -1884,10 +1828,10 @@ static inline int QDMA_API_SET_TXMSG(unsigned int mainType, QDMA_TxMsg_Ex_T* pTx
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_TRANSMIT_PACKETS_FULLMSG(unsigned int mainType, struct sk_buff *skb,QDMA_TxMsg_Ex_T* pTxMsg, struct port_info *pMacInfo){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_TRANSMIT_PACKETS;
@@ -1902,7 +1846,7 @@ static inline int QDMA_API_TRANSMIT_PACKETS_FULLMSG(unsigned int mainType, struc
 }
 
 static inline int QDMA_API_GET_RXMSG(unsigned int mainType, void* pRxMsg,QDMA_GET_RXMSG_FIELD_t field,unsigned int* pValue){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_RXMSG;
@@ -1916,10 +1860,10 @@ static inline int QDMA_API_GET_RXMSG(unsigned int mainType, void* pRxMsg,QDMA_GE
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_GET_RXMSG_ETHER(unsigned int mainType, void* pRxMsg,QDMA_RxMsg_Ether_T* p_rxmsg_eth){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_RXMSG_ETH;
@@ -1932,10 +1876,10 @@ static inline int QDMA_API_GET_RXMSG_ETHER(unsigned int mainType, void* pRxMsg,Q
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_CHECK_DSCP_IS_FREE(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_CHECK_DSCP_IS_FREE;
@@ -1945,10 +1889,10 @@ static inline int QDMA_API_CHECK_DSCP_IS_FREE(unsigned int mainType){
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_SET_DOWNSTREAM_QOS_MODE(unsigned int mainType){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_SET_DOWNSTREAM_QOS;
@@ -1958,10 +1902,10 @@ static inline int QDMA_API_SET_DOWNSTREAM_QOS_MODE(unsigned int mainType){
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
 
 static inline int QDMA_API_GET_DOWNSTREAM_QOS_MODE(unsigned int mainType, QDMA_Mode_t dnStreamQosMode){
-	struct ECNT_QDMA_Data in_data;
+	struct ECNT_QDMA_Data in_data = {0};
 	int ret=0;
 
 	in_data.function_id = QDMA_FUNCTION_GET_DOWNSTREAM_QOS;
@@ -1972,7 +1916,32 @@ static inline int QDMA_API_GET_DOWNSTREAM_QOS_MODE(unsigned int mainType, QDMA_M
 		return in_data.retValue;
 	else
 		return (int)ECNT_HOOK_ERROR;
-} 
+}
+
+static inline int QDMA_API_GET_HIERARCHICAL_RATELIMIT_EN(unsigned int mainType){
+	struct ECNT_QDMA_Data in_data = {0};
+	int ret=0;
+
+	in_data.function_id = QDMA_FUNCTION_GET_HIERARCHICAL_RATELIMIT_EN;
+	ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
+
+	if(ret != ECNT_HOOK_ERROR)
+		return in_data.retValue;
+	else
+		return (int)ECNT_HOOK_ERROR;
+}
+
+static inline int QDMA_API_DEINIT_FOR_LRO(unsigned int mainType){
+	struct ECNT_QDMA_Data in_data = {0};
+	int ret=0;
+
+	in_data.function_id = QDMA_FUNCTION_DEINIT_FOR_LRO;
+	ret = __ECNT_HOOK(mainType, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
+	if(ret != ECNT_HOOK_ERROR)
+		return in_data.retValue;
+	else
+		return (int)ECNT_HOOK_ERROR;
+}
 
 /************************************************************************
 *                  D A T A   D E C L A R A T I O N S

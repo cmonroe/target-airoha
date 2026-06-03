@@ -71,6 +71,10 @@ typedef enum {
 	EPHY_FUNCTION_MT_MII_REG_READ,
 	EPHY_FUNCTION_MT_EMII_REG_WRITE,
 	EPHY_FUNCTION_MT_EMII_REG_READ,
+	EPHY_FUNCTION_MONITOR_PHY_INIT_FLAG,
+#if defined(TCSUPPORT_CPU_EN7583)
+	EPHY_FUNCTION_DISABLE_LDPS,
+#endif
 #if  defined(TCSUPPORT_CPU_EN7512) || defined(TCSUPPORT_CPU_EN7521)
 #if !defined(TCSUPPORT_CPU_EN7516) && !defined(TCSUPPORT_CPU_EN7527)
 	EPHY_FUNCTION_MT7512FE_READ_PROBE,
@@ -140,7 +144,7 @@ typedef struct ECNT_EPHY_Data {
 *************************************************************************
 */
 static inline int EPHY_API_GET_MONITOR(void){
-    ECNT_EPHY_Data_s in_data;
+    ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_MONITOR;
     ret = __ECNT_HOOK(ECNT_ETHER_PHY, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
@@ -151,7 +155,7 @@ static inline int EPHY_API_GET_MONITOR(void){
 }
 
 static inline int EPHY_API_POWER_DOWN(int phy_add){
-    ECNT_EPHY_Data_s in_data;
+    ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_POWER_DOWN;
     in_data.phy_add = phy_add;
@@ -165,7 +169,8 @@ static inline int EPHY_API_POWER_DOWN(int phy_add){
 
 /* int mtPhyMiiWrite_TrDbg(u8 phyaddr, char *type, u32 data_addr ,u32 value, u8 ch_num) */
 static inline int EPHY_API_PHY_MII_WRITE_TRDBG(u8 phyaddr, char *type, u32 data_addr ,u32 value, u8 ch_num){
-    ECNT_EPHY_Data_s in_data;
+	/* CID:710965 */
+	ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_PHY_MII_WRITE_TRDBG;
 
@@ -181,7 +186,8 @@ static inline int EPHY_API_PHY_MII_WRITE_TRDBG(u8 phyaddr, char *type, u32 data_
 
 /* void mtMiiRegWrite(u32 port_num, u32 reg_num, u32 reg_data) */
 static inline int EPHY_API_MT_MII_REG_WRITE(u32 port_num, u32 reg_num, u32 reg_data){
-    ECNT_EPHY_Data_s in_data;
+    /* CID:710505 */
+	ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_MT_MII_REG_WRITE;
 	in_data.ephy_private.mii.port_num = port_num;
@@ -195,7 +201,8 @@ static inline int EPHY_API_MT_MII_REG_WRITE(u32 port_num, u32 reg_num, u32 reg_d
 
 /* u32 mtMiiRegRead(u8 port_num,u8 reg_num) */
 static inline int EPHY_API_MT_MII_REG_READ(u8 port_num,u8 reg_num){
-    ECNT_EPHY_Data_s in_data;
+	/* CID:712082 */
+    ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_MT_MII_REG_READ;
 	in_data.ephy_private.miiRead.port_num = port_num;
@@ -208,7 +215,8 @@ static inline int EPHY_API_MT_MII_REG_READ(u8 port_num,u8 reg_num){
 
 /* void mtEMiiRegWrite(u32 port_num, u32 dev_num, u32 reg_num, u32 reg_data) */
 static inline int EPHY_API_MT_EMII_REG_WRITE(u32 port_num, u32 dev_num, u32 reg_num, u32 reg_data){
-    ECNT_EPHY_Data_s in_data;
+    /* CID:708533 */
+	ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_MT_EMII_REG_WRITE;
 	in_data.ephy_private.mii.port_num = port_num;
@@ -222,7 +230,8 @@ static inline int EPHY_API_MT_EMII_REG_WRITE(u32 port_num, u32 dev_num, u32 reg_
 
 /* u32 mtEMiiRegRead(u32 port_num, u32 dev_num, u32 reg_num) */
 static inline int EPHY_API_MT_EMII_REG_READ(u32 port_num, u32 dev_num, u32 reg_num){
-    ECNT_EPHY_Data_s in_data;
+    /* CID:715790 */
+	ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_MT_EMII_REG_READ;
 	in_data.ephy_private.mii.port_num = port_num;
@@ -232,11 +241,37 @@ static inline int EPHY_API_MT_EMII_REG_READ(u32 port_num, u32 dev_num, u32 reg_n
 
 	return in_data.retValue;
 }
+
+static inline int EPHY_API_GET_MONITOR_PHY_INIT_FLAG(void) {
+	ECNT_EPHY_Data_s in_data = {0};
+	int ret = 0;
+	in_data.function_id = EPHY_FUNCTION_MONITOR_PHY_INIT_FLAG;
+	ret = __ECNT_HOOK(ECNT_ETHER_PHY, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
+
+	if (ret == ECNT_HOOK_ERROR)
+		return ECNT_HOOK_ERROR;
+	else
+		return in_data.retValue;
+}
+
+#if defined(TCSUPPORT_CPU_EN7583)
+static inline int EPHY_API_DISABLE_LDPS(void) {
+	ECNT_EPHY_Data_s in_data = {0};
+	int ret = 0;
+	in_data.function_id = EPHY_FUNCTION_DISABLE_LDPS;
+	ret = __ECNT_HOOK(ECNT_ETHER_PHY, ECNT_DRIVER_API, (struct ecnt_data *)&in_data);
+	if (ret != ECNT_HOOK_ERROR)
+		return ECNT_CONTINUE;
+	else
+		return ECNT_HOOK_ERROR;
+}
+#endif
+
 #if  defined(TCSUPPORT_CPU_EN7512) || defined(TCSUPPORT_CPU_EN7521)
 #if !defined(TCSUPPORT_CPU_EN7516) && !defined(TCSUPPORT_CPU_EN7527)
 /* int32 mt7512FEReadProbe(u8 port_num, u8 mode) */
 static inline int EPHY_API_MT7512FE_READ_PROBE(u8 port_num, u8 mode){
-    ECNT_EPHY_Data_s in_data;
+    ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_MT7512FE_READ_PROBE;
 	in_data.ephy_private.probe.port_num = port_num;
@@ -248,7 +283,7 @@ static inline int EPHY_API_MT7512FE_READ_PROBE(u8 port_num, u8 mode){
 
 /* u16 mt7512FEReadSnrSum(u8 port_num, u16 cnt) */
 static inline int EPHY_API_MT7512FE_SNR_SUM(u8 port_num, u16 cnt){
-    ECNT_EPHY_Data_s in_data;
+    ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_MT7512FE_SNR_SUM;
 	in_data.ephy_private.snr.port_num = port_num;
@@ -261,7 +296,7 @@ static inline int EPHY_API_MT7512FE_SNR_SUM(u8 port_num, u16 cnt){
 
 /* int32 mt7512FEReadAdcSum(u8 port_num); */
 static inline int EPHY_API_MT7512_FE_READ_ADC_SUM(u8 port_num){
-    ECNT_EPHY_Data_s in_data;
+    ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_MT7512_FE_READ_ADC_SUM;
 	in_data.ephy_private.adc.port_num = port_num;
@@ -275,7 +310,7 @@ static inline int EPHY_API_MT7512_FE_READ_ADC_SUM(u8 port_num){
 #endif
 /* void ephySLTMode(u8 port_num, u16 speed_mode); */
 static inline int EPHY_API_SLT_MODE(u8 port_num, u16 speed_mode){
-    ECNT_EPHY_Data_s in_data;
+    ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_SLT_MODE;
 	in_data.ephy_private.slt.port_num = port_num;
@@ -291,7 +326,7 @@ static inline int EPHY_API_SLT_MODE(u8 port_num, u16 speed_mode){
 
 /* void ephySETMode(u8 port_num, u16 speed_mode); */
 static inline int EPHY_API_SET_MODE(u8 set_mode, u16 parameter){
-    ECNT_EPHY_Data_s in_data;
+    ECNT_EPHY_Data_s in_data = {0};
     int ret=0;
     in_data.function_id = EPHY_FUNCTION_SET_MODE;
 	in_data.ephy_private.set.set_mode = set_mode;

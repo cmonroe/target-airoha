@@ -11,67 +11,9 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  drivers/net/ethernet/airoha/arht_dp_api.c |   16 ++++++++++++++++
  2 files changed, 17 insertions(+), 1 deletion(-)
 
---- a/drivers/net/ethernet/airoha/arht_dp_api.c
-+++ b/drivers/net/ethernet/airoha/arht_dp_api.c
-@@ -1829,6 +1829,10 @@ EXPORT_SYMBOL(ra_sw_nat_hook_xfer);
- int (*ra_sw_nat_hook_drop_packet) (struct sk_buff * skb) = NULL;
- EXPORT_SYMBOL(ra_sw_nat_hook_drop_packet);
- 
-+
-+int (*airoha_set_ppe_init_hook)(void) = NULL;
-+EXPORT_SYMBOL(airoha_set_ppe_init_hook);
-+
- int (*ra_sw_nat_hook_clean_table) (void) = NULL;
- EXPORT_SYMBOL(ra_sw_nat_hook_clean_table);
- 
-@@ -11857,16 +11861,35 @@ unlock:
- 	return ret;
- 
- }
-+static int airoha_set_ppe_init(void)
-+{
-+	int ret;
-+
-+	/* glb_eth is assigned at the end of airoha_probe, after airoha_ppe_init
-+	 * has already registered this hook. Caller (arht_general_offload's
-+	 * delayed worker) treats non-zero as "retry later", so bail until probe
-+	 * finishes wiring the global.
-+	 */
-+	if (!glb_eth)
-+		return -EAGAIN;
-+
-+	mutex_lock(&flow_offload_mutex);
-+	ret = airoha_ppe_offload_setup(glb_eth);
-+	mutex_unlock(&flow_offload_mutex);
-+	return ret;
- 
-+}
- void airoha_ppe_hook_init(void)
- {
- 	rcu_assign_pointer(ra_sw_nat_hook_drop_packet, airoha_ppe_drop_packet_handler);
-+	rcu_assign_pointer(airoha_set_ppe_init_hook, airoha_set_ppe_init);
- 	return ;
- }
- 
- void airoha_ppe_hook_exit(void)
- {
- 	rcu_assign_pointer(ra_sw_nat_hook_drop_packet, NULL);
-+	rcu_assign_pointer(airoha_set_ppe_init_hook, NULL);
- 	return ;
- }
- 
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -26,7 +26,7 @@ extern void airoha_ppe_hook_exit(void);
- extern struct airoha_eth *glb_eth;
- extern int airoha_is_pon_sfu_mode(void);
- 
--static DEFINE_MUTEX(flow_offload_mutex);
-+DEFINE_MUTEX(flow_offload_mutex);
- DEFINE_SPINLOCK(ppe_lock);
- static DEFINE_SPINLOCK(ppe_sram_access_lock);
- 
-@@ -1576,7 +1576,7 @@ static int airoha_ppe_wait_for_npu_init(
+@@ -1470,7 +1470,7 @@ static int airoha_ppe_wait_for_npu_init(
  	return err;
  }
  
@@ -80,13 +22,11 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
  {
  	struct airoha_npu *npu = airoha_ppe_npu_get(eth);
  	struct airoha_ppe *ppe = eth->ppe;
---- a/drivers/net/ethernet/airoha/airoha_eth.h
-+++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -977,4 +977,7 @@ bool airoha_ppe_foe_compare_entry(struct
+@@ -1509,6 +1509,7 @@ error_npu_put:
  
+ 	return err;
+ }
++EXPORT_SYMBOL(airoha_ppe_offload_setup);
  
- 
-+extern struct mutex flow_offload_mutex;
-+int airoha_ppe_offload_setup(struct airoha_eth *eth);
-+
- #endif /* AIROHA_ETH_H */
+ int airoha_ppe_setup_tc_block_cb(struct airoha_ppe_dev *dev, void *type_data)
+ {

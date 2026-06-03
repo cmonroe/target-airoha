@@ -6,6 +6,7 @@
 #define _COMMON_PHY
 struct str_serdes_common_phy {
 	struct device *dev;
+	struct device *scu_misc_dev;
 	void __iomem *G3_ana_phy_rg_base; /* serdes 3: PCIEG3_PHY_PMA_PHYA physical address */
 	void __iomem *G3_pma_phy_rg_base; /* serdes 3: PCIEG3_PHY_PMA_PHYD_0 physical address */
 	void __iomem *xfi_ana_pxp_phy_rg_base; /* serdes 2: xfi_ana_pxp physical address */

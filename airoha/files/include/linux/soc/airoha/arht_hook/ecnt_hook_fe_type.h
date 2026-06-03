@@ -355,6 +355,7 @@ typedef enum{
 	MULTICAST_MODE,
 	WAN_ITF_AND_TRAFFIC_FLOW_MODE,
 	LLID_MODE,
+	CONNTRACK_MODE,
 	DEFAULT_NULL_MODE,
 }FE_ACNT_Mode_t;
 
@@ -542,6 +543,7 @@ typedef enum {
     FE_SET_PSE_OQ_THR,
     FE_GET_ACNT2_IDX,
     FE_SET_ACNT2_MODE,
+    FE_GET_ACNT2_MODE,	
     FE_GET_WAN_ITF_INDEX,
 	FE_SET_GLO_RATE_BYTE,
 	FE_GET_PPPOE_INFO,
@@ -1079,7 +1081,7 @@ struct ecnt_fe_data {
 			uint length_short;
 		} pkt_len;
 		struct {
-			unchar *mac;
+			unchar mac[6];
 			ushort mask;
 		} mac_addr;
 		struct {

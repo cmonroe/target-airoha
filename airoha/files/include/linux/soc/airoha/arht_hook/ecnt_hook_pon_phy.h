@@ -1,9 +1,9 @@
 /***************************************************************
 Copyright Statement:
 
-This software/firmware and related documentation (¡°EcoNet Software¡±) 
+This software/firmware and related documentation (Â¡Â°EcoNet SoftwareÂ¡Â±) 
 are protected under relevant copyright laws. The information contained herein 
-is confidential and proprietary to EcoNet (HK) Limited (¡°EcoNet¡±) and/or 
+is confidential and proprietary to EcoNet (HK) Limited (Â¡Â°EcoNetÂ¡Â±) and/or 
 its licensors. Without the prior written permission of EcoNet and/or its licensors, 
 any reproduction, modification, use or disclosure of EcoNet Software, and 
 information contained herein, in whole or in part, shall be strictly prohibited.
@@ -12,8 +12,8 @@ EcoNet (HK) Limited  EcoNet. ALL RIGHTS RESERVED.
 
 BY OPENING OR USING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY 
 ACKNOWLEDGES AND AGREES THAT THE SOFTWARE/FIRMWARE AND ITS 
-DOCUMENTATIONS (¡°ECONET SOFTWARE¡±) RECEIVED FROM ECONET 
-AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER ON AN ¡°AS IS¡± 
+DOCUMENTATIONS (Â¡Â°ECONET SOFTWAREÂ¡Â±) RECEIVED FROM ECONET 
+AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER ON AN Â¡Â°AS ISÂ¡Â± 
 BASIS ONLY. ECONET EXPRESSLY DISCLAIMS ANY AND ALL WARRANTIES, 
 WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED 
 WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, 
@@ -22,11 +22,11 @@ WHATSOEVER WITH RESPECT TO THE SOFTWARE OF ANY THIRD PARTIES WHICH
 MAY BE USED BY, INCORPORATED IN, OR SUPPLIED WITH THE ECONET SOFTWARE. 
 RECEIVER AGREES TO LOOK ONLY TO SUCH THIRD PARTIES FOR ANY AND ALL 
 WARRANTY CLAIMS RELATING THERETO. RECEIVER EXPRESSLY ACKNOWLEDGES 
-THAT IT IS RECEIVER¡¯S SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD 
+THAT IT IS RECEIVERÂ¡Â¯S SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD 
 PARTY ALL PROPER LICENSES CONTAINED IN ECONET SOFTWARE.
 
 ECONET SHALL NOT BE RESPONSIBLE FOR ANY ECONET SOFTWARE RELEASES 
-MADE TO RECEIVER¡¯S SPECIFICATION OR CONFORMING TO A PARTICULAR 
+MADE TO RECEIVERÂ¡Â¯S SPECIFICATION OR CONFORMING TO A PARTICULAR 
 STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND 
 ECONET'S ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE ECONET 
 SOFTWARE RELEASED HEREUNDER SHALL BE, AT ECONET'S SOLE OPTION, TO 
@@ -91,7 +91,11 @@ ECONET SOFTWARE.
 #define PON_SET_PHY_NGPON2_TX_CHAN_CONFIG				 0x0025
 #define PON_SET_PHY_NGPON2_RX_CHAN_CONFIG				 0x0026
 #define PON_SET_PHY_LDDLA_AUTO_MODE                      0x0027
-
+#define PON_SET_PHY_HW_SCU_RST				 			0x0028				/* pon_phy_scu_reset_init()*/
+#define PON_SET_PHY_PRBS_RXBIST                          0x0029
+#define PON_SET_PHY_HSP_PROFILE                      0x002a
+#define PON_SET_PHY_HSP_US_LDPC_MODE_SWITCH                     0x002b
+#define PON_SET_PHY_HSP_DUMP_START                     0x002c//for debug
 /* Get Function */
 
 #define PON_GET_PHY_LOS_STATUS                          0x8001               /* phy_los_status()         */
@@ -132,6 +136,10 @@ ECONET SOFTWARE.
 #define PON_GET_PHY_TX_MODE	                 			0x8025  //julia_7523
 #define PON_GET_PHY_PRBS_ERR_CNT	                 	0x8026  //julia_7523
 #define PON_GET_PHY_NGPON2_CHAN                 		0x8027
+#define PON_GET_PHY_ROGUE_STATUS                 		0x8028
+#define PON_GET_PHY_HSP_PROFILE                         0x8029
+
+
 
 #define PHY_LOS_HAPPEN                          (0x01)
 #define PHY_NO_LOS_HAPPEN                       (0x00)
@@ -216,6 +224,10 @@ typedef enum XponPhy_Mode_e{
     PHY_NGPON2_10G_2G_CONFIG,
     PHY_NGPON2_2G_2G_CONFIG,
     PHY_GPON_SYM_CONFIG,
+    PHY_HSP_25G_SYM_CONFIG,
+    PHY_HSP_25G_ASY_CONFIG,
+    PHY_HSP_50G_25G_CONFIG,
+    PHY_HSP_50G_50G_CONFIG,
     PHY_UNKNOWN_CONFIG,
 } Xpon_Phy_Mode_t ;
 
@@ -247,10 +259,10 @@ typedef enum {
     PHY_ERR_CNT_CLR      = 0x01,
     PHY_BIP_CNT_CLR      = 0x02,
     PHY_RXFRAME_CNT_CLR  = 0x04,
-#if defined(CONFIG_USE_MT7520_ASIC) || defined(CONFIG_USE_A60928) || defined(TCSUPPORT_CPU_EN7580)
+//#if defined(CONFIG_USE_MT7520_ASIC) || defined(CONFIG_USE_A60928) || defined(TCSUPPORT_CPU_EN7580)
     PHY_TXFRAME_CNT_CLR  = 0x08,
     PHY_EPON_ERR_CNT_CLR = 0x10 
-#endif /* TCSUPPORT_WAN_EPON */
+//#endif /* TCSUPPORT_WAN_EPON */
 } ENUM_PhyCounterClr;
 
 /*GPON Preamble*/
@@ -374,6 +386,45 @@ typedef struct
     unchar  pon_tag[8];            /**< [8 bytes ] */	//not set by PHY
 }PHY_Xgpon_Profile_Msg_T, *PPHY_Xgpon_Profile_Msg_T;
 
+//HSP psbu segment descripter
+typedef struct
+{
+    unchar  delimiter_length;                  /**< [4 bits ]0:0bit;1:1*8=bits;8:8*8=64 bits */	
+    unchar  delimiter_pattern[8];              /**< [8 bytes ] */
+    uint    preamble_word_count;               /**< [2 bytes ] Note:for DS 25G mode,it's preamble_repeat_count */ 
+	unchar  preamble_type;                     /**< [1 bit ] 0 prbs,1 costum defined;Note:for DS 25G mode,it's 1 */
+	unchar  preamble_pattern_len;              /**< [4 bits ] */
+    unchar  preamble_pattern[8];               /**< [8 bytes ] */
+	unchar  pamble_prbs_type;                  /**< [4 bits ] 0:prbs7;1:prbs8;2:prbs9......8:prbs15 */
+	uint    preamble_prbs_seed  ;              /**< [2 bytes ] */
+
+}PHY_Hsp_psbu_seg_T, *PPHY_Hsp_psbu_seg_T;
+
+//HSP profile descripter
+typedef struct
+{
+    unchar  profile_version;                   /**< [4 bits ] */	//not set by PHY
+    unchar  profile_index;                     /**< [2 bits ] */
+    unchar  fec_indication;                    /**< [2 bits ] */
+	unchar  psbu_seg_num;                      /**< [2 bits ] */
+	PHY_Hsp_psbu_seg_T psbu_seg_1;
+	PHY_Hsp_psbu_seg_T psbu_seg_2;
+	PHY_Hsp_psbu_seg_T psbu_seg_3;
+	PHY_Hsp_psbu_seg_T psbu_seg_4;
+    unchar  pon_tag[8];                       /**< [8 bytes ] */	//not set by PHY
+}PHY_Hsp_Profile_Msg_T, *PPHY_Hsp_Profile_Msg_T;
+
+
+/* HSP US FEC descripter*/
+typedef struct
+{
+	unchar   us_ldpc_enable;                  /* US LDPC enable                                      */
+	unchar   us_ldpc_switch_event;             /* 1: Normal;2:type_B_back_to_O5 state;3:OLT_SET_CAPABILITY                              */
+	unchar   us_ldpc_identifier;              /* 0 default; 1 high throughput,2 high margin.Note:PHY checked only when us_ldpc_switch_event == 3.    */
+	unchar   us_ldpc_hm_code_cs;              /* CS of high margin mode,csmin=19,csmax=35                     */
+	uint     us_ldpc_scheduled_sfc;           /* scheduled sfc                    */
+
+}PHY_Hsp_us_ldpc_T, *PPHY_Hsp_us_ldpc_T;
 
 typedef struct
 {
@@ -400,6 +451,8 @@ typedef struct xpon_phy_api_data_s {
         PHY_Rogue_T                 * phy_rogue_cfg   ;
         PHY_Xgpon_Profile_Msg_T     * xgpon_profile   ;
 		PHY_Ngpon2_Chan_Sel_T		*ngpon2_chan_sel;
+		PHY_Hsp_Profile_Msg_T       * hsp_profile   ;
+		PHY_Hsp_us_ldpc_T           *us_ldpc;
         void                * raw             ;
     };
 }xpon_phy_api_data_t,*p_xpon_phy_api_data_t;
