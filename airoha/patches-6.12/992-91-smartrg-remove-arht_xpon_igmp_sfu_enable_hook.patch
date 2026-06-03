@@ -9,16 +9,14 @@
  extern int arht_ppe_multicast_set_valid(struct sk_buff* skb);
  extern int airoha_is_pon_sfu_mode(void);
  
-@@ -727,9 +727,9 @@ static void airoha_get_entry_bind(u32 ms
+@@ -819,8 +819,8 @@ static void airoha_get_entry_bind(u32 ms
  				flow_e->ingress_dev_idx = ETH2;
  		}
  		airoha_ppe_check_skb(&eth->ppe->dev, q->skb, hash, false);
--		if(arht_xpon_igmp_sfu_enable_hook == NULL){
+-		if (arht_xpon_igmp_sfu_enable_hook == NULL)
 -			arht_ppe_multicast_handler(eth->ppe, q->skb);
--		}
-+		//if(arht_xpon_igmp_sfu_enable_hook == NULL){
++		//if (arht_xpon_igmp_sfu_enable_hook == NULL)
 +		//	arht_ppe_multicast_handler(eth->ppe, q->skb);
-+		//}
- 	}
- 	else{
- 		if(airoha_is_pon_sfu_mode()){
+ 	} else {
+ 		if (airoha_is_pon_sfu_mode())
+ 			q->skb->l4_hash = 0;

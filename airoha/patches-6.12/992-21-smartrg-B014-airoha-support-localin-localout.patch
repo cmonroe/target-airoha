@@ -15,57 +15,51 @@
  
  static int is_ethmac_nvmem_cell_available(struct airoha_eth *eth)
  {
-@@ -716,22 +708,6 @@ static int airoha_qdma_fill_rx_queue(str
- 	return nframes;
+@@ -805,21 +797,6 @@ airoha_qdma_get_gdm_dev(struct airoha_et
+ 	return port->devs[d] ? port->devs[d] : ERR_PTR(-ENODEV);
  }
  
--
--static int airoha_check_pon_rx_hook(void *pMsg,struct sk_buff *skb, uint pktLen)
+-static int airoha_check_pon_rx_hook(void *pMsg, struct sk_buff *skb, uint pktLen)
 -{
--	/*
--	PON RX process hook
--	Ruturn: if pwan_cb_rx_hook return success iterate to next packet otherwise it go to eth rx
--	*/
--	if(pwan_cb_rx_hook){
--		pwan_cb_rx_hook(pMsg,QDMA_RX_DSCP_MSG_LENS,skb,pktLen);
--	}else{
+-	/* PON RX process hook: if pwan_cb_rx_hook consumes the packet return
+-	 * success so the caller iterates to the next packet, otherwise fall
+-	 * back to the regular eth rx path.
+-	 */
+-	if (pwan_cb_rx_hook) {
+-		pwan_cb_rx_hook(pMsg, QDMA_RX_DSCP_MSG_LENS, skb, pktLen);
+-	} else {
 -		return PON_RX_FAIL;
 -	}
 -
 -	return PON_RX_SUCCESS;
 -}
 -
- static void airoha_get_entry_bind(u32 msg1, struct airoha_queue *q, struct airoha_eth *eth, u32 sptag)
+ static void airoha_get_entry_bind(u32 msg1, struct airoha_queue *q,
+ 				  struct airoha_eth *eth, u32 sptag)
  {
- 	u32 reason;
-@@ -838,7 +814,6 @@ static int airoha_qdma_rx_process(struct
- 	struct airoha_eth *eth = qdma->eth;
- 	int qid = q - &qdma->q_rx[0];
- 	int done = 0;
--	int sport, VirIfIdx = 0;
- 
- 	while (done < budget) {
- 		struct airoha_queue_entry *e = &q->entry[q->tail];
-@@ -847,7 +822,6 @@ static int airoha_qdma_rx_process(struct
- 		struct airoha_gdm_port *port;
- 		int data_len, len, p;
+@@ -942,9 +919,8 @@ static int airoha_qdma_rx_process(struct
+ 		struct airoha_qdma_desc *desc = &q->desc[q->tail];
+ 		u32 msg1, desc_ctrl, sptag = 0;
+ 		struct airoha_gdm_dev *dev;
+-		int data_len, len, p, sport, VirIfIdx = 0;
++		int data_len, len, p;
  		struct page *page;
 -		struct pwan_msg pMsg;
  
  		desc_ctrl = le32_to_cpu(READ_ONCE(desc->ctrl));
  		if (!(desc_ctrl & QDMA_DESC_DONE_MASK))
-@@ -873,10 +847,6 @@ static int airoha_qdma_rx_process(struct
+@@ -969,10 +945,6 @@ static int airoha_qdma_rx_process(struct
  			goto free_frag;
  
- 		port = eth->ports[p];
+ 		p = eth->chip->get_ports_id(eth, desc);
 -		pMsg.msg0 = le32_to_cpu(desc->msg0);
 -		pMsg.msg1 = le32_to_cpu(desc->msg1);
 -		pMsg.msg2 = le32_to_cpu(desc->msg2);
 -		pMsg.msg3 = le32_to_cpu(desc->msg3);
- 		
+ 
  		if (!q->skb) { /* first buffer */
  			q->skb = napi_build_skb(e->buf - AIROHA_RX_HEADROOM,
-@@ -929,45 +899,10 @@ static int airoha_qdma_rx_process(struct
+@@ -1026,45 +998,10 @@ static int airoha_qdma_rx_process(struct
  		msg1 = le32_to_cpu(READ_ONCE(desc->msg1));
  		airoha_get_entry_bind(msg1, q, eth , sptag);
  		done++;
@@ -116,7 +110,7 @@
  		q->skb = NULL;
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -611,6 +611,12 @@ struct airoha_wdma_info {
+@@ -612,6 +612,12 @@ struct airoha_wdma_info {
  	u8 bss;
  };
  
@@ -129,7 +123,7 @@
  /* RX queue to IRQ mapping: BIT(q) in IRQ(n) */
  #define RX_IRQ0_BANK_PIN_MASK			0xbb9f
  #define RX_IRQ1_BANK_PIN_MASK			0x7fe00000
-@@ -922,7 +928,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
+@@ -938,7 +944,7 @@ void airoha_qdma_lan_tx(struct sk_buff *
  int airoha_get_lan_id(struct net_device *dev);
  void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
  void airoha_fe_core_reset(struct airoha_eth *eth);

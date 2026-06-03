@@ -25,16 +25,16 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -2048,7 +2048,7 @@ static int airoha_dev_open(struct net_de
+@@ -2193,7 +2193,7 @@ static int airoha_dev_open(struct net_de
  	atomic_inc(&qdma->users);
  
- 	if (port->id == AIROHA_GDM2_IDX &&
--	    airoha_ppe_is_enabled(qdma->eth, 1)) {
-+	    qdma->eth->soc->num_ppe >= 2) {
- 		/* For PPE2 always use secondary cpu port. */
+ 	if (!airoha_is_lan_gdm_dev(dev) &&
+-	    airoha_ppe_is_enabled(qdma->eth, 1))
++	    qdma->eth->soc->num_ppe >= 2)
  		pse_port = FE_PSE_PORT_PPE2;
- 	}
-@@ -3220,6 +3220,22 @@ static int airoha_register_gdm_devices(s
+ 	airoha_set_gdm_port_fwd_cfg(qdma->eth, REG_GDM_FWD_CFG(port->id),
+ 				    pse_port);
+@@ -3697,6 +3697,31 @@ static int airoha_register_gdm_devices(s
  
  	set_bit(DEV_STATE_REGISTERED, &eth->state);
  
@@ -45,13 +45,22 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 +	 */
 +	for (i = 0; i < ARRAY_SIZE(eth->ports); i++) {
 +		struct airoha_gdm_port *port = eth->ports[i];
++		int j;
 +
 +		if (!port || port->id != AIROHA_GDM2_IDX)
 +			continue;
 +
-+		rtnl_lock();
-+		dev_change_flags(port->dev, port->dev->flags | IFF_UP, NULL);
-+		rtnl_unlock();
++		for (j = 0; j < ARRAY_SIZE(port->devs); j++) {
++			struct airoha_gdm_dev *dev = port->devs[j];
++
++			if (!dev)
++				continue;
++
++			rtnl_lock();
++			dev_change_flags(dev->dev, dev->dev->flags | IFF_UP,
++					 NULL);
++			rtnl_unlock();
++		}
 +	}
 +
  	return 0;

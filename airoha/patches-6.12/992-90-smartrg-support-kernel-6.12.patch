@@ -59,9 +59,16 @@
  	hlist_for_each_entry_safe(e, n, &ppe->foe_flow[index], list) {
  		if (airoha_ppe_foe_compare_entry(e, hwe)) {
  			if(e->tx_modified){
-@@ -9876,30 +9876,29 @@ int airoha_eth_transmit_packet(struct sk
- 	struct airoha_gdm_port *port = netdev_priv(dev);
- 	struct airoha_qdma *qdma = port->qdma;
+@@ -9872,34 +9872,33 @@ ipv6_header:
+ }
+ 
+ int airoha_eth_transmit_packet(struct sk_buff *skb, u32 txmsg0, u32 txmsg1, struct port_info *pinfo){
+-	struct net_device *dev = glb_eth->ports[0]->dev;
+-	struct airoha_gdm_port *port = netdev_priv(dev);
+-	struct airoha_qdma *qdma = port->qdma;
++	struct airoha_gdm_port *port = glb_eth->ports[0];
++	struct net_device *dev = port->devs[0]->dev;
++	struct airoha_qdma *qdma = port->devs[0]->qdma;
  	u32 nr_frags, len;
 +	struct airoha_queue_entry *e;
  	struct netdev_queue *txq;
@@ -205,6 +212,17 @@
  	}
  
  	spin_unlock_irq(&q->lock);
+@@ -10035,8 +10034,8 @@ int qdma_wan_tx(struct sk_buff *skb, u32
+ 	struct skb_shared_info *sinfo = skb_shinfo(skb);
+ 	
+ 	struct airoha_gdm_port *port = glb_eth->ports[1];
+-	
+-	struct net_device *dev = port->dev;
++
++	struct net_device *dev = port->devs[0]->dev;
+ 	struct airoha_foe_entry *hwe;
+ 	u32  len = skb_headlen(skb);
+ 	
 @@ -10050,8 +10049,8 @@ int qdma_wan_tx(struct sk_buff *skb, u32
  	u16 index;
  	u32 msg2 = 0;
@@ -329,6 +347,19 @@
  	e = kzalloc(sizeof(*e), GFP_KERNEL);
  	if (!e)
  		return -ENOMEM;
+@@ -11563,9 +11572,9 @@ int speedtest_tx_offload(struct sk_buff
+ }
+ 
+ int airoha_eth_fast_tx(struct sk_buff *skb, int channel){
+-	struct net_device *dev = glb_eth->ports[0]->dev;
+-	struct airoha_gdm_port *port = netdev_priv(dev);
+-	struct airoha_qdma *qdma = port->qdma;
++	struct airoha_gdm_port *port = glb_eth->ports[0];
++	struct net_device *dev = port->devs[0]->dev;
++	struct airoha_qdma *qdma = port->devs[0]->qdma;
+ 	u32 nr_frags, msg0, msg1, len;
+ 	struct netdev_queue *txq;
+ 	struct airoha_queue *q;
 @@ -11623,67 +11632,75 @@ int airoha_eth_fast_tx(struct sk_buff *s
  	txq = netdev_get_tx_queue(dev, qid);
  	nr_frags = 1 + skb_shinfo(skb)->nr_frags;
@@ -426,9 +457,89 @@
  	}
  
  	spin_unlock_irq(&q->lock);
+@@ -11996,13 +12013,13 @@ int airoha_qdma_set_tx_rate_limit(struct
+ 	int i, err;
+ 
+ 	for (i = 0; i <= TRTCM_PEAK_MODE; i++) {
+-		err = airoha_qdma_set_trtcm_config(port->qdma, channel,
++		err = airoha_qdma_set_trtcm_config(port->devs[0]->qdma, channel,
+ 						   REG_EGRESS_TRTCM_CFG, i,
+ 						   !!rate, TRTCM_METER_MODE);
+ 		if (err)
+ 			return err;
+ 
+-		err = airoha_qdma_set_trtcm_token_bucket(port->qdma, channel,
++		err = airoha_qdma_set_trtcm_token_bucket(port->devs[0]->qdma, channel,
+ 							 REG_EGRESS_TRTCM_CFG,
+ 							 i, rate, bucket_size);
+ 		if (err)
+@@ -12248,9 +12265,9 @@ static void airoha_qdma_start_channel(st
+ {
+ 	
+ 	int  i = 0;
+-	if(port->qdma){
++	if(port->devs[0] && port->devs[0]->qdma){
+ 		for (i = 0; i < AIROHA_NUM_QOS_QUEUES; i++)
+-			airoha_qdma_clear(port->qdma, REG_QUEUE_CLOSE_CFG(channel),
++			airoha_qdma_clear(port->devs[0]->qdma, REG_QUEUE_CLOSE_CFG(channel),
+ 					  TXQ_DISABLE_CHAN_QUEUE_MASK(channel, i));	
+ 	}
+ }
+@@ -12258,9 +12275,9 @@ static void airoha_qdma_start_channel(st
+ static void airoha_qdma_stop_channel(struct airoha_gdm_port *port,uint channel)
+ {
+ 	int  i = 0;
+-	if(port->qdma){
++	if(port->devs[0] && port->devs[0]->qdma){
+ 		for (i = 0; i < AIROHA_NUM_QOS_QUEUES; i++)
+-			airoha_qdma_set(port->qdma, REG_QUEUE_CLOSE_CFG(channel),
++			airoha_qdma_set(port->devs[0]->qdma, REG_QUEUE_CLOSE_CFG(channel),
+ 					  TXQ_DISABLE_CHAN_QUEUE_MASK(channel, i));
+ 	}
+ }
+@@ -12452,8 +12469,8 @@ void airoha_eth_monitor_gsw_process(stru
+ 
+ void airoha_eth_monitor_serdes_process(struct airoha_gdm_port *port)
+ {
+-	struct net_device *eth_dev = port->dev;
+-	/*Detect Link Status*/ 
++	struct net_device *eth_dev = port->devs[0] ? port->devs[0]->dev : NULL;
++	/*Detect Link Status*/
+ 	/*Link down to up*/
+ 	if (!eth_dev){
+ 		printk("Error ! %s: Invaild eth dev port->id:%d\n",__func__,port->id);
+@@ -12462,7 +12479,7 @@ void airoha_eth_monitor_serdes_process(s
+ 	
+ 	if (!eth_lastlinks[ARHT_ETH_PORT_2] && (netif_running(eth_dev)&& netif_carrier_ok(eth_dev))){
+ 		if (glb_eth){
+-			if (port && port->qdma){
++			if (port && port->devs[0] && port->devs[0]->qdma){
+ 				airoha_eth_monitor_link_up_protection(port, eth_dev, HSGMII_LAN_ETH_CHNL);
+ 			}
+ 		}
+@@ -12471,7 +12488,7 @@ void airoha_eth_monitor_serdes_process(s
+ 				/* Link up to down*/
+ 	}else if (eth_lastlinks[ARHT_ETH_PORT_2] && (!netif_running(eth_dev) || !netif_carrier_ok(eth_dev))){	
+ 		if (glb_eth){
+-			if (port && port->qdma){
++			if (port && port->devs[0] && port->devs[0]->qdma){
+ 				/*Stop QDMA channel & MAC when Link Down*/
+ 				airoha_eth_monitor_link_down_protection(port, eth_dev, HSGMII_LAN_ETH_CHNL);
+ 			}
+@@ -12494,8 +12511,8 @@ void airoha_eth_monitor(struct work_stru
+ 		struct airoha_gdm_port *port = glb_eth->ports[p];
+ 		struct net_device *eth_dev = NULL;
+ 		
+-		eth_dev = port->dev;
+-		
++		eth_dev = port->devs[0] ? port->devs[0]->dev : NULL;
++
+ 		if(netdev_uses_dsa(eth_dev)){
+ 			/*Detect eth0 - lan1~4*/
+ 			airoha_eth_monitor_gsw_process(port);
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -162,13 +162,6 @@ enum {
+@@ -165,13 +165,6 @@ enum {
  	CRSN_25 = 0x19,
  };
  
@@ -442,7 +553,7 @@
  enum {
  	FE_PSE_PORT_CDM1,
  	FE_PSE_PORT_GDM1,
-@@ -937,7 +930,12 @@ int airoha_get_lan_id(struct net_device
+@@ -953,7 +946,12 @@ int airoha_get_lan_id(struct net_device
  void airoha_flow_table_entries_lan(struct rhashtable *flow_table, struct net_device *dev);
  void airoha_fe_core_reset(struct airoha_eth *eth);
  int airoha_receive_hook(struct sk_buff *skb, struct airoha_qdma_desc *desc, int p, int len, u32 sptag);
@@ -553,7 +664,7 @@
 +};
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -3468,56 +3468,7 @@ static u32 airoha_en7581_get_vip_port(st
+@@ -3999,86 +3999,7 @@ static int airoha_en7581_get_dev_from_sp
  	return 0;
  }
  
@@ -605,12 +716,42 @@
 -	return 0;
 -}
 -
+-static int airoha_an7583_get_dev_from_sport(struct airoha_qdma_desc *desc,
+-					    u16 *port, u16 *dev)
+-{
+-	u32 sport = FIELD_GET(QDMA_ETH_RXMSG_SPORT_MASK,
+-			      le32_to_cpu(READ_ONCE(desc->msg1)));
+-
+-	*dev = 0;
+-	switch (sport) {
+-	case 0x10 ... 0x14:
+-		*port = 0; /* GDM1 */
+-		break;
+-	case 0x2 ... 0x4:
+-		*port = sport - 1;
+-		break;
+-	case HSGMII_LAN_7583_ETH_SRCPORT:
+-		*port = 2; /* GDM3 */
+-		break;
+-	case HSGMII_LAN_7583_USB_SRCPORT:
+-		*dev = 1;
+-		fallthrough;
+-	case HSGMII_LAN_7583_PCIE_SRCPORT:
+-		*port = 3; /* GDM4 */
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
  extern const struct airoha_eth_chip chip_en7581_info;
 -extern const struct airoha_eth_chip chip_an7583_info;
  static const struct airoha_eth_soc_data en7581_soc_data = {
  	.version = 0x7581,
  	.xsi_rsts_names = en7581_xsi_rsts_names,
-@@ -3530,21 +3481,8 @@ static const struct airoha_eth_soc_data
+@@ -4092,22 +4013,8 @@ static const struct airoha_eth_soc_data
  	.chip = &chip_en7581_info,
  };
  
@@ -622,6 +763,7 @@
 -	.ops = {
 -		.get_sport = airoha_an7583_get_sport,
 -		.get_vip_port = airoha_an7583_get_vip_port,
+-		.get_dev_from_sport = airoha_an7583_get_dev_from_sport,
 -	},
 -	.chip = &chip_an7583_info,
 -};
@@ -632,3 +774,31 @@
  	{ /* sentinel */ }
  };
  MODULE_DEVICE_TABLE(of, of_airoha_match);
+--- a/drivers/net/ethernet/airoha/airoha_ppe.c
++++ b/drivers/net/ethernet/airoha/airoha_ppe.c
+@@ -16,6 +16,7 @@
+ 
+ #include "airoha_regs.h"
+ #include "airoha_eth.h"
++#include "eth_sal.h"
+ 
+ extern int airoha_set_ppe_mac(struct airoha_foe_entry *foe_entry, struct net_device *dev, char* src_mac, char*dst_mac, u16 pppid);
+ extern int (*ra_sw_nat_hook_clean_table) (void);
+@@ -446,7 +447,7 @@ static int airoha_ppe_foe_entry_prepare(
+ 
+ 			smac_id = port->id;
+ 
+-			id = port->qdma - &eth->qdma[0];
++			id = dev->qdma - &eth->qdma[0];
+ 			if (dsa_port >= 0) {
+ 				if (eth->qdma_init.lan_fastpath == 1) {
+ 					val |= AIROHA_FOE_IB2_FAST_PATH;
+@@ -500,7 +501,7 @@ static int airoha_ppe_foe_entry_prepare(
+ 		l2->etype = ETH_P_IP;
+ 	}
+ 
+-	airoha_set_ppe_mac(hwe, dev, data->eth.h_source, data->eth.h_dest, data->pppoe.sid);
++	airoha_set_ppe_mac(hwe, netdev, data->eth.h_source, data->eth.h_dest, data->pppoe.sid);
+ 
+ 	if (data->vlan.num) {
+ 		l2->vlan1 = data->vlan.hdr[0].id;
