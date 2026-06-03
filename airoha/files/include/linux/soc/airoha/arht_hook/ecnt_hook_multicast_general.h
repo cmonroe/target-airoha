@@ -47,6 +47,9 @@ ECONET SOFTWARE.
 *               D E F I N E S   &   C O N S T A N T S
 *************************************************************************
 */
+
+#define ECNT_VLAN_MAX_TAGS  (2)
+
 typedef enum
 {
 	ECNT_VLAN_TRANSPARENT = 0,

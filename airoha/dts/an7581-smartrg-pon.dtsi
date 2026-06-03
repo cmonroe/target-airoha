@@ -26,6 +26,7 @@
 		txDis-gpios = <&en7581_pinctrl 38 GPIO_ACTIVE_LOW>; // tx disable
 		txBen-gpios = <&en7581_pinctrl 41 GPIO_ACTIVE_LOW>; // for 7581 xepon&gepon BEN
 		rxDis-gpios = <&en7581_pinctrl 39 GPIO_ACTIVE_LOW>; // LED_PHY_VCC_DISABLE
+		common_phy = <&pon_pcs>;
 	};
 	
 	pon_led: xpon_led {

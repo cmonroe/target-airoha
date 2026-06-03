@@ -1,37 +1,37 @@
 /***************************************************************
 Copyright Statement:
 
-This software/firmware and related documentation (EcoNet Software) 
-are protected under relevant copyright laws. The information contained herein 
-is confidential and proprietary to EcoNet (HK) Limited (EcoNet) and/or 
-its licensors. Without the prior written permission of EcoNet and/or its licensors, 
-any reproduction, modification, use or disclosure of EcoNet Software, and 
+This software/firmware and related documentation (EcoNet Software)
+are protected under relevant copyright laws. The information contained herein
+is confidential and proprietary to EcoNet (HK) Limited (EcoNet) and/or
+its licensors. Without the prior written permission of EcoNet and/or its licensors,
+any reproduction, modification, use or disclosure of EcoNet Software, and
 information contained herein, in whole or in part, shall be strictly prohibited.
 
 EcoNet (HK) Limited  EcoNet. ALL RIGHTS RESERVED.
 
-BY OPENING OR USING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY 
-ACKNOWLEDGES AND AGREES THAT THE SOFTWARE/FIRMWARE AND ITS 
-DOCUMENTATIONS (ECONET SOFTWARE) RECEIVED FROM ECONET 
-AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER ON AN AS IS 
-BASIS ONLY. ECONET EXPRESSLY DISCLAIMS ANY AND ALL WARRANTIES, 
-WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED 
-WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, 
-OR NON-INFRINGEMENT. NOR DOES ECONET PROVIDE ANY WARRANTY 
-WHATSOEVER WITH RESPECT TO THE SOFTWARE OF ANY THIRD PARTIES WHICH 
-MAY BE USED BY, INCORPORATED IN, OR SUPPLIED WITH THE ECONET SOFTWARE. 
-RECEIVER AGREES TO LOOK ONLY TO SUCH THIRD PARTIES FOR ANY AND ALL 
-WARRANTY CLAIMS RELATING THERETO. RECEIVER EXPRESSLY ACKNOWLEDGES 
-THAT IT IS RECEIVERS SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD 
+BY OPENING OR USING THIS FILE, RECEIVER HEREBY UNEQUIVOCALLY
+ACKNOWLEDGES AND AGREES THAT THE SOFTWARE/FIRMWARE AND ITS
+DOCUMENTATIONS (ECONET SOFTWARE) RECEIVED FROM ECONET
+AND/OR ITS REPRESENTATIVES ARE PROVIDED TO RECEIVER ON AN AS IS
+BASIS ONLY. ECONET EXPRESSLY DISCLAIMS ANY AND ALL WARRANTIES,
+WHETHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+OR NON-INFRINGEMENT. NOR DOES ECONET PROVIDE ANY WARRANTY
+WHATSOEVER WITH RESPECT TO THE SOFTWARE OF ANY THIRD PARTIES WHICH
+MAY BE USED BY, INCORPORATED IN, OR SUPPLIED WITH THE ECONET SOFTWARE.
+RECEIVER AGREES TO LOOK ONLY TO SUCH THIRD PARTIES FOR ANY AND ALL
+WARRANTY CLAIMS RELATING THERETO. RECEIVER EXPRESSLY ACKNOWLEDGES
+THAT IT IS RECEIVERS SOLE RESPONSIBILITY TO OBTAIN FROM ANY THIRD
 PARTY ALL PROPER LICENSES CONTAINED IN ECONET SOFTWARE.
 
-ECONET SHALL NOT BE RESPONSIBLE FOR ANY ECONET SOFTWARE RELEASES 
-MADE TO RECEIVERS SPECIFICATION OR CONFORMING TO A PARTICULAR 
-STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND 
-ECONET'S ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE ECONET 
-SOFTWARE RELEASED HEREUNDER SHALL BE, AT ECONET'S SOLE OPTION, TO 
-REVISE OR REPLACE THE ECONET SOFTWARE AT ISSUE OR REFUND ANY SOFTWARE 
-LICENSE FEES OR SERVICE CHARGES PAID BY RECEIVER TO ECONET FOR SUCH 
+ECONET SHALL NOT BE RESPONSIBLE FOR ANY ECONET SOFTWARE RELEASES
+MADE TO RECEIVERS SPECIFICATION OR CONFORMING TO A PARTICULAR
+STANDARD OR OPEN FORUM. RECEIVER'S SOLE AND EXCLUSIVE REMEDY AND
+ECONET'S ENTIRE AND CUMULATIVE LIABILITY WITH RESPECT TO THE ECONET
+SOFTWARE RELEASED HEREUNDER SHALL BE, AT ECONET'S SOLE OPTION, TO
+REVISE OR REPLACE THE ECONET SOFTWARE AT ISSUE OR REFUND ANY SOFTWARE
+LICENSE FEES OR SERVICE CHARGES PAID BY RECEIVER TO ECONET FOR SUCH
 ECONET SOFTWARE.
 ***************************************************************/
 #ifndef _ECNT_HOOK_FE_H_
@@ -42,11 +42,17 @@ ECONET SOFTWARE.
 *                  I N C L U D E S
 *************************************************************************
 */
+#include <linux/netdevice.h>
 #include "ecnt_hook.h"
 #include "ecnt_hook_fe_type.h"
 
 //for NPU_WIFI_OFFLOAD
-//#include "modules/npu/wifi_mail.h"
+#ifndef TCSUPPORT_PON_UPSTREAM
+#define TCSUPPORT_PON_UPSTREAM
+#endif
+#ifndef TCSUPPORT_PON_UPSTREAM
+#include "modules/npu/wifi_mail.h"
+#endif
 extern void npu_wifi_offload_set_force_to_cpu_flag(char isForceToCpu);
 extern char npu_stat;
 /************************************************************************
@@ -75,12 +81,12 @@ extern char npu_stat;
 *************************************************************************
 */
 static inline int FE_API_SET_PACKET_LENGTH(FE_Gdma_Sel_t _gdm_sel, uint _length_long, uint _length_short) {
-	struct ecnt_fe_data in_data; 
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
-	in_data.function_id = FE_SET_PACKET_LENGTH; 
-	in_data.gdm_sel = _gdm_sel; 
-	in_data.api_data.pkt_len.length_long = _length_long; 
+
+	in_data.function_id = FE_SET_PACKET_LENGTH;
+	in_data.gdm_sel = _gdm_sel;
+	in_data.api_data.pkt_len.length_long = _length_long;
 	in_data.api_data.pkt_len.length_short = _length_short;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
@@ -89,9 +95,9 @@ static inline int FE_API_SET_PACKET_LENGTH(FE_Gdma_Sel_t _gdm_sel, uint _length_
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_CHANNEL_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _txrx_sel, unchar _channel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_CHANNEL_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.txrx_sel = _txrx_sel;
@@ -105,12 +111,13 @@ static inline int FE_API_SET_CHANNEL_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_
 }
 
 static inline int FE_API_SET_MAC_ADDR(FE_Gdma_Sel_t _gdm_sel, unchar *_mac, ushort _mask) {
-	struct ecnt_fe_data in_data;
+	/* CID:930981 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_MAC_ADDR;
 	in_data.gdm_sel = _gdm_sel;
-	in_data.api_data.mac_addr.mac = _mac;
+	memcpy(in_data.api_data.mac_addr.mac, _mac, 6);
 	in_data.api_data.mac_addr.mask = _mask;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
@@ -120,9 +127,9 @@ static inline int FE_API_SET_MAC_ADDR(FE_Gdma_Sel_t _gdm_sel, unchar *_mac, usho
 }
 
 static inline int FE_API_SET_MAC_ADDR_7516(FE_MacSet_Sel_t _macSet_sel, unsigned int _mac_h, unsigned int  _mac_lmin,unsigned int  _mac_lmax) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_MAC_ADDR_7516;
 	in_data.macSet_sel = _macSet_sel;
 	in_data.api_data.mac_addr_7516.mac_h = _mac_h;
@@ -135,9 +142,9 @@ static inline int FE_API_SET_MAC_ADDR_7516(FE_MacSet_Sel_t _macSet_sel, unsigned
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_WAN_PORT_7516(FE_Enable_t wan1_en, FE_WanPort_Sel_t wan1_port, FE_WanPort_Sel_t wan0_port) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_WAN_PORT_7516;
 	in_data.api_data.wan_port_7516.wan1_en = wan1_en;
 	in_data.api_data.wan_port_7516.wan1_port = wan1_port;
@@ -149,9 +156,9 @@ static inline int FE_API_SET_WAN_PORT_7516(FE_Enable_t wan1_en, FE_WanPort_Sel_t
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_HWFWD_CHANNEL(FE_Cdma_Sel_t _cdm_sel, unchar _channel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_HWFWD_CHANNEL;
 	in_data.cdm_sel = _cdm_sel;
 	in_data.channel = _channel;
@@ -164,9 +171,9 @@ static inline int FE_API_SET_HWFWD_CHANNEL(FE_Cdma_Sel_t _cdm_sel, unchar _chann
 }
 
 static inline int FE_API_SET_CHANNEL_RETIRE(FE_Gdma_Sel_t _gdm_sel, unchar _channel, FE_Linkup_t _mode) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_CHANNEL_RETIRE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.channel = _channel;
@@ -178,9 +185,9 @@ static inline int FE_API_SET_CHANNEL_RETIRE(FE_Gdma_Sel_t _gdm_sel, unchar _chan
 		return (int)ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_CRC_STRIP(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_CRC_STRIP;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -191,9 +198,9 @@ static inline int FE_API_SET_CRC_STRIP(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enab
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_PADDING(FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_PADDING;
 	in_data.api_data.enable = _enable;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -204,9 +211,9 @@ static inline int FE_API_SET_PADDING(FE_Enable_t _enable) {
 }
 
 static inline int FE_API_SET_EXT_TPID(uint _tpid) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_EXT_TPID;
 	in_data.reg_val = _tpid;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -217,9 +224,10 @@ static inline int FE_API_SET_EXT_TPID(uint _tpid) {
 }
 
 static inline int FE_API_GET_EXT_TPID(uint *_tpid) {
-	struct ecnt_fe_data in_data;
+	/* CID:710062 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_EXT_TPID;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	*_tpid = in_data.reg_val;
@@ -229,9 +237,9 @@ static inline int FE_API_GET_EXT_TPID(uint *_tpid) {
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_FW_CFG(FE_Gdma_Sel_t _gdm_sel, FE_Frame_type_t _dp_sel, FE_Frame_dp_t _dp_type) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_FW_CFG;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.fw_cfg.dp_sel = _dp_sel;
@@ -244,9 +252,10 @@ static inline int FE_API_SET_FW_CFG(FE_Gdma_Sel_t _gdm_sel, FE_Frame_type_t _dp_
 }
 
 static inline int FE_API_GET_FW_CFG(FE_Gdma_Sel_t _gdm_sel, uint* pval) {
-	struct ecnt_fe_data in_data;
+	/* CID:708621 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_FW_CFG;
 	in_data.gdm_sel = _gdm_sel;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -257,9 +266,9 @@ static inline int FE_API_GET_FW_CFG(FE_Gdma_Sel_t _gdm_sel, uint* pval) {
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_DROP_UDP_CHKSUM_ERR_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_DROP_UDP_CHKSUM_ERR_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -271,9 +280,9 @@ static inline int FE_API_SET_DROP_UDP_CHKSUM_ERR_ENABLE(FE_Gdma_Sel_t _gdm_sel, 
 }
 
 static inline int FE_API_SET_DROP_TCP_CHKSUM_ERR_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_DROP_TCP_CHKSUM_ERR_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -284,9 +293,9 @@ static inline int FE_API_SET_DROP_TCP_CHKSUM_ERR_ENABLE(FE_Gdma_Sel_t _gdm_sel, 
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_DROP_IP_CHKSUM_ERR_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_DROP_IP_CHKSUM_ERR_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -298,9 +307,9 @@ static inline int FE_API_SET_DROP_IP_CHKSUM_ERR_ENABLE(FE_Gdma_Sel_t _gdm_sel, F
 }
 
 static inline int FE_API_SET_DROP_CRC_ERR_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_DROP_CRC_ERR_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -312,9 +321,9 @@ static inline int FE_API_SET_DROP_CRC_ERR_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enab
 }
 
 static inline int FE_API_SET_DROP_RUNT_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_DROP_RUNT_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -326,9 +335,9 @@ static inline int FE_API_SET_DROP_RUNT_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_
 }
 
 static inline int FE_API_SET_DROP_LONG_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_DROP_LONG_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -340,9 +349,9 @@ static inline int FE_API_SET_DROP_LONG_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_
 }
 
 static inline int FE_API_SET_VLAN_CHECK(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_VLAN_CHECK;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -354,9 +363,10 @@ static inline int FE_API_SET_VLAN_CHECK(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _ena
 }
 
 static inline int FE_API_GET_OK_CNT(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _txrx_sel, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:715874 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_OK_CNT;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.txrx_sel = _txrx_sel;
@@ -369,9 +379,10 @@ static inline int FE_API_GET_OK_CNT(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _txrx_
 }
 
 static inline int FE_API_GET_RX_CRC_ERR_CNT(uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:711529 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_RX_CRC_ERR_CNT;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	*_cnt = in_data.cnt;
@@ -382,9 +393,10 @@ static inline int FE_API_GET_RX_CRC_ERR_CNT(uint *_cnt) {
 }
 
 static inline int FE_API_GET_RX_DROP_FIFO_CNT(FE_Gdma_Sel_t _gdm_sel, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:712861 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_RX_DROP_FIFO_CNT;
 	in_data.gdm_sel = _gdm_sel;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -395,9 +407,10 @@ static inline int FE_API_GET_RX_DROP_FIFO_CNT(FE_Gdma_Sel_t _gdm_sel, uint *_cnt
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_GET_RX_DROP_ERR_CNT(FE_Gdma_Sel_t _gdm_sel, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:709352 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_RX_DROP_ERR_CNT;
 	in_data.gdm_sel = _gdm_sel;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -408,9 +421,10 @@ static inline int FE_API_GET_RX_DROP_ERR_CNT(FE_Gdma_Sel_t _gdm_sel, uint *_cnt)
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_GET_OK_BYTE_CNT(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _txrx_sel, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:710341 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_OK_BYTE_CNT;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.txrx_sel = _txrx_sel;
@@ -423,9 +437,10 @@ static inline int FE_API_GET_OK_BYTE_CNT(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _
 }
 
 static inline int FE_API_GET_TX_GET_CNT(FE_Gdma_Sel_t _gdm_sel, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:710039 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_TX_GET_CNT;
 	in_data.gdm_sel = _gdm_sel;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -437,9 +452,10 @@ static inline int FE_API_GET_TX_GET_CNT(FE_Gdma_Sel_t _gdm_sel, uint *_cnt) {
 }
 
 static inline int FE_API_GET_TX_DROP_CNT(FE_Gdma_Sel_t _gdm_sel, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:714667 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_TX_DROP_CNT;
 	in_data.gdm_sel = _gdm_sel;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -451,9 +467,10 @@ static inline int FE_API_GET_TX_DROP_CNT(FE_Gdma_Sel_t _gdm_sel, uint *_cnt) {
 }
 
 static inline int FE_API_GET_TIEM_STAMP(uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:715739 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_TIEM_STAMP;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	*_cnt = in_data.cnt;
@@ -464,13 +481,13 @@ static inline int FE_API_GET_TIEM_STAMP(uint *_cnt) {
 }
 
 static inline int FE_API_SET_TIME_STAMP(uint ts) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_TIEM_STAMP;
     in_data.timeStamp = ts & 0xffff;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
-	
+
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
 	else
@@ -478,9 +495,9 @@ static inline int FE_API_SET_TIME_STAMP(uint ts) {
 }
 
 static inline int FE_API_SET_INS_VLAN_TPID(FE_Gdma_Sel_t _gdm_sel, uint _tpid) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_INS_VLAN_TPID;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.reg_val = _tpid;
@@ -491,9 +508,9 @@ static inline int FE_API_SET_INS_VLAN_TPID(FE_Gdma_Sel_t _gdm_sel, uint _tpid) {
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_VLAN_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_VLAN_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.enable = _enable;
@@ -505,9 +522,9 @@ static inline int FE_API_SET_VLAN_ENABLE(FE_Gdma_Sel_t _gdm_sel, FE_Enable_t _en
 }
 
 static inline int FE_API_SET_BLACK_LIST(FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_BLACK_LIST;
 	in_data.api_data.enable = _enable;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -518,7 +535,7 @@ static inline int FE_API_SET_BLACK_LIST(FE_Enable_t _enable) {
 }
 
 static inline int FE_API_SET_ETHER_TYEP(uint _index, FE_Enable_t _enable, FE_PPPOE_t _is_pppoe, uint _value) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 
 	in_data.function_id = FE_SET_ETHER_TYEP;
@@ -534,9 +551,9 @@ static inline int FE_API_SET_ETHER_TYEP(uint _index, FE_Enable_t _enable, FE_PPP
 }
 
 static inline int FE_API_SET_L2U_KEY(uint _index, FE_L2U_KEY_t _key_sel, uint _key0, uint _key1) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_L2U_KEY;
 	in_data.index = _index;
 	in_data.api_data.l2u_key.key_sel = _key_sel;
@@ -550,9 +567,10 @@ static inline int FE_API_SET_L2U_KEY(uint _index, FE_L2U_KEY_t _key_sel, uint _k
 }
 
 static inline int FE_API_GET_AC_GROUP_PKT_CNT(uint _index, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:710659 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_AC_GROUP_PKT_CNT;
 	in_data.index = _index;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -564,15 +582,16 @@ static inline int FE_API_GET_AC_GROUP_PKT_CNT(uint _index, uint *_cnt) {
 }
 
 static inline int FE_API_GET_AC_GROUP_BYTE_CNT(uint _index, uint *_cnt, uint *_cnt_hi) {
-	struct ecnt_fe_data in_data;
+	/* CID:713912 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_AC_GROUP_BYTE_CNT;
 	in_data.index = _index;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	*_cnt = in_data.cnt;
 	*_cnt_hi = in_data.cnt_hi;
-	
+
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
 	else
@@ -581,9 +600,9 @@ static inline int FE_API_GET_AC_GROUP_BYTE_CNT(uint _index, uint *_cnt, uint *_c
 
 
 static inline int FE_API_CLR_AC_GROUP_PKT_CNT(uint _index) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_CLR_AC_GROUP_PKT_CNT;
 	in_data.index = _index;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -594,9 +613,9 @@ static inline int FE_API_CLR_AC_GROUP_PKT_CNT(uint _index) {
 }
 
 static inline int FE_API_CLR_AC_GROUP_BYTE_CNT(uint _index) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_CLR_AC_GROUP_BYTE_CNT;
 	in_data.index = _index;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -607,9 +626,9 @@ static inline int FE_API_CLR_AC_GROUP_BYTE_CNT(uint _index) {
 }
 
 static inline int FE_API_SET_METER_GROUP(uint _index, uint _value) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_METER_GROUP;
 	in_data.index = _index;
 	in_data.reg_val = _value;
@@ -621,9 +640,9 @@ static inline int FE_API_SET_METER_GROUP(uint _index, uint _value) {
 }
 
 static inline int FE_API_SET_GDM_PCP_CODING(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _txrx_sel, FE_PcpMode_t mode) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_GDM_PCP_CODING;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.txrx_sel = _txrx_sel;
@@ -636,9 +655,9 @@ static inline int FE_API_SET_GDM_PCP_CODING(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_
 }
 
 static inline int FE_API_SET_CDM_PCP_CODING(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _txrx_sel, FE_PcpMode_t mode) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_CDM_PCP_CODING;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.txrx_sel = _txrx_sel;
@@ -648,12 +667,12 @@ static inline int FE_API_SET_CDM_PCP_CODING(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_
 		return in_data.retValue;
 	else
 		return ECNT_HOOK_ERROR;
-}	
+}
 
 static inline int FE_API_SET_VIP_ENABLE(uint _index, FE_Enable_t _enable, FE_Patn_type _patten_type, uint _patten) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_VIP_ENABLE;
 	in_data.index = _index;
 	in_data.api_data.vip_cfg.enable = _enable;
@@ -667,9 +686,10 @@ static inline int FE_API_SET_VIP_ENABLE(uint _index, FE_Enable_t _enable, FE_Pat
 }
 
 static inline int FE_API_GET_ETH_RX_CNT(FE_RxCnt_t *_rxCnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:714807 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_ETH_RX_CNT;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	*_rxCnt = in_data.api_data.FE_RxCnt;
@@ -680,9 +700,10 @@ static inline int FE_API_GET_ETH_RX_CNT(FE_RxCnt_t *_rxCnt) {
 }
 
 static inline int FE_API_GET_ETH_TX_CNT(FE_TxCnt_t *_txCnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:710324 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_ETH_TX_CNT;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	*_txCnt = in_data.api_data.FE_TxCnt;
@@ -693,9 +714,10 @@ static inline int FE_API_GET_ETH_TX_CNT(FE_TxCnt_t *_txCnt) {
 }
 
 static inline int FE_API_GET_ETH_FRAME_CNT(FE_TXRX_Sel_t _txrx_sel, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:715518 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_ETH_FRAME_CNT;
 	in_data.txrx_sel = _txrx_sel;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -707,9 +729,10 @@ static inline int FE_API_GET_ETH_FRAME_CNT(FE_TXRX_Sel_t _txrx_sel, uint *_cnt) 
 }
 
 static inline int FE_API_GET_ETH_ERR_CNT(FE_Err_type_t _type, uint *_cnt) {
-	struct ecnt_fe_data in_data;
+	/* CID:712347 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_ETH_ERR_CNT;
 	in_data.err_type = _type;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -721,9 +744,9 @@ static inline int FE_API_GET_ETH_ERR_CNT(FE_Err_type_t _type, uint *_cnt) {
 }
 
 static inline int FE_API_SET_CLEAR_MIB(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _txrx_sel) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_CLEAR_MIB;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.txrx_sel = _txrx_sel;
@@ -735,9 +758,10 @@ static inline int FE_API_SET_CLEAR_MIB(FE_Gdma_Sel_t _gdm_sel, FE_TXRX_Sel_t _tx
 }
 
 static inline int FE_API_SET_CDM_RX_RED_DROP(FE_Cdma_Sel_t _cdm_sel, FE_RedDropQ_Sel_t _dropQ_sel, FE_RedDropMode_Sel_t _dropMode_sel) {
-	struct ecnt_fe_data in_data;
+	/* CID:714596 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_CDM_RX_RED_DROP;
 	in_data.cdm_sel = _cdm_sel;
 	in_data.dropQ_sel = _dropQ_sel;
@@ -750,9 +774,9 @@ static inline int FE_API_SET_CDM_RX_RED_DROP(FE_Cdma_Sel_t _cdm_sel, FE_RedDropQ
 }
 
 static inline int FE_API_GET_CDM_RX_RED_DROP(FE_Cdma_Sel_t _cdm_sel, FE_RedDropQ_Sel_t _dropQ_sel, FE_RedDropMode_Sel_t *_dropMode_sel_p) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_CDM_RX_RED_DROP;
 	in_data.cdm_sel = _cdm_sel;
 	in_data.dropQ_sel = _dropQ_sel;
@@ -764,9 +788,9 @@ static inline int FE_API_GET_CDM_RX_RED_DROP(FE_Cdma_Sel_t _cdm_sel, FE_RedDropQ
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_CHANNEL_RETIRE_ALL(FE_Gdma_Sel_t gdm_sel, unchar channel) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_CHANNEL_RETIRE_ALL;
 	in_data.gdm_sel = gdm_sel;
 	in_data.channel = channel;
@@ -777,9 +801,9 @@ static inline int FE_API_SET_CHANNEL_RETIRE_ALL(FE_Gdma_Sel_t gdm_sel, unchar ch
 		return ECNT_HOOK_ERROR;
 }
 static inline int FE_API_SET_CHANNEL_RETIRE_ONE(FE_Gdma_Sel_t gdm_sel, unchar channel) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_CHANNEL_RETIRE_ONE;
 	in_data.gdm_sel = gdm_sel;
 	in_data.channel = channel;
@@ -792,14 +816,14 @@ static inline int FE_API_SET_CHANNEL_RETIRE_ONE(FE_Gdma_Sel_t gdm_sel, unchar ch
 
 static inline int FE_API_SET_TX_RATE(uint rate,uint mode,uint maxBkSzie,uint tick)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_TX_RATE;
 	in_data.api_data.rate_cfg.rate = rate;
-	in_data.api_data.rate_cfg.mode = mode;	
+	in_data.api_data.rate_cfg.mode = mode;
 	in_data.api_data.rate_cfg.maxBkSize = maxBkSzie;
-	in_data.api_data.rate_cfg.tick = tick;	
+	in_data.api_data.rate_cfg.tick = tick;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -809,12 +833,12 @@ static inline int FE_API_SET_TX_RATE(uint rate,uint mode,uint maxBkSzie,uint tic
 
 static inline int FE_API_SET_RXUC_RATE(uint rate,uint mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_RXUC_RATE;
 	in_data.api_data.rate_cfg.rate = rate;
-	in_data.api_data.rate_cfg.mode = mode;	
+	in_data.api_data.rate_cfg.mode = mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -824,12 +848,12 @@ static inline int FE_API_SET_RXUC_RATE(uint rate,uint mode)
 
 static inline int FE_API_SET_RXBC_RATE(uint rate,uint mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_RXBC_RATE;
 	in_data.api_data.rate_cfg.rate = rate;
-	in_data.api_data.rate_cfg.mode = mode;	
+	in_data.api_data.rate_cfg.mode = mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -839,12 +863,12 @@ static inline int FE_API_SET_RXBC_RATE(uint rate,uint mode)
 
 static inline int FE_API_SET_RXMC_RATE(uint rate,uint mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_RXMC_RATE;
 	in_data.api_data.rate_cfg.rate = rate;
-	in_data.api_data.rate_cfg.mode = mode;	
+	in_data.api_data.rate_cfg.mode = mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -854,12 +878,12 @@ static inline int FE_API_SET_RXMC_RATE(uint rate,uint mode)
 
 static inline int FE_API_SET_RXOC_RATE(uint rate,uint mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_RXOC_RATE;
 	in_data.api_data.rate_cfg.rate = rate;
-	in_data.api_data.rate_cfg.mode = mode;	
+	in_data.api_data.rate_cfg.mode = mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -869,9 +893,9 @@ static inline int FE_API_SET_RXOC_RATE(uint rate,uint mode)
 
 static inline int FE_API_ADD_VIP_ETHER(ushort type)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_ADD_VIP_ETHER;
 	in_data.api_data.vip.type = type;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -883,9 +907,9 @@ static inline int FE_API_ADD_VIP_ETHER(ushort type)
 
 static inline int FE_API_ADD_VIP_PPP(ushort type)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_ADD_VIP_PPP;
 	in_data.api_data.vip.type = type;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -897,9 +921,9 @@ static inline int FE_API_ADD_VIP_PPP(ushort type)
 
 static inline int FE_API_ADD_VIP_IP(ushort type)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_ADD_VIP_IP;
 	in_data.api_data.vip.type = type;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -911,12 +935,12 @@ static inline int FE_API_ADD_VIP_IP(ushort type)
 
 static inline int FE_API_ADD_VIP_TCP(ushort src,ushort dst,unchar mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_ADD_VIP_TCP;
 	in_data.api_data.vip.src = src;
-	in_data.api_data.vip.dst = dst;	
+	in_data.api_data.vip.dst = dst;
 	in_data.api_data.vip.mode = mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
@@ -927,13 +951,13 @@ static inline int FE_API_ADD_VIP_TCP(ushort src,ushort dst,unchar mode)
 
 static inline int FE_API_ADD_VIP_UDP(ushort src,ushort dst,unchar mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_ADD_VIP_UDP;
 	in_data.api_data.vip.src = src;
-	in_data.api_data.vip.dst = dst;	
-	in_data.api_data.vip.mode = mode;	
+	in_data.api_data.vip.dst = dst;
+	in_data.api_data.vip.mode = mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -944,9 +968,9 @@ static inline int FE_API_ADD_VIP_UDP(ushort src,ushort dst,unchar mode)
 
 static inline int FE_API_DEL_VIP_ETHER(ushort type)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_DEL_VIP_ETHER;
 	in_data.api_data.vip.type = type;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -958,9 +982,9 @@ static inline int FE_API_DEL_VIP_ETHER(ushort type)
 
 static inline int FE_API_DEL_VIP_PPP(ushort type)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_DEL_VIP_PPP;
 	in_data.api_data.vip.type = type;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -972,9 +996,9 @@ static inline int FE_API_DEL_VIP_PPP(ushort type)
 
 static inline int FE_API_DEL_VIP_IP(ushort type)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_DEL_VIP_IP;
 	in_data.api_data.vip.type = type;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -986,12 +1010,12 @@ static inline int FE_API_DEL_VIP_IP(ushort type)
 
 static inline int FE_API_DEL_VIP_TCP(ushort src,ushort dst,unchar mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_DEL_VIP_TCP;
 	in_data.api_data.vip.src = src;
-	in_data.api_data.vip.dst = dst;	
+	in_data.api_data.vip.dst = dst;
 	in_data.api_data.vip.mode = mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
@@ -1002,12 +1026,12 @@ static inline int FE_API_DEL_VIP_TCP(ushort src,ushort dst,unchar mode)
 
 static inline int FE_API_DEL_VIP_UDP(ushort src,ushort dst,unchar mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_DEL_VIP_UDP;
 	in_data.api_data.vip.src = src;
-	in_data.api_data.vip.dst = dst;	
+	in_data.api_data.vip.dst = dst;
 	in_data.api_data.vip.mode = mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
@@ -1020,14 +1044,14 @@ static inline int FE_API_DEL_VIP_UDP(ushort src,ushort dst,unchar mode)
 
 static inline int FE_API_ADD_L2LU_VLAN_DSCP(ushort svlan,ushort cvlan,unchar dscp,unchar mask)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_ADD_L2LU_VLAN_DSCP;
 	in_data.api_data.l2lu.svlan = svlan;
 	in_data.api_data.l2lu.cvlan = cvlan;
 	in_data.api_data.l2lu.dscp = dscp;
-	in_data.api_data.l2lu.mask = mask;	
+	in_data.api_data.l2lu.mask = mask;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1037,14 +1061,14 @@ static inline int FE_API_ADD_L2LU_VLAN_DSCP(ushort svlan,ushort cvlan,unchar dsc
 
 static inline int FE_API_ADD_L2LU_VLAN_TRFC(ushort svlan,ushort cvlan,unchar trfc,unchar mask)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_ADD_L2LU_VLAN_TRFC;
 	in_data.api_data.l2lu.svlan = svlan;
 	in_data.api_data.l2lu.cvlan = cvlan;
 	in_data.api_data.l2lu.dscp = trfc;
-	in_data.api_data.l2lu.mask = mask;	
+	in_data.api_data.l2lu.mask = mask;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1054,14 +1078,14 @@ static inline int FE_API_ADD_L2LU_VLAN_TRFC(ushort svlan,ushort cvlan,unchar trf
 
 static inline int FE_API_DEL_L2LU_VLAN_DSCP(ushort svlan,ushort cvlan,unchar dscp,unchar mask)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_DEL_L2LU_VLAN_DSCP;
 	in_data.api_data.l2lu.svlan = svlan;
 	in_data.api_data.l2lu.cvlan = cvlan;
 	in_data.api_data.l2lu.dscp = dscp;
-	in_data.api_data.l2lu.mask = mask;	
+	in_data.api_data.l2lu.mask = mask;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1071,14 +1095,14 @@ static inline int FE_API_DEL_L2LU_VLAN_DSCP(ushort svlan,ushort cvlan,unchar dsc
 
 static inline int FE_API_DEL_L2LU_VLAN_TRFC(ushort svlan,ushort cvlan,unchar trfc,unchar mask)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_DEL_L2LU_VLAN_TRFC;
 	in_data.api_data.l2lu.svlan = svlan;
 	in_data.api_data.l2lu.cvlan = cvlan;
 	in_data.api_data.l2lu.dscp = trfc;
-	in_data.api_data.l2lu.mask = mask;	
+	in_data.api_data.l2lu.mask = mask;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1087,9 +1111,9 @@ static inline int FE_API_DEL_L2LU_VLAN_TRFC(ushort svlan,ushort cvlan,unchar trf
 }
 
 static inline int FE_API_SET_TX_FAVOR_OAM_ENABLE(FE_Enable_t _enable) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_TX_FAVOR_OAM_ENABLE;
 	in_data.api_data.enable = _enable;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1100,13 +1124,13 @@ static inline int FE_API_SET_TX_FAVOR_OAM_ENABLE(FE_Enable_t _enable) {
 }
 
 static inline int FE_API_TLS_FORWARD(void* skb,FE_Tls_forward_direction_t dir) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_TLS_FORWARD;
 	in_data.api_data.tls_forward.skb = skb;
 	in_data.api_data.tls_forward.dir = dir;
-	
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1116,9 +1140,9 @@ static inline int FE_API_TLS_FORWARD(void* skb,FE_Tls_forward_direction_t dir) {
 
 static inline int FE_API_DO_FE_RESET(FE_Reset_mode_t reset_mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_DO_RESET;
 	in_data.api_data.reset_mode = reset_mode;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1129,9 +1153,9 @@ static inline int FE_API_DO_FE_RESET(FE_Reset_mode_t reset_mode)
 }
 static inline int FE_API_SET_LOOPBACK_ENABLE(FE_Gdma_Sel_t _gdm_sel, uint channel, FE_Enable_t enable)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_LOOPBACK_ENABLE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.channel = channel;
@@ -1145,9 +1169,9 @@ static inline int FE_API_SET_LOOPBACK_ENABLE(FE_Gdma_Sel_t _gdm_sel, uint channe
 
 static inline int FE_API_SET_LOOPBACK_MODE(FE_Gdma_Sel_t _gdm_sel, FE_Random_mode_t channel_mode, FE_Random_mode_t length_mode, FE_Random_mode_t gap_mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_LOOPBACK_MODE;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.lpbp_mode.channel_mode = channel_mode;
@@ -1161,7 +1185,7 @@ static inline int FE_API_SET_LOOPBACK_MODE(FE_Gdma_Sel_t _gdm_sel, FE_Random_mod
 }
 static inline int FE_API_SET_METER_RATELIMIT(uint ratelimit, unchar idx, FE_Dir_t dir, FE_Meter_Mode_t mode, unchar enable)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
 	int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1183,7 +1207,7 @@ static inline int FE_API_SET_METER_RATELIMIT(uint ratelimit, unchar idx, FE_Dir_
 
 static inline int FE_API_GET_METER_RATELIMIT(uint *ratelimit, unchar idx, FE_Dir_t dir, FE_Meter_Mode_t mode)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
 	int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1201,7 +1225,7 @@ static inline int FE_API_GET_METER_RATELIMIT(uint *ratelimit, unchar idx, FE_Dir
 
 static inline int FE_API_SET_METER_RATELIMIT_MODE(FE_Dir_t dir, FE_Meter_Mode_t mode)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
 	int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1217,7 +1241,7 @@ static inline int FE_API_SET_METER_RATELIMIT_MODE(FE_Dir_t dir, FE_Meter_Mode_t 
 
 static inline int FE_API_GET_FlOW_CNT(unchar idx, FE_Dir_t dir, FE_ACNT_Mode_t mode, uint *cnt_lo, uint *cnt_hi)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
 	int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1236,7 +1260,7 @@ static inline int FE_API_GET_FlOW_CNT(unchar idx, FE_Dir_t dir, FE_ACNT_Mode_t m
 
 static inline int FE_API_GET_FlOW_PKT_CNT(unchar idx, FE_Dir_t dir, FE_ACNT_Mode_t mode, uint *pkt_cnt, uint *pkt_cnt_hi)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
 	int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1255,7 +1279,7 @@ static inline int FE_API_GET_FlOW_PKT_CNT(unchar idx, FE_Dir_t dir, FE_ACNT_Mode
 
 static inline int FE_API_CLEAR_FlOW_CNT(unchar idx, FE_Dir_t dir, FE_ACNT_Mode_t mode)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
 	int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1272,7 +1296,7 @@ static inline int FE_API_CLEAR_FlOW_CNT(unchar idx, FE_Dir_t dir, FE_ACNT_Mode_t
 
 static inline int FE_API_GET_WAN_ITF_INDEX(struct sk_buff *skb, unchar *wan_idx)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1289,7 +1313,7 @@ static inline int FE_API_GET_WAN_ITF_INDEX(struct sk_buff *skb, unchar *wan_idx)
 
 static inline int FE_API_GET_METER_IDX(struct sk_buff *skb, FE_Dir_t dir, unchar *meter_idx, unchar idx)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1307,7 +1331,7 @@ static inline int FE_API_GET_METER_IDX(struct sk_buff *skb, FE_Dir_t dir, unchar
 
 static inline int FE_API_GET_ACNT2_IDX(struct sk_buff *skb, FE_Dir_t dir,unchar *acnt2_idx)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1323,7 +1347,7 @@ static inline int FE_API_GET_ACNT2_IDX(struct sk_buff *skb, FE_Dir_t dir,unchar 
 }
 static inline int FE_API_GET_ACNT1_IDX(struct sk_buff *skb, FE_Dir_t dir,unchar *acnt1_idx)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1340,7 +1364,7 @@ static inline int FE_API_GET_ACNT1_IDX(struct sk_buff *skb, FE_Dir_t dir,unchar 
 
 static inline int FE_API_GET_ACNT0_IDX(struct sk_buff *skb, FE_Dir_t dir,unchar *acnt0_idx)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1356,7 +1380,7 @@ static inline int FE_API_GET_ACNT0_IDX(struct sk_buff *skb, FE_Dir_t dir,unchar 
 }
 static inline int FE_API_GET_ACNT1_MODE(FE_Dir_t dir, unchar *acnt1_mode)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1372,7 +1396,7 @@ static inline int FE_API_GET_ACNT1_MODE(FE_Dir_t dir, unchar *acnt1_mode)
 
 static inline int FE_API_GET_ACNT0_MODE(FE_Dir_t dir,unchar *acnt0_mode)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1388,7 +1412,7 @@ static inline int FE_API_GET_ACNT0_MODE(FE_Dir_t dir,unchar *acnt0_mode)
 
 static inline int FE_API_SET_ACNT1_MODE(FE_Dir_t dir, unchar acnt1_mode)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1404,7 +1428,7 @@ static inline int FE_API_SET_ACNT1_MODE(FE_Dir_t dir, unchar acnt1_mode)
 
 static inline int FE_API_SET_ACNT0_MODE(FE_Dir_t dir,unchar acnt0_mode)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1420,7 +1444,7 @@ static inline int FE_API_SET_ACNT0_MODE(FE_Dir_t dir,unchar acnt0_mode)
 
 static inline int FE_API_GET_METER_ENABLE(unchar *enable, unchar idx, FE_Dir_t dir)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
 	int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1437,7 +1461,7 @@ static inline int FE_API_GET_METER_ENABLE(unchar *enable, unchar idx, FE_Dir_t d
 
 static inline int FE_API_SET_METER_CTL_BY_OLT(unchar enable)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1452,7 +1476,7 @@ static inline int FE_API_SET_METER_CTL_BY_OLT(unchar enable)
 
 static inline int FE_API_GET_DEV_MAC_INDEX(unchar *mac, unchar *mac_idx)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1468,7 +1492,7 @@ static inline int FE_API_GET_DEV_MAC_INDEX(unchar *mac, unchar *mac_idx)
 
 static inline int FE_API_INIT_RESOURCE_MANAGE(void)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1482,7 +1506,7 @@ static inline int FE_API_INIT_RESOURCE_MANAGE(void)
 
 static inline int FE_API_DEINIT_RESOURCE_MANAGE(void)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1496,7 +1520,7 @@ static inline int FE_API_DEINIT_RESOURCE_MANAGE(void)
 
 static inline int FE_API_SET_PSE_OQ_THRESHOLD(FE_PonMode_Sel_t pon_mode)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
     memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1510,9 +1534,9 @@ static inline int FE_API_SET_PSE_OQ_THRESHOLD(FE_PonMode_Sel_t pon_mode)
 }
 static inline int FE_API_GET_UNKNOWN_MUL_PKT(uint unknown_mul_pkt)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_UNKNOWN_MUL_PKT;
 	in_data.api_data.unknown_mul_pkt= unknown_mul_pkt;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1525,9 +1549,9 @@ static inline int FE_API_GET_UNKNOWN_MUL_PKT(uint unknown_mul_pkt)
 
 static inline int FE_API_SET_GLO_RATE_BYTE(FE_Rate_minus_t rate_minus, unchar rate_byte)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_GLO_RATE_BYTE;
 	in_data.api_data.glo_rate_byte.rate_minus = rate_minus;
 	in_data.api_data.glo_rate_byte.rate_byte = rate_byte;
@@ -1539,14 +1563,14 @@ static inline int FE_API_SET_GLO_RATE_BYTE(FE_Rate_minus_t rate_minus, unchar ra
 }
 
 static inline int FE_API_ADD_DEV_TO_TOTAL_ACCOUNT(unsigned char *mac) {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_ADD_DEV_TO_TOTAL_ACCOUNT;
 	memcpy(in_data.api_data.dev_cfg.mac, mac, 6);
-    
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
-	
+
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
 	else
@@ -1555,10 +1579,10 @@ static inline int FE_API_ADD_DEV_TO_TOTAL_ACCOUNT(unsigned char *mac) {
 
 static inline int FE_API_SET_MC_VLAN_GLOBAL(FE_Enable_t enable)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	
+
 	in_data.function_id = FE_SET_MC_VLAN_GLOBAL;
 	in_data.api_data.enable = enable;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1571,14 +1595,14 @@ static inline int FE_API_SET_MC_VLAN_GLOBAL(FE_Enable_t enable)
 
 static inline int FE_API_GET_MC_VLAN_GLOBAL(FE_Enable_t *enable)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	
+
 	in_data.function_id = FE_GET_MC_VLAN_GLOBAL;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	*enable = in_data.api_data.enable;
-	
+
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
 	else
@@ -1587,10 +1611,10 @@ static inline int FE_API_GET_MC_VLAN_GLOBAL(FE_Enable_t *enable)
 
 static inline int FE_API_SET_MC_VLAN_TABLE_CFG(FE_McVlanTableCfg_t *mcVlanTableCfg)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	
+
 	in_data.function_id = FE_SET_MC_VLAN_TABLE_CFG;
 	in_data.api_data.fe_mcvlan_table_cfg.mc_table_id = mcVlanTableCfg->mc_table_id;
 	in_data.api_data.fe_mcvlan_table_cfg.enable = mcVlanTableCfg->enable;
@@ -1605,10 +1629,10 @@ static inline int FE_API_SET_MC_VLAN_TABLE_CFG(FE_McVlanTableCfg_t *mcVlanTableC
 
 static inline int FE_API_GET_MC_VLAN_TABLE_CFG(FE_McVlanTableCfg_t *mcVlanTableCfg)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	
+
 	in_data.function_id = FE_GET_MC_VLAN_TABLE_CFG;
 	in_data.api_data.fe_mcvlan_table_cfg.mc_table_id = mcVlanTableCfg->mc_table_id;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1623,10 +1647,10 @@ static inline int FE_API_GET_MC_VLAN_TABLE_CFG(FE_McVlanTableCfg_t *mcVlanTableC
 
 static inline int FE_API_SET_MC_VLAN_ACTION_CFG(FE_McVlanActionCfg_t *mcVlanActionCfg)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	
+
 	in_data.function_id = FE_SET_MC_VLAN_ACTION_CFG;
 	in_data.api_data.fe_mcvlan_action_cfg.mc_table_id = mcVlanActionCfg->mc_table_id;
 	in_data.api_data.fe_mcvlan_action_cfg.mc_chnl_id = mcVlanActionCfg->mc_chnl_id;
@@ -1643,10 +1667,10 @@ static inline int FE_API_SET_MC_VLAN_ACTION_CFG(FE_McVlanActionCfg_t *mcVlanActi
 
 static inline int FE_API_GET_MC_VLAN_ACTION_CFG(FE_McVlanActionCfg_t *mcVlanActionCfg)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	
+
 	in_data.function_id = FE_GET_MC_VLAN_ACTION_CFG;
 	in_data.api_data.fe_mcvlan_action_cfg.mc_table_id = mcVlanActionCfg->mc_table_id;
 	in_data.api_data.fe_mcvlan_action_cfg.mc_chnl_id = mcVlanActionCfg->mc_chnl_id;
@@ -1663,10 +1687,10 @@ static inline int FE_API_GET_MC_VLAN_ACTION_CFG(FE_McVlanActionCfg_t *mcVlanActi
 
 static inline int FE_API_SET_MC_VLAN_CLEAR_ALL(unsigned char mc_table_id)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	
+
 	in_data.function_id = FE_SET_MC_VLAN_CLEAR_ALL;
 	in_data.api_data.fe_mcvlan_table_cfg.mc_table_id = mc_table_id;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1679,13 +1703,13 @@ static inline int FE_API_SET_MC_VLAN_CLEAR_ALL(unsigned char mc_table_id)
 
 static inline int FE_API_XFI_PHY_LINK_CHANGE(XFI_LINK_STATUS_t status)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
 	in_data.function_id = FE_XFI_PHY_LINK_CHANGE;
 	in_data.api_data.status = status;
-    
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API,(struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1695,9 +1719,9 @@ static inline int FE_API_XFI_PHY_LINK_CHANGE(XFI_LINK_STATUS_t status)
 
 static inline int FE_API_SET_GDMA_MISC_CONFIG(FE_Gdma_Sel_t _gdm_sel, FE_MISC_CONFIG_t  mode)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_GDMA_MISC_CONFIG;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.api_data.fe_misc_cfg  = mode;
@@ -1711,9 +1735,10 @@ static inline int FE_API_SET_GDMA_MISC_CONFIG(FE_Gdma_Sel_t _gdm_sel, FE_MISC_CO
 
 
 static inline int FE_API_GET_HSGMII_RX_CNT(FE_RxCnt_t *_rxCnt, int hsgmii_index) {
-	struct ecnt_fe_data in_data;
+	/* CID:711746 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_HSGMII_LAN_RX_CNT;
 	in_data.index = hsgmii_index;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1725,9 +1750,10 @@ static inline int FE_API_GET_HSGMII_RX_CNT(FE_RxCnt_t *_rxCnt, int hsgmii_index)
 }
 
 static inline int FE_API_GET_HSGMII_TX_CNT(FE_TxCnt_t *_txCnt, int hsgmii_index) {
-	struct ecnt_fe_data in_data;
+	/* CID:713087 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_HSGMII_LAN_TX_CNT;
 	in_data.index = hsgmii_index;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1739,13 +1765,13 @@ static inline int FE_API_GET_HSGMII_TX_CNT(FE_TxCnt_t *_txCnt, int hsgmii_index)
 }
 static inline int FE_API_SET_AEWAN_FWDFQ(FE_Gdma_Sel_t _gdm_sel, uint aewan_fwdfq)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_AEWAN_FWDFQ;
 	in_data.gdm_sel = _gdm_sel;
 	in_data.reg_val = aewan_fwdfq;
-	
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1754,12 +1780,12 @@ static inline int FE_API_SET_AEWAN_FWDFQ(FE_Gdma_Sel_t _gdm_sel, uint aewan_fwdf
 }
 static inline int FE_API_SET_AEWAN_IFCDISABLE(uint aewan_ifcdisable)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	 
+
 	in_data.function_id = FE_SET_AEWAN_IFCDISABLE;
 	in_data.reg_val = aewan_ifcdisable;
-	
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1769,13 +1795,13 @@ static inline int FE_API_SET_AEWAN_IFCDISABLE(uint aewan_ifcdisable)
 
 static inline int FE_API_SET_GMD2_SPTAG_FOR_LOOPBACK(FE_Enable_t enable)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	 
+
 	in_data.function_id = FE_SET_GMD2_SPTAG_FOR_LOOPBACK;
 	in_data.api_data.enable = enable;
-	
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1785,7 +1811,7 @@ static inline int FE_API_SET_GMD2_SPTAG_FOR_LOOPBACK(FE_Enable_t enable)
 
 static inline void FE_API_SET_NPU_FORCE_TO_CPU_FLAG(char forceToCpu)
 {
-#if 0
+#ifndef TCSUPPORT_PON_UPSTREAM
 	if(npu_stat == 1)
 		WIFI_MAIL_API_SET_WAIT_IS_FORCE_TO_CPU(0, forceToCpu);
 	else
@@ -1797,10 +1823,10 @@ static inline void FE_API_SET_NPU_FORCE_TO_CPU_FLAG(char forceToCpu)
 
 static inline int FE_API_SET_TUNNEL_CFG(unsigned int tableIndex, unsigned int offset, unsigned int value0,unsigned int value1,unsigned int value2,unsigned int value3)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	 
+
 	in_data.function_id = FE_SET_TUNNEL_CFG;
 	in_data.api_data.fe_tunnel_cfg.tableIndex = tableIndex;
 	in_data.api_data.fe_tunnel_cfg.offset = offset;
@@ -1808,8 +1834,8 @@ static inline int FE_API_SET_TUNNEL_CFG(unsigned int tableIndex, unsigned int of
 	in_data.api_data.fe_tunnel_cfg.value1 = value1;
 	in_data.api_data.fe_tunnel_cfg.value2 = value2;
 	in_data.api_data.fe_tunnel_cfg.value3 = value3;
-	
-	
+
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1820,15 +1846,32 @@ static inline int FE_API_SET_TUNNEL_CFG(unsigned int tableIndex, unsigned int of
 
 static inline int FE_API_SET_GDM_SPTAG_FOR_EXTSWITCH(FE_Enable_t enable, FE_Gdma_Sel_t gdm_sel, uint channel)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	 
+
 	in_data.function_id = FE_SET_GDM_SPTAG_FOR_EXTSWITCH;
 	in_data.api_data.enable = enable;
 	in_data.gdm_sel= gdm_sel;
 	in_data.channel = channel;
-	
+
+	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
+	if(ret != ECNT_HOOK_ERROR)
+		return in_data.retValue;
+	else
+		return ECNT_HOOK_ERROR;
+}
+
+static inline int FE_API_SET_PSE_IQ_RSV(FE_Frame_dp_t port, uint value)
+{
+	struct ecnt_fe_data in_data = {0};
+	int ret = 0;
+	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
+
+	in_data.function_id = FE_SET_PSE_IQ_RSV;
+	in_data.api_data.fe_iq_rsv.port = port;
+    in_data.api_data.fe_iq_rsv.val = value;
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1838,15 +1881,15 @@ static inline int FE_API_SET_GDM_SPTAG_FOR_EXTSWITCH(FE_Enable_t enable, FE_Gdma
 
 static inline int FE_API_SET_PSE_OQ_RSV_ENABLE(FE_Frame_dp_t port, uint channel, FE_Enable_t enable)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	 
+
 	in_data.function_id = FE_SET_PSE_OQ_RSV_EN;
 	in_data.api_data.fe_oq_rsv_en.port = port;
     in_data.api_data.fe_oq_rsv_en.channel = channel;
     in_data.api_data.fe_oq_rsv_en.enable = enable;
-	
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1856,13 +1899,13 @@ static inline int FE_API_SET_PSE_OQ_RSV_ENABLE(FE_Frame_dp_t port, uint channel,
 
 static inline int FE_API_SET_MBI_ARB_RST(FE_Gdma_Sel_t gdm_sel)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	 
+
 	in_data.function_id = FE_SET_MBI_ARB_RST;
 	in_data.gdm_sel= gdm_sel;
-	
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1872,15 +1915,15 @@ static inline int FE_API_SET_MBI_ARB_RST(FE_Gdma_Sel_t gdm_sel)
 
 static inline int FE_API_SET_RMBI_FRAG(FE_Gdma_Sel_t gdm_sel, uint channel, uint reg_val)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	 
+
 	in_data.function_id = FE_SET_RMBI_FRAG;
 	in_data.gdm_sel= gdm_sel;
 	in_data.channel= channel;
 	in_data.reg_val= reg_val;
-	
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1889,9 +1932,10 @@ static inline int FE_API_SET_RMBI_FRAG(FE_Gdma_Sel_t gdm_sel, uint channel, uint
 }
 
 static inline int FE_API_GET_CHN_RLS(FE_Gdma_Sel_t _gdm_sel, uint* pval) {
-	struct ecnt_fe_data in_data;
+	/* CID:716046 */
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_GET_CHN_RLS;
 	in_data.gdm_sel = _gdm_sel;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -1904,15 +1948,15 @@ static inline int FE_API_GET_CHN_RLS(FE_Gdma_Sel_t _gdm_sel, uint* pval) {
 
 static inline int FE_API_SET_TMBI_FRAG(FE_Gdma_Sel_t gdm_sel, uint channel, uint reg_val)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	 
+
 	in_data.function_id = FE_SET_TMBI_FRAG;
 	in_data.gdm_sel= gdm_sel;
 	in_data.channel= channel;
 	in_data.reg_val= reg_val;
-	
+
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;
@@ -1921,10 +1965,10 @@ static inline int FE_API_SET_TMBI_FRAG(FE_Gdma_Sel_t gdm_sel, uint channel, uint
 }
 static inline int FE_API_SET_GDMA_ENABLE(FE_Gdma_Sel_t gdm_sel)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-	
+
 	in_data.function_id = FE_SET_GDMA_ENABLE;
 	in_data.gdm_sel= gdm_sel;
 
@@ -1937,7 +1981,7 @@ static inline int FE_API_SET_GDMA_ENABLE(FE_Gdma_Sel_t gdm_sel)
 
 static inline int FE_API_SET_GDMA_DISABLE(FE_Gdma_Sel_t gdm_sel)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
 
@@ -1954,9 +1998,9 @@ static inline int FE_API_SET_GDMA_DISABLE(FE_Gdma_Sel_t gdm_sel)
 
 static inline int FE_API_SET_CHN_RETIRE_ACTION(FE_Gdma_Sel_t gdm_sel, unchar channel)
 {
-    struct ecnt_fe_data in_data;
+    struct ecnt_fe_data in_data = {0};
     int ret = 0;
-    
+
     in_data.function_id = FE_SET_CHN_RETIRE_ACTION;
     in_data.gdm_sel = gdm_sel;
     in_data.channel = channel;
@@ -1967,11 +2011,11 @@ static inline int FE_API_SET_CHN_RETIRE_ACTION(FE_Gdma_Sel_t gdm_sel, unchar cha
         return ECNT_HOOK_ERROR;
 }
 
-static inline int FE_API_SET_CHN_RETIRE_DONE(FE_Gdma_Sel_t gdm_sel, unchar channel) 
+static inline int FE_API_SET_CHN_RETIRE_DONE(FE_Gdma_Sel_t gdm_sel, unchar channel)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_CHN_RETIRE_DONE;
 	in_data.gdm_sel = gdm_sel;
 	in_data.channel = channel;
@@ -1982,11 +2026,11 @@ static inline int FE_API_SET_CHN_RETIRE_DONE(FE_Gdma_Sel_t gdm_sel, unchar chann
 		return ECNT_HOOK_ERROR;
 }
 
-static inline int FE_API_SET_QBI_FTTR_CHN_DISABLE(void) 
+static inline int FE_API_SET_QBI_FTTR_CHN_DISABLE(void)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_QBI_FTTR_CHN_DISABLE;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
@@ -1995,11 +2039,11 @@ static inline int FE_API_SET_QBI_FTTR_CHN_DISABLE(void)
 		return ECNT_HOOK_ERROR;
 }
 
-static inline int FE_API_SET_FORCE_SLOW_ENABLE(FE_Enable_t _enable) 
+static inline int FE_API_SET_FORCE_SLOW_ENABLE(FE_Enable_t _enable)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_FORCE_SLOW_ENABLE;
 	in_data.api_data.enable = _enable;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -2009,11 +2053,11 @@ static inline int FE_API_SET_FORCE_SLOW_ENABLE(FE_Enable_t _enable)
 		return ECNT_HOOK_ERROR;
 }
 
-static inline int FE_API_SET_FORCE_SLOW_DUTY(FE_Enable_t fix_duty, uint fast_duty, uint slow_duty) 
+static inline int FE_API_SET_FORCE_SLOW_DUTY(FE_Enable_t fix_duty, uint fast_duty, uint slow_duty)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_FORCE_SLOW_DUTY;
 	in_data.api_data.force_slow_cfg.fix_duty_enable  = fix_duty;
 	in_data.api_data.force_slow_cfg.fast_duty		 = fast_duty;
@@ -2027,10 +2071,10 @@ static inline int FE_API_SET_FORCE_SLOW_DUTY(FE_Enable_t fix_duty, uint fast_dut
 
 static inline int FE_API_SET_VIP_RXQ_SELECTION(unsigned char rxq_sel)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
 	memset(&in_data, 0, sizeof(struct ecnt_fe_data)) ;
-    
+
 	in_data.function_id = FE_SET_VIP_RXQ_SELECTION;
 	in_data.channel = rxq_sel;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
@@ -2042,13 +2086,13 @@ static inline int FE_API_SET_VIP_RXQ_SELECTION(unsigned char rxq_sel)
 
 static inline int FE_API_SET_VIP_FOR_TCP_SPEEDTEST(ushort operation,ushort src_port,ushort dst_port)
 {
-	struct ecnt_fe_data in_data;
+	struct ecnt_fe_data in_data = {0};
 	int ret = 0;
-	
+
 	in_data.function_id = FE_SET_VIP_FOR_TCP_SPEEDTEST;
 	in_data.api_data.vip.type = operation;
 	in_data.api_data.vip.src = src_port;
-	in_data.api_data.vip.dst = dst_port;	
+	in_data.api_data.vip.dst = dst_port;
 	ret = __ECNT_HOOK(ECNT_FE, ECNT_FE_API, (struct ecnt_data *)&in_data);
 	if(ret != ECNT_HOOK_ERROR)
 		return in_data.retValue;

@@ -36,6 +36,10 @@ typedef struct WAN_XMIT_S{
     int ret;
 }WAN_XMIT_t;
 
+typedef struct PON_Reg_Info_S{
+    uint32_t     reg_addr;
+    uint32_t     reg_val;
+}PON_Reg_Info_t;
 
 typedef struct pon_los_status_s{
 	uint8_t los_status;
@@ -71,6 +75,8 @@ typedef enum Pub_Sub_Type_e{
 	XPON_DBRU_SLIGHT_MODIFY,
 	XPON_BBF247_ENABLE_GET,
 	XPON_GET_PON_STATUS,
+	XPON_REG_SET,
+	XPON_REG_GET,
 }Pub_Sub_Type_t;
 
 typedef enum PHY_Event_Source_e{
@@ -172,6 +178,7 @@ typedef struct xpon_mac_Pub_info_s {
         WAN_XMIT_t wan_xmit;
 		unsigned char bbf247_enable;
 		pon_los_status_t pon_los_status;
+		PON_Reg_Info_t reg_info;
     };
 }xpon_mac_Pub_info_t;
 
@@ -464,6 +471,40 @@ static inline void ECNT_API_XPON_GET_TRAFFIC_STATUS(pon_los_status_t *pon_los_st
 	pon_los_status->los_status= data.pub_info.pon_los_status.los_status;
 	pon_los_status->pon_status= data.pub_info.pon_los_status.pon_status;
 }
+
+
+
+static inline void  ECNT_API_XPON_SET_MAC_REG(u32 reg, u32 val)
+{
+    xpon_mac_hook_data_t data = {0} ;
+    
+    data.src_module                  =  XPON_PUB_MODULE ;
+    data.pub_info.reg_info.reg_addr  =  reg ;
+    data.pub_info.reg_info.reg_val   =  val ;
+	data.pub_info.type               =  XPON_REG_SET;
+	
+    if(ECNT_HOOK_ERROR == __ECNT_HOOK(ECNT_XPON_MAC, ECNT_XPON_MAC_HOOK, (struct ecnt_data * )&data) ){
+        printk("ECNT_HOOK_ERROR occur with PON_PHY_SET_MAC_REG. %s:%d\n",  __FUNCTION__, __LINE__);
+    }
+
+}
+
+static inline int  ECNT_API_XPON_GET_MAC_REG(u32 reg)
+{
+    xpon_mac_hook_data_t data = {0} ;
+    
+    data.src_module                  =  XPON_PUB_MODULE ;
+    data.pub_info.reg_info.reg_addr  =  reg ;
+	data.pub_info.type               =  XPON_REG_GET;
+	
+    if(ECNT_HOOK_ERROR == __ECNT_HOOK(ECNT_XPON_MAC, ECNT_XPON_MAC_HOOK, (struct ecnt_data * )&data) ){
+        printk("ECNT_HOOK_ERROR occur with PON_PHY_GET_MAC_REG. %s:%d\n",  __FUNCTION__, __LINE__);
+    }
+
+	return data.pub_info.reg_info.reg_val;
+
+}
+
 
 
 #endif // __LINUX_ENCT_HOOK_PON_MAC_H
