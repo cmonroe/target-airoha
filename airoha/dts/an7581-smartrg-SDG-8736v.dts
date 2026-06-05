@@ -411,6 +411,32 @@
 };
 
 &eth {
+	/*
+	 * Description for QDMA RX ring configuration:
+	 *
+	 * QDMA LAN/WAN total has 32 RX rings, each ring size can be configured.
+	 * Hardware supports MAX 8 LRO rings, ring 12-19 are LRO capable.
+	 * Use lro-mask-lan/lro-mask-wan bit mask to enable/disable LRO rings.
+	 * e.g., lro-mask-lan = <0x0f> means ring 12-15 are enabled for LRO.
+	 * LRO ring DSCP values are taken from rx-dscp-lan/rx-dscp-wan at the
+	 * corresponding ring index (12-19).
+	 *
+	 * LRO ring payload size is 32KB, non-LRO ring payload size is 2KB.
+	 * Ring size means buffer capability.
+	 *
+	 * The following configuration is for DRAM size optimization.
+	 * If there is no config in DTS, driver will use default configuration.
+	 */
+	rx-dscp-lan = <1024 256 128 128 256 16 128 128
+				   128 128 16 256 128 128 128 128
+				   16 16 16 16 16 16 16 16
+				   16 16 16 16 16 16 16 16>;
+	rx-dscp-wan = <1024 256 128 128 256 16 128 128
+				   128 128 16 256 128 128 128 128
+				   16 16 16 16 16 16 16 16
+				   16 16 16 16 16 16 16 16>;
+	lro-mask-lan = <0x0f>;
+	lro-mask-wan = <0x0f>;
 	nvmem-cells = <&macaddr 0x0>;
 	nvmem-cell-names = "mac";
 	status = "okay";
