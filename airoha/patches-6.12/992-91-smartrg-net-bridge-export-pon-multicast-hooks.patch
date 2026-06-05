@@ -76,7 +76,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  static const struct rhashtable_params br_mdb_rht_params = {
  	.head_offset = offsetof(struct net_bridge_mdb_entry, rhnode),
  	.key_offset = offsetof(struct net_bridge_mdb_entry, addr),
-@@ -5250,3 +5259,64 @@ void br_mdb_hash_fini(struct net_bridge
+@@ -5250,3 +5259,79 @@ void br_mdb_hash_fini(struct net_bridge
  	rhashtable_destroy(&br->sg_port_tbl);
  	rhashtable_destroy(&br->mdb_hash_tbl);
  }
@@ -90,12 +90,19 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 +			       struct net_device *ports[], int nport,
 +			       unsigned char *uni_addrs[])
 +{
-+	struct net_bridge *br = netdev_priv(br_dev);
++	struct net_bridge *br;
 +	struct net_bridge_mdb_entry *mdst;
 +	struct net_bridge_port_group *p;
 +	bool allow_mode_include = true;
 +	int cnt = 0;
 +
++	/* Callers resolve @br_dev by name; reject non-bridge devices (e.g. a
++	 * "br-lan" VLAN) before treating netdev_priv() as struct net_bridge.
++	 */
++	if (!br_dev || !netif_is_bridge_master(br_dev))
++		return 0;
++
++	br = netdev_priv(br_dev);
 +	mdst = br_mdb_ip_get_rcu(br, addr);
 +	if (!mdst) {
 +		/* Retry as a (*,G) lookup if the (S,G) entry is absent. */
@@ -126,15 +133,23 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 +
 +void br_multicast_spin_lock(struct net_device *br_dev)
 +{
-+	struct net_bridge *br = netdev_priv(br_dev);
++	struct net_bridge *br;
 +
++	if (!br_dev || !netif_is_bridge_master(br_dev))
++		return;
++
++	br = netdev_priv(br_dev);
 +	spin_lock(&br->multicast_lock);
 +}
 +
 +void br_multicast_spin_unlock(struct net_device *br_dev)
 +{
-+	struct net_bridge *br = netdev_priv(br_dev);
++	struct net_bridge *br;
 +
++	if (!br_dev || !netif_is_bridge_master(br_dev))
++		return;
++
++	br = netdev_priv(br_dev);
 +	spin_unlock(&br->multicast_lock);
 +}
 +
