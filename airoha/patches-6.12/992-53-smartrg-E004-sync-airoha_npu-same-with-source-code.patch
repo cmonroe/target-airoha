@@ -53,21 +53,6 @@
  	arht_npu_retry_send_msg(npu, ret, val, dma_addr, size, func_id);
  
  	spin_unlock_bh(&npu->cores[core].lock);
-@@ -433,12 +456,12 @@ static int airoha_npu_wlan_init_memory(s
- 	err = airoha_npu_wlan_cmd_with_retry(npu, 1, cmd, "band0_oncpu", 1, &val);
- 	if (err)
- 		return err;
--
-+#if 0
- 	cmd = WLAN_FUNC_SET_WAIT_TX_BUF_CHECK_ADDR;
- 	err = airoha_npu_wlan_cmd_with_retry(npu, 0, cmd, "tx-bufid", 0, NULL);
- 	if (err)
- 		return err;
--
-+#endif
- 	cmd = WLAN_FUNC_SET_WAIT_PKT_BUF_ADDR;
- 	err = airoha_npu_wlan_cmd_with_retry(npu, 0, cmd, "pkt", 0, NULL);
- 	if (err)
 @@ -452,11 +475,10 @@ static int airoha_npu_wlan_init_memory(s
  	if (of_property_match_string(npu->dev->of_node, "memory-region-names",
  				     "ba") >= 0) {
