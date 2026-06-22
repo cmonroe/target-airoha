@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -15,6 +15,7 @@
+@@ -16,6 +16,7 @@
  
  #include "airoha_regs.h"
  #include "airoha_eth.h"

@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -737,7 +737,7 @@ static int airoha_qdma_lro_rx_process(st
+@@ -738,7 +738,7 @@ static int airoha_qdma_lro_rx_process(st
  	if (!ipv4 && !ipv6)
  		return -EOPNOTSUPP;
  

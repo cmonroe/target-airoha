@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -2670,6 +2670,22 @@ static const struct airoha_ethool_priv_f
+@@ -2671,6 +2671,22 @@ static const struct airoha_ethool_priv_f
  	{ "wan", airoha_dev_set_wan_flag },
  };
  #define AIROHA_PRIV_FLAGS_STR_LEN	ARRAY_SIZE(airoha_eth_priv_flags)
@@ -23,7 +23,7 @@
  
  static void airoha_ethtool_get_drvinfo(struct net_device *netdev,
  				       struct ethtool_drvinfo *info)
-@@ -2770,6 +2786,8 @@ static u32 airoha_ethtool_get_priv_flags
+@@ -2771,6 +2787,8 @@ static u32 airoha_ethtool_get_priv_flags
  static int airoha_ethtool_get_sset_count(struct net_device *netdev, int sset)
  {
  	switch (sset) {
@@ -32,7 +32,7 @@
  	case ETH_SS_PRIV_FLAGS:
  		return AIROHA_PRIV_FLAGS_STR_LEN;
  	default:
-@@ -2783,6 +2801,10 @@ static void airoha_ethtool_get_strings(s
+@@ -2784,6 +2802,10 @@ static void airoha_ethtool_get_strings(s
  	int i;
  
  	switch (stringset) {

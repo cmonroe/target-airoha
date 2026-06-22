@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -2466,7 +2466,7 @@ static netdev_tx_t airoha_dev_xmit(struc
+@@ -2467,7 +2467,7 @@ static netdev_tx_t airoha_dev_xmit(struc
  	qid = airoha_qdma_get_txq(qdma, skb_get_queue_mapping(skb));
  	tag = airoha_get_dsa_tag(skb, netdev);
  	if (qdma->eth->extra_ops.get_qdma_channel)

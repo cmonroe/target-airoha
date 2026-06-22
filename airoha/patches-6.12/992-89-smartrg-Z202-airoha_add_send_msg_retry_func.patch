@@ -1,7 +1,6 @@
-diff -uNr old/drivers/net/ethernet/airoha/airoha_npu.c new/drivers/net/ethernet/airoha/airoha_npu.c
---- old/drivers/net/ethernet/airoha/airoha_npu.c	2026-05-12 11:26:07.800069000 +0800
-+++ new/drivers/net/ethernet/airoha/airoha_npu.c	2026-05-12 11:28:19.498065000 +0800
-@@ -17,7 +17,7 @@
+--- a/drivers/net/ethernet/airoha/airoha_npu.c
++++ b/drivers/net/ethernet/airoha/airoha_npu.c
+@@ -16,7 +16,7 @@
  #include "airoha_npu.h"
  #include "airoha_function.h"
  
@@ -10,9 +9,9 @@ diff -uNr old/drivers/net/ethernet/airoha/airoha_npu.c new/drivers/net/ethernet/
  			       void *p, int size)
  {
  	u16 core = 0; /* FIXME */
-@@ -75,6 +75,42 @@
- 	return ret;
+@@ -75,6 +75,42 @@ npu_send_msg_retry:
  }
+ 
  
 +int airoha_npu_send_msg(struct airoha_npu *npu, int func_id,
 +			       void *p, int size)
@@ -53,7 +52,7 @@ diff -uNr old/drivers/net/ethernet/airoha/airoha_npu.c new/drivers/net/ethernet/
  static int airoha_npu_load_firmware(struct device *dev, void __iomem *addr,
  				    const char *fw_name, int fw_max_size)
  {
-@@ -354,7 +390,7 @@
+@@ -354,7 +390,7 @@ int airoha_npu_wlan_msg_send(struct airo
  	wlan_data->func_id = func_id;
  	memcpy(wlan_data->d, data, data_len);
  
@@ -62,7 +61,7 @@ diff -uNr old/drivers/net/ethernet/airoha/airoha_npu.c new/drivers/net/ethernet/
  	kfree(wlan_data);
  
  	return err;
-@@ -376,7 +412,7 @@
+@@ -376,7 +412,7 @@ int airoha_npu_wlan_msg_get(struct airoh
  	wlan_data->func_type = NPU_OP_GET;
  	wlan_data->func_id = func_id;
  

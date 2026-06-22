@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -909,8 +909,9 @@ free_frag:
+@@ -910,8 +910,9 @@ free_frag:
  			q->count.rx.rx_error_count++;
  			dev_kfree_skb(q->skb);
  			q->skb = NULL;

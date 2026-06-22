@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -1055,7 +1055,7 @@ static int airoha_qdma_init_rx(struct ai
+@@ -1056,7 +1056,7 @@ static int airoha_qdma_init_rx(struct ai
  			continue;
  		}
  		if (qdma->eth->extra_ops.rx_dscp_num_init)

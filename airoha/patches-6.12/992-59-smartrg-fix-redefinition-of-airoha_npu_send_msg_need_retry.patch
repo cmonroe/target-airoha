@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_npu.c
 +++ b/drivers/net/ethernet/airoha/airoha_npu.c
-@@ -75,14 +75,6 @@
+@@ -74,14 +74,6 @@ npu_send_msg_retry:
  	return ret;
  }
  
@@ -13,5 +13,5 @@
 -	return airoha_npu_send_msg(npu, func_id, p, size);
 -}
  
- int airoha_npu_send_msg(struct airoha_npu *npu, int func_id,
- 			       void *p, int size)
+ static int airoha_npu_load_firmware(struct device *dev, void __iomem *addr,
+ 				    const char *fw_name, int fw_max_size)
