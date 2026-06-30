@@ -1,0 +1,11 @@
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -738,7 +738,7 @@ static int airoha_qdma_lro_rx_process(st
+ 	if (!ipv4 && !ipv6)
+ 		return -EOPNOTSUPP;
+ 
+-	l2_len = FIELD_GET(QDMA_ETH_RXMSG_L2_LEN_MASK, msg2);
++	l2_len = FIELD_GET(QDMA_ETH_RXMSG_L2_LEN_MASK, msg2) - 14;
+ 	len = FIELD_GET(QDMA_DESC_LEN_MASK, desc_ctrl);
+ 	if (ipv4) {
+ 		struct iphdr *iph;

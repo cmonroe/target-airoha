@@ -1,0 +1,19 @@
+--- a/drivers/net/ethernet/airoha/Makefile
++++ b/drivers/net/ethernet/airoha/Makefile
+@@ -3,6 +3,7 @@
+ # Airoha for the Mediatek SoCs built-in ethernet macs
+ #
+ 
++obj-y += arht_hook.o
+ obj-$(CONFIG_NET_AIROHA) += airoha-eth.o
+ obj-$(CONFIG_NET_AIROHA) += arht_dp_api.o
+ obj-$(CONFIG_NET_AIROHA) += arht_dp_api_debugfs.o
+@@ -10,7 +11,7 @@ obj-$(CONFIG_NET_AIROHA) += arht_qdma.o
+ obj-$(CONFIG_NET_AIROHA) += arht_ppe.o
+ obj-$(CONFIG_NET_AIROHA) += arht_fe.o
+ obj-$(CONFIG_NET_AIROHA) += arht_multicast.o
+-obj-$(CONFIG_NET_AIROHA) += arht_hsgmii.o arht_config.o arht_loopback.o
++obj-$(CONFIG_NET_AIROHA) += arht_hsgmii.o arht_config.o arht_loopback.o arht_dynamic_ifc.o
+ airoha-eth-y := airoha_eth.o airoha_eth_extra.o  airoha_ppe.o  en7581/soc_en7581.o
+ airoha-eth-$(CONFIG_DEBUG_FS) += airoha_ppe_debugfs.o airoha_ppe_debugfs_extra.o
+ obj-$(CONFIG_NET_AIROHA_NPU) += airoha_npu.o airoha_npu_extra.o

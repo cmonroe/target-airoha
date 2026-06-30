@@ -1,0 +1,45 @@
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -2671,6 +2671,22 @@ static const struct airoha_ethool_priv_f
+ 	{ "wan", airoha_dev_set_wan_flag },
+ };
+ #define AIROHA_PRIV_FLAGS_STR_LEN	ARRAY_SIZE(airoha_eth_priv_flags)
++static const char *airoha_ethtool_stats_strings[] = {
++    "TxOkPackets",
++    "TxOkBytes",
++    "TxDrop",
++    "TxBroadcast",
++    "TxMulticast",
++    "TxUnicast",
++    "RxOkPackets",
++    "RxOkBytes",
++    "RxDrop",
++    "RxBroadcast",
++    "RxMulticast",
++    "RxUnicast",
++    "RxErr",
++};
++#define AIROHA_STATS_STR_LEN	ARRAY_SIZE(airoha_ethtool_stats_strings)
+ 
+ static void airoha_ethtool_get_drvinfo(struct net_device *netdev,
+ 				       struct ethtool_drvinfo *info)
+@@ -2771,6 +2787,8 @@ static u32 airoha_ethtool_get_priv_flags
+ static int airoha_ethtool_get_sset_count(struct net_device *netdev, int sset)
+ {
+ 	switch (sset) {
++	case ETH_SS_STATS:
++		return AIROHA_STATS_STR_LEN;
+ 	case ETH_SS_PRIV_FLAGS:
+ 		return AIROHA_PRIV_FLAGS_STR_LEN;
+ 	default:
+@@ -2784,6 +2802,10 @@ static void airoha_ethtool_get_strings(s
+ 	int i;
+ 
+ 	switch (stringset) {
++	case ETH_SS_STATS:
++		for (i = 0; i < AIROHA_STATS_STR_LEN; i++)
++			strncpy(data + i * ETH_GSTRING_LEN, airoha_ethtool_stats_strings[i], ETH_GSTRING_LEN);
++		break;
+ 	case ETH_SS_PRIV_FLAGS:
+ 		for (i = 0; i < AIROHA_PRIV_FLAGS_STR_LEN; i++)
+ 			ethtool_puts(&data, airoha_eth_priv_flags[i].name);

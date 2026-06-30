@@ -1,0 +1,17 @@
+--- a/drivers/net/ethernet/airoha/airoha_npu.c
++++ b/drivers/net/ethernet/airoha/airoha_npu.c
+@@ -74,14 +74,6 @@ npu_send_msg_retry:
+ 	return ret;
+ }
+ 
+-/* airoha_npu_send_msg already retries internally; the extension data-path
+- * uses this name for messages that must be retried on NPU busy/timeout.
+- */
+-int airoha_npu_send_msg_need_retry(struct airoha_npu *npu, int func_id,
+-				   void *p, int size)
+-{
+-	return airoha_npu_send_msg(npu, func_id, p, size);
+-}
+ 
+ static int airoha_npu_load_firmware(struct device *dev, void __iomem *addr,
+ 				    const char *fw_name, int fw_max_size)

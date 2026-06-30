@@ -1,0 +1,24 @@
+--- a/drivers/net/ethernet/airoha/airoha_eth.c
++++ b/drivers/net/ethernet/airoha/airoha_eth.c
+@@ -910,8 +910,9 @@ free_frag:
+ 			q->count.rx.rx_error_count++;
+ 			dev_kfree_skb(q->skb);
+ 			q->skb = NULL;
++		} else {
++			page_pool_put_full_page(q->page_pool, page, true);
+ 		}
+-		page_pool_put_full_page(q->page_pool, page, true);
+ 	}
+ 	airoha_qdma_fill_rx_queue(q);
+ 
+--- a/drivers/net/ethernet/airoha/airoha_eth.h
++++ b/drivers/net/ethernet/airoha/airoha_eth.h
+@@ -626,7 +626,7 @@ struct airoha_wdma_info {
+ };
+ 
+ /* RX queue to IRQ mapping: BIT(q) in IRQ(n) */
+-#define RX_IRQ0_BANK_PIN_MASK			0xbb9f
++#define RX_IRQ0_BANK_PIN_MASK			0xfb9f
+ #define RX_IRQ1_BANK_PIN_MASK			0x7fe00000
+ #define RX_IRQ2_BANK_PIN_MASK			0x20
+ #define RX_IRQ3_BANK_PIN_MASK			0x40
