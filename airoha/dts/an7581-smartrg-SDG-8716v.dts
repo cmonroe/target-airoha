@@ -45,6 +45,28 @@
 		};
 	};
 
+	gpio-export {
+		compatible = "gpio-export";
+
+		slic_reset {
+			gpio-export,name = "slic_reset";
+			/*
+			* Keep SLIC (Si32184) in reset by default. voip_loader
+			* releases it after slic3_silicon.ko is ready. Pairs
+			* with the U-Boot gpio_direction_output(14, 0) so the
+			* pin never floats from power-on through Linux boot.
+			*/
+			gpio-export,output = <0>;
+			gpios = <&en7581_pinctrl 14 GPIO_ACTIVE_HIGH>;
+		};
+	};
+
+	voip_pcm: pcm@1fbd0000 {
+		compatible = "airoha,airoha-pcm";
+		reg = <0x0 0x1fbd0000 0x0 0x4fff>;
+		interrupts = <GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
 	leds: gpio-leds {
 		compatible = "gpio-leds";
 
