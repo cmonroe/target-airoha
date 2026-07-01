@@ -8,7 +8,7 @@
  
  		hwe = airoha_ppe_foe_get_entry(ppe, i);
  		if (!hwe)
-@@ -138,24 +139,36 @@ static int airoha_ppe_debugfs_foe_show(s
+@@ -136,24 +137,36 @@ static int airoha_ppe_debugfs_foe_show(s
  			data = hwe->ipv6.data;
  			ib2 = hwe->ipv6.ib2;
  			l2 = &hwe->ipv6.l2;
@@ -53,7 +53,7 @@
  			   l2->vlan1, l2->vlan2, hwe->ib1, ib2,
  			   stats.packets, stats.bytes);
  	}
-@@ -177,10 +190,13 @@ DEFINE_SHOW_ATTRIBUTE(airoha_ppe_debugfs
+@@ -175,10 +188,13 @@ DEFINE_SHOW_ATTRIBUTE(airoha_ppe_debugfs
  
  int airoha_ppe_debugfs_init(struct airoha_ppe *ppe)
  {

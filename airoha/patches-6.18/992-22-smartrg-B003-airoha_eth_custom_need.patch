@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -22,6 +22,8 @@
+@@ -23,6 +23,8 @@
  
  #include "airoha_regs.h"
  #include "airoha_eth.h"
@@ -9,7 +9,7 @@
  
  u32 airoha_rr(void __iomem *base, u32 offset)
  {
-@@ -4013,6 +4015,9 @@ static int airoha_probe(struct platform_
+@@ -4159,6 +4161,9 @@ static int airoha_probe(struct platform_
  	platform_set_drvdata(pdev, eth);
  
  	memset(&eth->extra_ops, 0, sizeof(eth->extra_ops));

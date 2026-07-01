@@ -8,7 +8,7 @@
  
  static void airoha_debugfs_ppe_print_tuple(struct seq_file *m,
  					   void *src_addr, void *dest_addr,
-@@ -198,6 +199,6 @@ int airoha_ppe_debugfs_init(struct airoh
+@@ -196,6 +197,6 @@ int airoha_ppe_debugfs_init(struct airoh
  			    &airoha_ppe_debugfs_foe_all_fops);
  	debugfs_create_file("bind", 0444, root, ppe,
  			    &airoha_ppe_debugfs_foe_bind_fops);

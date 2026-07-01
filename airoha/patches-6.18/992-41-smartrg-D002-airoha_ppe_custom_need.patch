@@ -6,5 +6,5 @@
  #include "airoha_eth.h"
 +#include "airoha_function.h"
  
- static DEFINE_MUTEX(flow_offload_mutex);
- DEFINE_SPINLOCK(ppe_lock);
+ /* Serialize airoha_gdm_dev flags, QDMA pointer and PPE CPU port
+  * configuration.

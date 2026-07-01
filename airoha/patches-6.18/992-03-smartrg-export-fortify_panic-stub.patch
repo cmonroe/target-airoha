@@ -16,7 +16,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 
 --- a/lib/string_helpers.c
 +++ b/lib/string_helpers.c
-@@ -1040,4 +1040,13 @@ void __fortify_panic(const u8 reason, co
+@@ -1043,4 +1043,13 @@ void __fortify_panic(const u8 reason, co
  	BUG();
  }
  EXPORT_SYMBOL(__fortify_panic);

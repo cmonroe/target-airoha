@@ -456,6 +456,8 @@
 };
 
 &gdm2 {
+	phy-mode = "internal";
+
 	nvmem-cells = <&macaddr 0x0>;
 	nvmem-cell-names = "mac-address";
 

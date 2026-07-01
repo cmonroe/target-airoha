@@ -30,7 +30,7 @@ functions.
  
  static void airoha_pcs_setup_scu_eth(struct airoha_pcs_priv *priv,
  				     phy_interface_t interface)
-@@ -1029,7 +1030,6 @@ static int airoha_pcs_alloc_maps(struct
+@@ -1031,7 +1032,6 @@ static int airoha_pcs_alloc_maps(struct
  	ret = airoha_pcs_init_named_regmap(pdev, "multi_sgmii", &maps->multi_sgmii);
  	if (ret)
  		return ret;
@@ -38,7 +38,7 @@ functions.
  	ret = airoha_pcs_init_named_regmap(pdev, "usxgmii", &maps->usxgmii_pcs);
  	if (ret)
  		return ret;
-@@ -1046,7 +1046,6 @@ static int airoha_pcs_usb_alloc_maps(str
+@@ -1048,7 +1048,6 @@ static int airoha_pcs_usb_alloc_maps(str
  {
  	struct airoha_pcs_maps *maps = &priv->maps[0];
  	int ret;
@@ -46,7 +46,7 @@ functions.
  	ret = airoha_pcs_init_named_regmap(pdev, "pcs_mac", &maps->pcs_mac);
  	if (ret)
  		return ret;
-@@ -1230,6 +1229,7 @@ static int airoha_pcs_probe(struct platf
+@@ -1232,6 +1231,7 @@ static int airoha_pcs_probe(struct platf
  	const struct airoha_pcs_match_data *data;
  	struct device *dev = &pdev->dev;
  	struct airoha_pcs_priv *priv;
@@ -54,7 +54,7 @@ functions.
  	int index, ret;
  
  	data = of_device_get_match_data(dev);
-@@ -1286,6 +1286,18 @@ static int airoha_pcs_probe(struct platf
+@@ -1288,6 +1288,18 @@ static int airoha_pcs_probe(struct platf
  		break;
  	}
  

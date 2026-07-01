@@ -1,6 +1,6 @@
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -1056,7 +1056,7 @@ static int airoha_qdma_init_rx(struct ai
+@@ -1148,7 +1148,7 @@ static int airoha_qdma_init_rx(struct ai
  			continue;
  		}
  		if (qdma->eth->extra_ops.rx_dscp_num_init)
@@ -11,7 +11,7 @@
  		err = airoha_qdma_init_rx_queue(&qdma->q_rx[i], qdma,
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
-@@ -763,6 +763,14 @@ struct qdma_init {
+@@ -761,6 +761,14 @@ struct qdma_init {
  	unsigned char speedtest_fastpath;
  };
  
@@ -26,7 +26,7 @@
  struct arht_extra_ops {
  	void (*set_ppe_dft_cport)(struct airoha_eth *eth, int portid, int qdmaid);
  	int (*support_eth_monitor)(int p);
-@@ -785,7 +793,9 @@ struct arht_extra_ops {
+@@ -783,7 +791,9 @@ struct arht_extra_ops {
  	struct airoha_gdm_dev* (*get_gdm_dev)(struct airoha_eth *eth, struct net_device *dev);
  	int (*tx_modified)(struct airoha_flow_table_entry *e, u32 hash);
  	void (*ethtool_stats)(struct airoha_gdm_dev *dev, u64 *data);
@@ -37,7 +37,7 @@
  	void (*ppe_exit)(void);
  };
  
-@@ -816,6 +826,7 @@ struct airoha_eth {
+@@ -814,6 +824,7 @@ struct airoha_eth {
  	bool meter_enable;
  	bool reduce_memory;
  	struct arht_extra_ops extra_ops;
@@ -45,7 +45,7 @@
  };
  
  u32 airoha_rr(void __iomem *base, u32 offset);
-@@ -871,7 +882,17 @@ static inline bool airoha_is_7583(struct
+@@ -869,7 +880,17 @@ static inline bool airoha_is_7583(struct
  static inline bool airoha_qdma_is_lro_queue(struct airoha_queue *q)
  {
  	struct airoha_qdma *qdma = q->qdma;

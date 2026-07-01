@@ -32,7 +32,7 @@
  static int airoha_npu_load_firmware(struct device *dev, void __iomem *addr,
  				    const char *fw_name, int fw_max_size)
  {
-@@ -609,6 +620,9 @@ static int airoha_npu_probe(struct platf
+@@ -608,6 +619,9 @@ static int airoha_npu_probe(struct platf
  	npu->ops.wlan_enable_irq = airoha_npu_wlan_irq_enable;
  	npu->ops.wlan_disable_irq = airoha_npu_wlan_irq_disable;
  

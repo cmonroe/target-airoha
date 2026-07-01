@@ -25,16 +25,16 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 
 --- a/drivers/net/ethernet/airoha/airoha_eth.c
 +++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -2032,7 +2032,7 @@ static int airoha_dev_open(struct net_de
- 	atomic_inc(&qdma->users);
+@@ -2194,7 +2194,7 @@ static int airoha_dev_open(struct net_de
+ 	airoha_qdma_start(qdma);
  
  	if (!airoha_is_lan_gdm_dev(dev) &&
--	    airoha_ppe_is_enabled(qdma->eth, 1))
-+	    qdma->eth->soc->num_ppe >= 2)
+-	    airoha_ppe_is_enabled(eth, 1))
++	    eth->soc->num_ppe >= 2)
  		pse_port = FE_PSE_PORT_PPE2;
- 	airoha_set_gdm_port_fwd_cfg(qdma->eth, REG_GDM_FWD_CFG(port->id),
+ 	airoha_set_gdm_port_fwd_cfg(eth, REG_GDM_FWD_CFG(port->id),
  				    pse_port);
-@@ -3970,6 +3970,31 @@ static int airoha_register_gdm_devices(s
+@@ -4092,6 +4092,33 @@ static int airoha_register_gdm_devices(s
  
  	set_bit(DEV_STATE_REGISTERED, &eth->state);
  
@@ -52,12 +52,14 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
 +
 +		for (j = 0; j < ARRAY_SIZE(port->devs); j++) {
 +			struct airoha_gdm_dev *dev = port->devs[j];
++			struct net_device *netdev;
 +
 +			if (!dev)
 +				continue;
 +
++			netdev = netdev_from_priv(dev);
 +			rtnl_lock();
-+			dev_change_flags(dev->dev, dev->dev->flags | IFF_UP,
++			dev_change_flags(netdev, netdev->flags | IFF_UP,
 +					 NULL);
 +			rtnl_unlock();
 +		}

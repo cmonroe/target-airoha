@@ -4,7 +4,7 @@
 
 --- a/drivers/net/ethernet/airoha/airoha_ppe.c
 +++ b/drivers/net/ethernet/airoha/airoha_ppe.c
-@@ -826,6 +826,8 @@ static void airoha_ppe_foe_remove_flow(s
+@@ -835,6 +835,8 @@ static void airoha_ppe_foe_remove_flow(s
  		e->data.ib1 &= ~AIROHA_FOE_IB1_BIND_STATE;
  		e->data.ib1 |= FIELD_PREP(AIROHA_FOE_IB1_BIND_STATE,
  					  AIROHA_FOE_STATE_INVALID);
@@ -13,7 +13,7 @@
  		airoha_ppe_foe_commit_entry(ppe, &e->data, e->hash, false);
  		e->hash = 0xffff;
  	}
-@@ -1345,6 +1347,8 @@ void airoha_ppe_foe_entry_get_stats(stru
+@@ -1354,6 +1356,8 @@ void airoha_ppe_foe_entry_get_stats(stru
  	struct airoha_npu *npu;
  	u32 index;
  
