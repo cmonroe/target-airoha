@@ -118,7 +118,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  	static const char *const ppe_type[] = {
 --- a/drivers/net/ethernet/airoha/arht_ppe.c
 +++ b/drivers/net/ethernet/airoha/arht_ppe.c
-@@ -3449,6 +3449,7 @@ void airoha_set_flow_destination(struct
+@@ -3597,6 +3597,7 @@ void airoha_set_flow_destination(struct
  
          if(arht_foe_entry_is_wifi(&e->data)){
                  AIROHA_LOG(AIROHA_DEBUG_LEVEL_ERR, "destination set to WIFI\n");
@@ -126,7 +126,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
                  /* mt76 NPU egress is fully described at rule-replace time via
                   * dev_fill_forward_path(); no QDMA TX pass ever runs for wifi
                   * to set tx_modified, so grant commit-eligibility here.
-@@ -4119,6 +4120,14 @@ static int airoha_ppe_netdev_event(struc
+@@ -4271,6 +4272,14 @@ static int airoha_ppe_netdev_event(struc
  	switch (event) {
  	case NETDEV_UNREGISTER:
  		airoha_ppe_clean_entry_by_landev(dev);

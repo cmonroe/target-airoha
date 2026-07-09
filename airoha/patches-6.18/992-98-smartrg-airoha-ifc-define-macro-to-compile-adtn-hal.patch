@@ -14,7 +14,7 @@ Signed-off-by: Hoang Viet Pham <hoang.pham@adtran.com>
 
 --- a/include/linux/soc/airoha/arht_hook/ecnt_hook_ifc_type.h
 +++ b/include/linux/soc/airoha/arht_hook/ecnt_hook_ifc_type.h
-@@ -276,6 +276,9 @@ typedef enum
+@@ -280,6 +280,9 @@ typedef enum
  *************************************************************************
  */
  

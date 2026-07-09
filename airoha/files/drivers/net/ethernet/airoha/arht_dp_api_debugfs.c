@@ -789,7 +789,7 @@ static ssize_t shrink_table_dump_write_proc(struct file *file, const char __user
 static ssize_t airoha_pon_serdes_mode_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
 {
 	char input_str[32];
-	int val = 0;
+	int ret, val = 0;
 
 	if (count >= sizeof(input_str))
 		return -EINVAL;
@@ -797,7 +797,11 @@ static ssize_t airoha_pon_serdes_mode_write(struct file *file, const char __user
 		return -EFAULT;
 	
 	input_str[count] = '\0';
-	if(sscanf(input_str, "%d",&val) < 1){
+	ret = kstrtoint(input_str, 10, &val);
+	if(ret){
+		return ret;
+	}
+	if (val < 0 || val > 1){
 		return -EINVAL;
 	}
 	

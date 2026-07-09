@@ -16,23 +16,7 @@
  
  	spin_unlock_bh(&npu->cores[core].lock);
  
-@@ -49,6 +51,15 @@ int airoha_npu_send_msg(struct airoha_np
- 	return ret;
- }
- 
-+/* airoha_npu_send_msg already retries internally; the extension data-path
-+ * uses this name for messages that must be retried on NPU busy/timeout.
-+ */
-+int airoha_npu_send_msg_need_retry(struct airoha_npu *npu, int func_id,
-+				   void *p, int size)
-+{
-+	return airoha_npu_send_msg(npu, func_id, p, size);
-+}
-+
- static int airoha_npu_load_firmware(struct device *dev, void __iomem *addr,
- 				    const char *fw_name, int fw_max_size)
- {
-@@ -608,6 +619,9 @@ static int airoha_npu_probe(struct platf
+@@ -608,6 +610,9 @@ static int airoha_npu_probe(struct platf
  	npu->ops.wlan_enable_irq = airoha_npu_wlan_irq_enable;
  	npu->ops.wlan_disable_irq = airoha_npu_wlan_irq_disable;
  

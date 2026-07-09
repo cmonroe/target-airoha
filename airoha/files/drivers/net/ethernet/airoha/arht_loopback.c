@@ -455,6 +455,7 @@ static ssize_t airoha_hwnat_loopback_write(struct file *file,
 	char input_str[64];
 	char cmd[32];
 	int val, ret;
+	char *ptr, *token;
 
 	if (count >= sizeof(input_str))
 		return -EINVAL;
@@ -463,8 +464,10 @@ static ssize_t airoha_hwnat_loopback_write(struct file *file,
 		return -EFAULT;
 
 	input_str[count] = '\0';
-
-	if (sscanf(input_str, "%31s %d", cmd, &val) != 2) {
+	ptr = input_str;
+	token = strsep(&ptr, " \t");
+	if (!token || !ptr || strscpy(cmd, token, sizeof(cmd)) < 0 || kstrtoint(strim(ptr), 10, &val)) 
+	{
 		pr_info("Usage: echo [enable|mac_swap] [0|1]\n");
 		return -EINVAL;
 	}

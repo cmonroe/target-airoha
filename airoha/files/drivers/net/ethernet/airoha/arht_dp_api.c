@@ -1265,6 +1265,20 @@ int airoha_qdma_lan_tx(struct sk_buff *skb,u32 tag,u8 fport,int channel,int qid,
 		airoha_ppe_foe_flow_update_eth_offload(glb_eth->ppe, skb, &pinfo, fport);
 
 		airoha_ppe_update_txmsg(skb, msg1, msg2);
+		
+#if defined(CONFIG_SUPPORT_QDMALAN_TR471)
+		/* TR471 qdmaLAN speedtest TX offload */
+		spin_lock_bh(&ppe_lock);
+		if (skb->mark == DP_SPEED_UP) {
+			struct airoha_foe_entry *hwe;
+			hwe = airoha_ppe_foe_get_entry_locked(glb_eth->ppe, FOE_ENTRY_NUM(skb));
+			if (NULL != hwe) {
+				speedtest_lan_tx_offload(skb, hwe, glb_eth->ppe, &pinfo, glb_eth->soc->fport[SERDES_ETH_IDX]);
+			}
+		}
+		spin_unlock_bh(&ppe_lock);
+#endif
+
 	}
 	return 0;
 }
@@ -1491,6 +1505,12 @@ int qdma_wan_tx(struct sk_buff *skb, u32 msg0, u32 msg1, struct port_info *pinfo
 		msg0 |= FIELD_PREP(QDMA_ETH_TXMSG_QUEUE_MASK, 7);
 		skb_set_queue_mapping(skb, 7);
 	}
+	else{
+		u8 priority = skb->priority % AIROHA_NUM_QOS_QUEUES;
+		priority = (AIROHA_NUM_QOS_QUEUES - 1) - priority;
+		msg0  |= FIELD_PREP(QDMA_ETH_TXMSG_QUEUE_MASK, priority);
+	}
+	
 	qid = skb_get_queue_mapping(skb);
 
 	airoha_ppe_update_txmsg(skb, &msg1, &msg2);
@@ -2216,6 +2236,112 @@ int isValidPpeEntry(struct sk_buff *skb, struct airoha_foe_entry *foe_entry)
 	return 1;
 }
 
+#if defined(CONFIG_SUPPORT_QDMALAN_TR471)
+void SetSpeedtestPortInfo(struct airoha_foe_entry * foe_entry, struct port_info *pinfo, u32 fport)
+{
+
+  
+    u32 channel = 0, qdata=0, val=0, priority=0;
+	foe_entry->ib1 = (foe_entry->ib1 & ~(AIROHA_FOE_IB1_BIND_STATE)) | 
+					FIELD_PREP(AIROHA_FOE_IB1_BIND_STATE, AIROHA_FOE_STATE_BIND);
+
+	val = FIELD_PREP(AIROHA_FOE_IB2_PORT_AG, 0x1f) |
+		  FIELD_PREP(AIROHA_FOE_IB2_PSE_PORT, fport) | 
+		  FIELD_PREP(AIROHA_FOE_IB2_NBQ, pinfo->channel) | 
+		  AIROHA_FOE_IB2_PSE_QOS;
+
+	if (glb_eth){
+		if(glb_eth->qdma_init.speedtest_fastpath){
+			val |= AIROHA_FOE_IB2_FAST_PATH;
+		}
+	}
+
+	channel = pinfo->channel;
+
+	qdata = FIELD_PREP(AIROHA_FOE_CHANNEL, channel) |
+	       FIELD_PREP(AIROHA_FOE_QID, priority) |
+	       FIELD_PREP(AIROHA_FOE_SHAPER_ID, 0x7f);
+
+	if (IS_IPV4_GRP(foe_entry)) 
+	{
+		foe_entry->ipv4.l2.common.etype = pinfo->stag;
+		foe_entry->ipv4.data = qdata;
+		foe_entry->ipv4.ib2 = val;
+	}else  
+	{
+		foe_entry->ipv6.l2.etype = pinfo->stag;
+		foe_entry->ipv6.data = qdata;
+		foe_entry->ipv6.ib2 = val;
+	}
+
+	return ;
+
+}
+
+int speedtest_tx_offload(struct sk_buff * skb, struct airoha_foe_entry *foe_entry,struct airoha_ppe *ppe,struct port_info *pinfo)
+{
+	int ret = 0;
+	u32 foe_entry_idx= 0;
+	struct airoha_gdm_dev *gdm_dev;
+  /* this check is for: onu as iperf server, ethernet lan pc as iperf client 
+   * The condition is that when the interface name is "eth" and the skb is not associated with
+   * WAN interface,the speedtest_tx_offload is skipped
+   */
+	if(skb->dev && memcmp(skb->dev->name,"eth",3) == 0)
+	{
+		gdm_dev = airoha_ppe_get_gdm_dev(glb_eth, skb->dev);
+		if (arht_is_valid_gdm_dev(glb_eth, gdm_dev) && !(gdm_dev->flags & AIROHA_PRIV_F_WAN))
+			return 0;
+	}
+
+	
+	foe_entry_idx = skb->hash & AIROHA_PPE_ENTRY_MASK;
+	
+	/* get start fill entry for each layer */
+	FillSpeedtestEntryInfo(skb, foe_entry);
+
+	if(!isValidPpeEntry(skb, foe_entry)) {
+		skb->hash = 0;
+		ret = 1;
+		skb->data = skb_mac_header(skb);
+		return ret;
+	}
+
+	/* Set force port info */
+	SetSpeedtestPortInfo(foe_entry,pinfo,FE_PSE_PORT_GDM2);
+
+	airoha_ppe_foe_commit_entry_ptr(ppe,foe_entry,foe_entry_idx,1);		
+	ret = 1;
+	skb->data = skb_mac_header(skb);
+	return ret;
+}
+
+int speedtest_lan_tx_offload(struct sk_buff *skb, struct airoha_foe_entry *foe_entry, struct airoha_ppe *ppe, struct port_info *pinfo, u32 fport)
+{
+	int ret = 0;
+	u32 foe_entry_idx = 0;
+
+	foe_entry_idx = skb->hash & AIROHA_PPE_ENTRY_MASK;
+
+	/* get start fill entry for each layer */
+	FillSpeedtestEntryInfo(skb, foe_entry);
+
+	if(!isValidPpeEntry(skb, foe_entry)) {
+		skb->hash = 0;
+		ret = 1;
+		skb->data = skb_mac_header(skb);
+		return ret;
+	}
+
+	/* Set force port info for QDMALAN */
+	SetSpeedtestPortInfo(foe_entry, pinfo, fport);
+
+	airoha_ppe_foe_commit_entry_ptr(ppe,foe_entry,foe_entry_idx,1);		
+	ret = 1;
+	skb->data = skb_mac_header(skb);
+	return ret;
+}
+#else
 void SetSpeedtestPortInfo(struct airoha_foe_entry * foe_entry, struct airoha_ppe *ppe,struct port_info *pinfo)
 {
 
@@ -2258,7 +2384,19 @@ int speedtest_tx_offload(struct sk_buff * skb, struct airoha_foe_entry *foe_entr
 {
 	int ret = 0;
 	u32 foe_entry_idx= 0;
+	struct airoha_gdm_dev *gdm_dev;
+  /* this check is for: onu as iperf server, ethernet lan pc as iperf client 
+   * The condition is that when the interface name is "eth" and the skb is not associated with
+   * WAN interface,the speedtest_tx_offload is skipped
+   */
+	if(skb->dev && memcmp(skb->dev->name,"eth",3) == 0)
+	{
+		gdm_dev = airoha_ppe_get_gdm_dev(glb_eth, skb->dev);
+		if (arht_is_valid_gdm_dev(glb_eth, gdm_dev) && !(gdm_dev->flags & AIROHA_PRIV_F_WAN))
+			return 0;
+	}
 
+	
 	foe_entry_idx = skb->hash & AIROHA_PPE_ENTRY_MASK;
 	
 	/* get start fill entry for each layer */
@@ -2279,6 +2417,7 @@ int speedtest_tx_offload(struct sk_buff * skb, struct airoha_foe_entry *foe_entr
 	skb->data = skb_mac_header(skb);
 	return ret;
 }
+#endif
 
 void SetTR471PortInfo(struct airoha_foe_entry * foe_entry)
 {
@@ -3200,6 +3339,9 @@ int airoha_receive_hook(struct airoha_queue *q, struct airoha_qdma_desc *desc,
 		if(wan_speed_test_pinpong_handle_hook && (VirIfIdx == DP_SPEED_UP)){
 			skb->mark = DP_SPEED_UP;
 			skb_set_hash(skb, hash,PKT_HASH_TYPE_L4);
+			if(set_entry_reason_hook){
+				set_entry_reason_hook(skb, crsn);
+			}
 			wan_speed_test_pinpong_handle_hook(skb);
 			return 0;
 		}

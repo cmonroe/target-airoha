@@ -9,9 +9,9 @@
  			       void *p, int size)
  {
  	u16 core = 0; /* FIXME */
-@@ -75,6 +75,42 @@ npu_send_msg_retry:
+@@ -74,6 +74,42 @@ npu_send_msg_retry:
+ 	return ret;
  }
- 
  
 +int airoha_npu_send_msg(struct airoha_npu *npu, int func_id,
 +			       void *p, int size)
@@ -52,7 +52,7 @@
  static int airoha_npu_load_firmware(struct device *dev, void __iomem *addr,
  				    const char *fw_name, int fw_max_size)
  {
-@@ -354,7 +390,7 @@ int airoha_npu_wlan_msg_send(struct airo
+@@ -353,7 +389,7 @@ int airoha_npu_wlan_msg_send(struct airo
  	wlan_data->func_id = func_id;
  	memcpy(wlan_data->d, data, data_len);
  
@@ -61,7 +61,7 @@
  	kfree(wlan_data);
  
  	return err;
-@@ -376,7 +412,7 @@ int airoha_npu_wlan_msg_get(struct airoh
+@@ -375,7 +411,7 @@ int airoha_npu_wlan_msg_get(struct airoh
  	wlan_data->func_type = NPU_OP_GET;
  	wlan_data->func_id = func_id;
  

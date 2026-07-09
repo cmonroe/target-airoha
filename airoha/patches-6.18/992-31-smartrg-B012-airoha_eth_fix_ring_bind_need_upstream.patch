@@ -1,16 +1,3 @@
---- a/drivers/net/ethernet/airoha/airoha_eth.c
-+++ b/drivers/net/ethernet/airoha/airoha_eth.c
-@@ -996,8 +996,9 @@ free_frag:
- 			q->count.rx.rx_error_count++;
- 			dev_kfree_skb(q->skb);
- 			q->skb = NULL;
-+		} else {
-+			page_pool_put_full_page(q->page_pool, page, true);
- 		}
--		page_pool_put_full_page(q->page_pool, page, true);
- 	}
- 	airoha_qdma_fill_rx_queue(q);
- 
 --- a/drivers/net/ethernet/airoha/airoha_eth.h
 +++ b/drivers/net/ethernet/airoha/airoha_eth.h
 @@ -626,7 +626,7 @@ struct airoha_wdma_info {

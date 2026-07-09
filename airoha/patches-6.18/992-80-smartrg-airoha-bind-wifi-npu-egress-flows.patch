@@ -49,7 +49,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  						info.idx) |
 --- a/drivers/net/ethernet/airoha/arht_ppe.c
 +++ b/drivers/net/ethernet/airoha/arht_ppe.c
-@@ -3409,6 +3409,26 @@ int __airoha_ppe_foe_commit_entry(struct
+@@ -3557,6 +3557,26 @@ int __airoha_ppe_foe_commit_entry(struct
  	return ret;
  }
  
@@ -76,7 +76,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
  void airoha_set_flow_destination(struct net_device *dev, struct airoha_flow_table_entry *e)
  {
          if(!dev || !e){
-@@ -3420,13 +3440,22 @@ void airoha_set_flow_destination(struct
+@@ -3568,13 +3588,22 @@ void airoha_set_flow_destination(struct
                  AIROHA_LOG(AIROHA_DEBUG_LEVEL_ERR, "destination set to PON\n");
                  e->e_magic = PON;
          }
@@ -100,7 +100,7 @@ Signed-off-by: Chad Monroe <chad@monroe.io>
          return;
  }
  
-@@ -3760,9 +3789,9 @@ void arht_modified_ppe_entry(struct airo
+@@ -3912,9 +3941,9 @@ void arht_modified_ppe_entry(struct airo
  		return;
  	}
  
